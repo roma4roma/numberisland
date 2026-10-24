@@ -77,7 +77,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .btn.leaf { background: var(--leaf); color: #fff; }
 .btn.coral { background: var(--coral); color: #fff; }
 .btn.plain { background: #fff; }
-.btn.small { font-size: 15px; padding: 5px 12px; min-height: 38px; border-width: 2px; box-shadow: 0 3px 0 var(--ink); }
+.topbar > div { min-width: 0; }
+.btn.small { white-space: nowrap; font-size: 15px; padding: 5px 12px; min-height: 38px; border-width: 2px; box-shadow: 0 3px 0 var(--ink); }
 .btn[disabled] { opacity: .5; cursor: not-allowed; }
 .link-btn { background: none; border: 0; color: var(--ink-soft); font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 15px; padding: 6px; }
 
@@ -160,6 +161,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .stars { color: var(--sun-deep); letter-spacing: 1px; font-size: 16px; white-space: nowrap; }
 .stars .off { color: #D6C9A6; }
 .lvl { font-size: 12px; font-weight: 800; background: var(--ink); color: #fff; border-radius: 8px; padding: 0 7px; white-space: nowrap; }
+.game-card.locked { filter: grayscale(.85); opacity: .6; box-shadow: 0 3px 0 var(--ink); }
+.game-card.locked:hover { transform: none; }
 .game-card.feature { grid-column: span 2; flex-direction: row; align-items: center; gap: 14px; }
 .game-card.feature .gicon { font-size: 56px; }
 .game-card.feature .gtext { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
@@ -168,7 +171,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 /* ---------- Game shell ---------- */
 .topbar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
-  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
   background: var(--sand); padding: 4px 0 10px; border-bottom: 3px dashed var(--sand-2); margin-bottom: 12px;
 }
 .topbar h2 { font-size: 22px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -303,7 +306,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .hearts { letter-spacing: 2px; }
 .aq { background: var(--sun); color: var(--ink); border-radius: 12px; text-align: center; font-family: var(--display); font-size: 30px; padding: 4px; margin-bottom: 8px; }
 .road {
-  position: relative; height: 330px; overflow: hidden; border-radius: 12px; touch-action: none; cursor: pointer;
+  position: relative; height: clamp(380px, 62vh, 560px); overflow: hidden; border-radius: 12px; touch-action: none; cursor: pointer;
   border-left: 16px solid #3E9B45; border-right: 16px solid #3E9B45;
   background:
     linear-gradient(90deg, transparent calc(33.33% - 2px), rgba(255,255,255,.55) calc(33.33% - 2px) calc(33.33% + 2px), transparent calc(33.33% + 2px) calc(66.66% - 2px), rgba(255,255,255,.55) calc(66.66% - 2px) calc(66.66% + 2px), transparent calc(66.66% + 2px)),
@@ -311,7 +314,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
   -webkit-mask-image: none;
 }
 .road .stripes { position: absolute; inset: -40px 0 0; background: repeating-linear-gradient(180deg, transparent 0 22px, #3B3F49 22px 44px); opacity: .9; pointer-events: none; }
-.car { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) rotate(90deg); font-size: 46px; line-height: 1; transition: left .12s ease; z-index: 3; }
+.car { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) rotate(var(--rot, 90deg)); font-size: 46px; line-height: 1; transition: left .12s ease; z-index: 3; }
 .arow { position: absolute; left: 0; right: 0; top: 0; height: 46px; z-index: 2; will-change: transform; }
 .abox {
   position: absolute; top: 0; transform: translateX(-50%); min-width: 62px; padding: 4px 10px;
@@ -383,6 +386,29 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .item .price { font-size: 14px; }
 .item.wearing { background: var(--leaf-soft); border-color: var(--leaf); }
 .item.locked { opacity: .55; }
+.shop-top { min-height: 140px; position: relative; }
+.shop-side { display: grid; gap: 4px; max-width: 280px; }
+.item { position: relative; }
+.rarity { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; border: 2px solid var(--ink); border-radius: 999px; padding: 0 7px; white-space: nowrap; }
+.r-common { background: #fff; } .r-rare { background: #CBE8FF; } .r-epic { background: #E6DBFF; } .r-legend { background: var(--sun); }
+.title-pill { display: inline-block; background: var(--plum); color: #fff; border-radius: 999px; padding: 0 10px; font-size: 13px; font-weight: 800; vertical-align: middle; }
+.title-pill.big { font-size: 14px; padding: 4px 10px; margin: 8px 0; }
+.isle { position: relative; width: 100%; max-width: 560px; height: 190px; margin: 0 auto; border: 3px solid var(--ink); border-radius: 18px; overflow: hidden;
+  background: linear-gradient(#A8E6F7 0 58%, #1FA3B0 58%); }
+.isle.big { height: 250px; }
+.isle-sun { position: absolute; right: 7%; top: 9%; width: 38px; height: 38px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 8px rgba(255,201,60,.35); }
+.isle-land { position: absolute; left: 9%; right: 9%; bottom: 12%; height: 46%; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, #FBE3A4, #EBC46E 70%); border: 3px solid #D9A94A; }
+.isle-item { position: absolute; transform: translateX(-50%); line-height: 1; filter: drop-shadow(0 3px 0 rgba(0,0,0,.15)); }
+.isle-empty { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); font-weight: 800; color: var(--sea-deep); background: rgba(255,255,255,.8); padding: 4px 12px; border-radius: 12px; text-align: center; width: max-content; max-width: 80%; }
+.isle-count { position: absolute; left: 10px; top: 8px; background: rgba(255,255,255,.85); border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-weight: 800; font-size: 13px; }
+.avatar.frame-wood { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #9B6B3D; }
+.avatar.frame-leaf { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #3FA34D, 0 0 0 9px #C6F59A; }
+.avatar.frame-ice { box-shadow: 0 0 0 3px #E8FBFF, 0 0 0 7px #7FD6F0, 0 0 14px 4px rgba(127,214,240,.9); }
+.avatar.frame-fire { box-shadow: 0 0 0 3px #FFE08A, 0 0 0 7px #FF6B57, 0 0 16px 6px rgba(255,107,87,.85); animation: flicker 1.2s infinite alternate; }
+.avatar.frame-rainbowf { box-shadow: 0 0 0 3px #FF6B57, 0 0 0 6px #FFC93C, 0 0 0 9px #23A866, 0 0 0 12px #2C8FD6, 0 0 0 15px #9B5DE5; }
+.avatar.frame-diamond { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #B9F2FF, 0 0 0 9px #fff, 0 0 22px 8px rgba(185,242,255,1); animation: shine 1.6s infinite alternate; }
+@keyframes flicker { to { box-shadow: 0 0 0 3px #FFE08A, 0 0 0 7px #FF8A3D, 0 0 22px 9px rgba(255,138,61,.9); } }
+@keyframes shine { to { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #E0FAFF, 0 0 0 9px #fff, 0 0 30px 12px rgba(224,250,255,1); } }
 .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .badge { border: 3px solid var(--ink); border-radius: 16px; background: #fff; padding: 10px; text-align: center; min-width: 0; }
 .badge .bicon { font-size: 40px; line-height: 1.1; }
@@ -397,6 +423,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .t-sheet { background: var(--foam); border: 3px solid var(--ink); border-radius: 14px; padding: 10px 14px; margin-bottom: 12px; display: grid; gap: 8px; }
 .t-sheet .row-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .t-sheet .text-input { font-size: 15px; padding: 4px 10px; flex: 1 1 260px; min-width: 0; }
+.lock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+.lock-item { display: flex; justify-content: space-between; gap: 8px; align-items: center; border: 2px solid var(--ink); border-radius: 10px; padding: 4px 10px; font-weight: 700; font-size: 14px; cursor: pointer; background: #fff; text-align: left; }
+.lock-item.on b { color: var(--leaf); } .lock-item.off { background: var(--sand-2); } .lock-item.off b { color: var(--coral); }
+.lock-item[disabled] { cursor: default; opacity: 1; }
 .ok-text { color: var(--leaf); font-weight: 800; } .bad-text { color: var(--coral); font-weight: 800; }
 .pin-box { max-width: 340px; margin: 10px auto; display: grid; gap: 10px; text-align: center; }
 .pin-err { color: var(--coral); font-weight: 800; min-height: 24px; }
@@ -422,6 +452,58 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .t-tools .row-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .t-tools .text-input { max-width: 180px; font-size: 18px; padding: 4px 10px; }
 
+/* ---------- Topic trail ---------- */
+.topic-card {
+  width: 100%; text-align: left; cursor: pointer; margin-bottom: 14px;
+  border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 5px 0 var(--ink);
+  background: linear-gradient(120deg, #FFE08A 0%, #FFC93C 55%, #FFB13C 100%);
+  padding: 14px 18px; display: flex; align-items: center; gap: 16px; transition: transform .1s;
+}
+.topic-card:hover { transform: translateY(-2px); }
+.topic-card:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+.topic-card .ticon { font-size: 52px; line-height: 1; }
+.topic-card .ttext { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.topic-card .eyebrow { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--sea-deep); }
+.topic-card .tname { font-family: var(--display); font-size: 26px; line-height: 1.1; }
+.topic-card .tsub { font-weight: 700; font-size: 14px; color: var(--ink-soft); }
+.topic-card .tgo { font-family: var(--display); font-size: 18px; background: var(--ink); color: #fff; border-radius: 12px; padding: 8px 14px; white-space: nowrap; }
+.trail-hero { display: grid; gap: 4px; text-align: center; margin-bottom: 14px; }
+.trail-hero h3 { font-size: 26px; color: var(--sea-deep); }
+.trail-hero .note { margin: 0; }
+.trail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; counter-reset: stop; }
+.stop {
+  position: relative; text-align: left; cursor: pointer; min-width: 0;
+  border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 5px 0 var(--ink); background: #fff;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.stop:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+.stop .snum { font-family: var(--display); font-size: 22px; color: #fff; background: var(--sea); border: 2px solid var(--ink); border-radius: 999px; padding: 0 10px; align-self: flex-start; }
+.stop .stitle { font-weight: 800; font-size: 15px; line-height: 1.2; }
+.stop .sfoot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-top: 4px; }
+.stop.done { background: var(--leaf-soft); }
+.stop.mix { background: var(--sand-2); }
+.stop.mix .snum { background: var(--coral); }
+.vrec { display: grid; grid-template-columns: auto auto; gap: 6px 12px; justify-content: center; align-items: center; font-family: var(--display); font-variant-numeric: tabular-nums; }
+.vrec .vn { text-align: right; font-size: 34px; line-height: 1.1; }
+.vrec .rule { grid-column: 1 / 2; height: 4px; background: var(--ink); border-radius: 2px; }
+.vrec .vslot { min-width: 140px; height: 50px; font-size: 28px; justify-items: end; place-items: center end; padding: 0 12px; }
+.vrec .hint { font-family: var(--body); font-weight: 800; font-size: 15px; color: var(--ink-soft); white-space: nowrap; }
+.est-row { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center; align-items: center; font-family: var(--display); font-size: 28px; margin: 6px 0; }
+.est-row .slot { min-width: 90px; height: 54px; font-size: 28px; }
+.est-arrow { color: var(--ink-soft); }
+.choice-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.choice-row .btn { font-size: 22px; min-width: 190px; min-height: 60px; }
+.claim { background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 10px 16px; font-family: var(--display); font-size: 30px; text-align: center; margin: 8px auto; max-width: 420px; }
+.claim small { display: block; font-family: var(--body); font-weight: 800; font-size: 16px; color: var(--ink-soft); }
+.array-canvas { display: block; margin: 4px auto 8px; max-width: 100%; }
+.word-story { background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 16px; font-size: 19px; font-weight: 700; line-height: 1.45; max-width: 560px; margin: 0 auto; }
+.word-story .wq { display: block; margin-top: 6px; color: var(--sea-deep); }
+@media (max-width: 640px) {
+  .trail { grid-template-columns: repeat(2, 1fr); }
+  .topic-card { flex-wrap: wrap; } .topic-card .ticon { font-size: 40px; } .topic-card .tname { font-size: 22px; }
+  .vrec .vn { font-size: 28px; } .vrec .vslot { min-width: 110px; }
+}
+
 /* ---------- Toasts ---------- */
 #toasts { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 50%; transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; width: max-content; max-width: calc(100vw - 32px); pointer-events: none; }
 .toast { background: var(--ink); color: #fff; border-radius: 14px; padding: 8px 16px; font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: toastIn .3s; text-align: center; }
@@ -437,7 +519,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
   .game-card .gname { font-size: 18px; }
   .hub-head .who h2 { font-size: 24px; }
   .avatar-pick { grid-template-columns: repeat(4, 1fr); }
-  .road { height: 290px; }
+  .road { height: clamp(360px, 58vh, 480px); }
   .key { height: 52px; }
   .topbar h2 { font-size: 18px; }
 }
@@ -502,6 +584,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
         <div class="hub-actions">
           <span class="chip coins" id="hubCoins">🪙 0</span>
           <button type="button" class="btn small" id="openShop">🛍️ Shop</button>
+          <button type="button" class="btn small plain" id="openIsland">🏝️ My Island</button>
           <button type="button" class="btn small plain" id="openBadges">🏅 Badges</button>
         </div>
       </div>
@@ -542,12 +625,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
         <h2>Island Shop</h2>
         <span class="chip coins" id="shopCoins">🪙 0</span>
       </div>
-      <div class="shop-top"><div id="shopAvatar"></div><div class="note" style="text-align:left;max-width:260px">Spend coins on hats, pets and backgrounds. Tap something you own to wear it or take it off.</div></div>
-      <div class="tabs" role="tablist" id="shopTabs">
-        <button type="button" class="tab" role="tab" data-tab="hat" aria-selected="true">Hats</button>
-        <button type="button" class="tab" role="tab" data-tab="pet" aria-selected="false">Pets</button>
-        <button type="button" class="tab" role="tab" data-tab="bg" aria-selected="false">Backgrounds</button>
-      </div>
+      <div class="shop-top" id="shopTop"></div>
+      <div class="tabs" role="tablist" id="shopTabs"></div>
       <div class="item-grid" id="shopGrid"></div>
     </section>
 
@@ -622,18 +701,27 @@ const SKILLS = {
   arrays:  { name: 'Arrays & area', short: 'Arrays',
              levels: ['up to 5 × 5', 'up to 6 × 6', 'up to 8 × 8', 'up to 10 × 10', 'up to 12 × 12'] },
   longdiv: { name: 'Dividing big numbers', short: 'Big ÷',
-             levels: ['division facts', '2-digit ÷ 1-digit', '2-digit with remainders', '3-digit ÷ 1-digit', '4-digit ÷ 1-digit'] }
+             levels: ['division facts', '2-digit ÷ 1-digit', '2-digit with remainders', '3-digit ÷ 1-digit', '4-digit ÷ 1-digit'] },
+  t4tens:  { name: 'Multiplying by multiples of 10', short: '× tens',
+             levels: ['tens × tens, facts to 5', 'tens × tens, facts to 9', 'products with extra zeros', '2-digit × tens', 'all 2-digit × tens'] },
+  t4est:   { name: 'Estimating products', short: 'Estimate',
+             levels: ['round smaller numbers', 'round any 2-digit number', 'rounding and reasonable answers', 'more reasonable answers', 'mixed estimating'] },
+  t4word:  { name: 'Multi-step word problems', short: 'Word probs',
+             levels: ['two steps, smaller numbers', 'two steps', 'two steps, bigger numbers', 'three steps', 'three steps, bigger numbers'] }
 };
 const SKILL_IDS = Object.keys(SKILLS);
 
 const GAMES = [
-  { id: 'driver',  name: 'Math Driver',    icon: '🚗', blurb: 'Steer into the right answer. Pick ×, ÷, + or −.', skill: null, bg: '#FFE6A6', feature: true },
-  { id: 'runner',  name: 'Fact Runner',    icon: '🏃', blurb: 'Jump the wrong answers.', skill: 'mult', bg: '#CBE8FF' },
-  { id: 'column',  name: 'Column Cliffs',  icon: '🧗', blurb: 'Big + and − in columns.', skill: 'addsub', bg: '#FFD5CC' },
-  { id: 'partial', name: 'Area Builder',   icon: '🧱', blurb: 'Multiply with partial products.', skill: 'partial', bg: '#E6DBFF' },
-  { id: 'arrays',  name: 'Array Garden',   icon: '🌻', blurb: 'Plant rows and columns.', skill: 'arrays', bg: '#CDEFD9' },
-  { id: 'divide',  name: 'Treasure Split', icon: '💰', blurb: 'Share coins fairly with division.', skill: 'longdiv', bg: '#FFF0B8' },
-  { id: 'memory',  name: 'Memory Reef',    icon: '🐚', blurb: 'Match facts to products.', skill: 'mult', bg: '#D7F7F2' }
+  { id: 'driver',   name: 'Math Driver',        icon: '🚗', blurb: 'Steer into the right answer. Pick ×, ÷, + or −.', skill: null, bg: '#FFE6A6', feature: true, practices: 'Facts: ×, ÷, + and −' },
+  { id: 'runner',   name: 'Fact Runner',        icon: '🏃', blurb: 'Run into the right answer and jump the wrong ones.', skill: 'mult', bg: '#CBE8FF', feature: true, practices: 'Multiplication facts' },
+  { id: 'memory',   name: 'Memory Reef',        icon: '🐚', blurb: 'Match facts to products.', skill: 'mult', bg: '#D7F7F2', practices: 'Multiplication facts' },
+  { id: 'arrays',   name: 'Array Garden',       icon: '🌻', blurb: 'Plant rows and columns.', skill: 'arrays', bg: '#CDEFD9', practices: 'Arrays and area' },
+  { id: 'tens',     name: 'Tens Tower',         icon: '🗼', blurb: 'Multiply by multiples of 10.', skill: 't4tens', bg: '#FFE1DB', practices: 'Multiplying by multiples of 10, like 40 × 30 and 23 × 40' },
+  { id: 'partial',  name: 'Area Builder',       icon: '🧱', blurb: 'Multiply with area models and partial products.', skill: 'partial', bg: '#E6DBFF', practices: 'Partial products and area models, up to 2-digit × 2-digit' },
+  { id: 'estimate', name: 'Estimation Station', icon: '🎯', blurb: 'Round, estimate, and spot answers that make sense.', skill: 't4est', bg: '#FFF0B8', practices: 'Rounding to estimate products; reasonable answers' },
+  { id: 'column',   name: 'Column Cliffs',      icon: '🧗', blurb: 'Big + and − in columns.', skill: 'addsub', bg: '#FFD5CC', practices: 'Multi-digit addition and subtraction' },
+  { id: 'divide',   name: 'Treasure Split',     icon: '💰', blurb: 'Share coins fairly with division.', skill: 'longdiv', bg: '#FFF6C7', practices: 'Division with remainders' },
+  { id: 'story',    name: 'Story Problems',     icon: '📜', blurb: 'Find the hidden question, then solve.', skill: 't4word', bg: '#DCEBFF', practices: 'Multi-step word problems' }
 ];
 const GAME = Object.fromEntries(GAMES.map(g => [g.id, g]));
 
@@ -642,18 +730,30 @@ const SHOP = {
   hat: [
     { id: 'cap', icon: '🧢', name: 'Cap', price: 20 },
     { id: 'bow', icon: '🎀', name: 'Bow', price: 20 },
+    { id: 'flower', icon: '🌸', name: 'Flower', price: 35 },
     { id: 'sunhat', icon: '👒', name: 'Sun hat', price: 40 },
     { id: 'tophat', icon: '🎩', name: 'Top hat', price: 60 },
-    { id: 'grad', icon: '🎓', name: 'Grad cap', price: 90 },
-    { id: 'crown', icon: '👑', name: 'Crown', price: 150, minLevel: 5 }
+    { id: 'rescue', icon: '⛑️', name: 'Rescue helmet', price: 90 },
+    { id: 'grad', icon: '🎓', name: 'Grad cap', price: 120 },
+    { id: 'pumpkin', icon: '🎃', name: 'Pumpkin', price: 180 },
+    { id: 'crown', icon: '👑', name: 'Crown', price: 400, minLevel: 5 },
+    { id: 'star', icon: '🌟', name: 'Star', price: 750, minLevel: 7 },
+    { id: 'gem', icon: '💎', name: 'Diamond', price: 1500, minLevel: 9 }
   ],
   pet: [
     { id: 'chick', icon: '🐣', name: 'Chick', price: 30 },
+    { id: 'puppy', icon: '🐶', name: 'Puppy', price: 40 },
+    { id: 'kitten', icon: '🐱', name: 'Kitten', price: 40 },
     { id: 'crab', icon: '🦀', name: 'Crab', price: 45 },
     { id: 'fish', icon: '🐠', name: 'Fish', price: 45 },
-    { id: 'parrot', icon: '🦜', name: 'Parrot', price: 70 },
-    { id: 'unicorn', icon: '🦄', name: 'Unicorn', price: 120, minLevel: 4 },
-    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 200, minLevel: 7 }
+    { id: 'bee', icon: '🐝', name: 'Bee', price: 60 },
+    { id: 'parrot', icon: '🦜', name: 'Parrot', price: 90 },
+    { id: 'butterfly', icon: '🦋', name: 'Butterfly', price: 120 },
+    { id: 'flamingo', icon: '🦩', name: 'Flamingo', price: 200 },
+    { id: 'unicorn', icon: '🦄', name: 'Unicorn', price: 350, minLevel: 4 },
+    { id: 'trex', icon: '🦖', name: 'T. rex', price: 500, minLevel: 5 },
+    { id: 'peacock', icon: '🦚', name: 'Peacock', price: 650, minLevel: 6 },
+    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 1200, minLevel: 8 }
   ],
   bg: [
     { id: 'sky', name: 'Sky', price: 0, css: 'linear-gradient(160deg,#C9F1FF,#7FD3EE)' },
@@ -661,10 +761,75 @@ const SHOP = {
     { id: 'jungle', name: 'Jungle', price: 40, css: 'linear-gradient(160deg,#C6F59A,#3FA34D)' },
     { id: 'lagoon', name: 'Lagoon', price: 40, css: 'linear-gradient(160deg,#B4FFE9,#18AFA0)' },
     { id: 'berry', name: 'Berry', price: 60, css: 'linear-gradient(160deg,#FFC7E6,#C45BB0)' },
-    { id: 'galaxy', name: 'Galaxy', price: 100, css: 'radial-gradient(circle at 30% 30%,#8E7CF0,#2A1F6B 70%)', minLevel: 3 },
-    { id: 'gold', name: 'Gold', price: 250, css: 'linear-gradient(160deg,#FFF6B8,#F0B400)', minLevel: 8 }
+    { id: 'candy', name: 'Candy', price: 120, css: 'repeating-linear-gradient(45deg,#FFD1E8 0 8px,#FFFFFF 8px 16px)' },
+    { id: 'galaxy', name: 'Galaxy', price: 250, css: 'radial-gradient(circle at 30% 30%,#8E7CF0,#2A1F6B 70%)', minLevel: 3 },
+    { id: 'lava', name: 'Lava', price: 400, css: 'radial-gradient(circle at 50% 80%,#FFD23F,#FF5A1F 45%,#7A1408)', minLevel: 5 },
+    { id: 'aurora', name: 'Aurora', price: 600, css: 'linear-gradient(160deg,#0B2545 10%,#2EC4B6 45%,#9B5DE5 80%)', minLevel: 6 },
+    { id: 'rainbow', name: 'Rainbow', price: 900, css: 'conic-gradient(#FF6B57,#FFC93C,#23A866,#2C8FD6,#9B5DE5,#FF6B57)', minLevel: 7 },
+    { id: 'gold', name: 'Gold', price: 1500, css: 'linear-gradient(160deg,#FFF6B8,#F0B400)', minLevel: 8 }
+  ],
+  frame: [
+    { id: 'wood', name: 'Wood', price: 80 },
+    { id: 'leaf', name: 'Leaf', price: 150 },
+    { id: 'ice', name: 'Ice', price: 300, minLevel: 3 },
+    { id: 'fire', name: 'Fire', price: 500, minLevel: 4 },
+    { id: 'rainbowf', name: 'Rainbow', price: 900, minLevel: 6 },
+    { id: 'diamond', name: 'Diamond', price: 2000, minLevel: 9 }
+  ],
+  effect: [
+    { id: 'stars', name: 'Stars', price: 0, fx: ['✨', '⭐', '🪙'] },
+    { id: 'hearts', name: 'Hearts', price: 60, fx: ['💖', '💕', '✨'] },
+    { id: 'balloons', name: 'Balloons', price: 120, fx: ['🎈', '🎉', '🎊'] },
+    { id: 'music', name: 'Music', price: 150, fx: ['🎵', '🎶', '🎷'] },
+    { id: 'pizza', name: 'Pizza party', price: 200, fx: ['🍕', '🍩', '🧁'] },
+    { id: 'dinos', name: 'Dinosaurs', price: 350, fx: ['🦖', '🦕', '🌿'], minLevel: 3 },
+    { id: 'fireworks', name: 'Fireworks', price: 500, fx: ['🎆', '🎇', '💥'], minLevel: 4 },
+    { id: 'gems', name: 'Gems', price: 1000, fx: ['💎', '💠', '👑'], minLevel: 7 }
+  ],
+  ride: [
+    { id: 'car', icon: '🚗', name: 'Car', price: 0, rot: 90 },
+    { id: 'taxi', icon: '🚕', name: 'Taxi', price: 50, rot: 90 },
+    { id: 'tractor', icon: '🚜', name: 'Tractor', price: 80, rot: 90 },
+    { id: 'jeep', icon: '🚙', name: 'Jeep', price: 120, rot: 90 },
+    { id: 'police', icon: '🚓', name: 'Police car', price: 200, rot: 90 },
+    { id: 'firetruck', icon: '🚒', name: 'Fire truck', price: 300, rot: 90 },
+    { id: 'racecar', icon: '🏎️', name: 'Race car', price: 500, rot: 90, minLevel: 3 },
+    { id: 'ufo', icon: '🛸', name: 'UFO', price: 1000, rot: 0, minLevel: 6 },
+    { id: 'rocket', icon: '🚀', name: 'Rocket', price: 1800, rot: -45, minLevel: 8 }
+  ],
+  title: [
+    { id: 'puzzle', name: 'Puzzle Pro', price: 100 },
+    { id: 'ninja', name: 'Number Ninja', price: 150 },
+    { id: 'solver', name: 'Problem Solver', price: 200 },
+    { id: 'factmaster', name: 'Fact Master', price: 250 },
+    { id: 'wizard', name: 'Math Wizard', price: 400, minLevel: 4 },
+    { id: 'brain', name: 'Super Brain', price: 600, minLevel: 5 },
+    { id: 'captain', name: 'Captain Calculator', price: 900, minLevel: 6 },
+    { id: 'legend', name: 'Living Legend', price: 2000, minLevel: 9 }
+  ],
+  island: [
+    { id: 'shells', icon: '🐚', name: 'Shells', price: 40, x: 30, y: 26, z: 22 },
+    { id: 'flowers', icon: '🌺', name: 'Flowers', price: 60, x: 47, y: 24, z: 26 },
+    { id: 'palm', icon: '🌴', name: 'Palm tree', price: 80, x: 17, y: 40, z: 48 },
+    { id: 'umbrella', icon: '⛱️', name: 'Beach umbrella', price: 120, x: 60, y: 30, z: 36 },
+    { id: 'turtle', icon: '🐢', name: 'Turtle friend', price: 150, x: 80, y: 22, z: 28 },
+    { id: 'tent', icon: '🏕️', name: 'Tent', price: 200, x: 38, y: 38, z: 40 },
+    { id: 'sailboat', icon: '⛵', name: 'Sailboat', price: 300, x: 90, y: 6, z: 40 },
+    { id: 'hut', icon: '🛖', name: 'Hut', price: 400, x: 70, y: 40, z: 46 },
+    { id: 'statue', icon: '🗿', name: 'Stone statue', price: 600, x: 27, y: 50, z: 40, minLevel: 4 },
+    { id: 'whale', icon: '🐳', name: 'Whale', price: 800, x: 7, y: 4, z: 42, minLevel: 5 },
+    { id: 'volcano', icon: '🌋', name: 'Volcano', price: 1000, x: 47, y: 54, z: 64, minLevel: 5 },
+    { id: 'helicopter', icon: '🚁', name: 'Helicopter', price: 1200, x: 76, y: 80, z: 34, minLevel: 6 },
+    { id: 'ferris', icon: '🎡', name: 'Ferris wheel', price: 1600, x: 84, y: 44, z: 52, minLevel: 7 },
+    { id: 'castle', icon: '🏰', name: 'Castle', price: 2500, x: 63, y: 54, z: 60, minLevel: 8 }
   ]
 };
+const SHOP_TABS = [
+  { id: 'hat', label: 'Hats', wear: true }, { id: 'pet', label: 'Pets', wear: true }, { id: 'bg', label: 'Backgrounds', one: true },
+  { id: 'frame', label: 'Frames', wear: true }, { id: 'effect', label: 'Celebrations', one: true }, { id: 'ride', label: 'Driver rides', one: true },
+  { id: 'title', label: 'Titles', wear: true }, { id: 'island', label: 'My Island', place: true }
+];
+const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'] : price <= 250 ? ['Rare', 'r-rare'] : price <= 900 ? ['Epic', 'r-epic'] : ['Legendary', 'r-legend'];
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
 const BADGES = [
@@ -673,7 +838,7 @@ const BADGES = [
   { id: 'streak10',  icon: '🔥', name: 'On Fire',         desc: 'Get 10 right in a row' },
   { id: 'streak25',  icon: '🌋', name: 'Volcano',         desc: 'Get 25 right in a row' },
   { id: 'century',   icon: '💯', name: 'Century',         desc: 'Answer 100 questions correctly' },
-  { id: 'explorer',  icon: '🧭', name: 'Explorer',        desc: 'Play all 7 games' },
+  { id: 'explorer',  icon: '🧭', name: 'Explorer',        desc: 'Play 7 different games' },
   { id: 'climb',     icon: '📈', name: 'Climber',         desc: 'Reach level 3 in any skill' },
   { id: 'master',    icon: '🏆', name: 'Skill Master',    desc: 'Reach level 5 in any skill' },
   { id: 'legend',    icon: '👑', name: 'Island Legend',   desc: 'Reach level 5 in every skill' },
@@ -681,7 +846,10 @@ const BADGES = [
   { id: 'highway',   icon: '🏁', name: 'Highway Hero',    desc: 'Score 1,500 in Math Driver' },
   { id: 'jumper',    icon: '🦘', name: 'Jump Champ',      desc: 'Score 1,500 in Fact Runner' },
   { id: 'memory',    icon: '🧠', name: 'Sharp Memory',    desc: 'Clear Memory Reef in 9 moves or fewer' },
-  { id: 'rich',      icon: '💎', name: 'Treasure Keeper', desc: 'Earn 500 coins in total' }
+  { id: 'rich',      icon: '💎', name: 'Treasure Keeper', desc: 'Earn 500 coins in total' },
+  { id: 'rich2',     icon: '🏦', name: 'Coin Tycoon',     desc: 'Earn 5,000 coins in total' },
+  { id: 'builder',   icon: '🏝️', name: 'Island Builder',  desc: 'Put 7 things on your island' },
+  { id: 'collector', icon: '🗃️', name: 'Collector',       desc: 'Own 30 things from the shop' },
 ];
 const PRAISE = ['Nice!', 'You got it!', 'Brilliant!', 'Super!', 'Yes!', 'Awesome!', 'Spot on!', 'Great thinking!'];
 
@@ -708,7 +876,7 @@ function newProfile(name, avatar, forcedId) {
   const id = forcedId || 'p' + Date.now().toString(36) + rnd(100, 999);
   const skills = {}; SKILL_IDS.forEach(k => skills[k] = newSkill());
   store.profiles[id] = {
-    id, name, avatar, coins: 0, coinsEarned: 0, xp: 0, owned: ['sky'], wear: { hat: null, pet: null, bg: 'sky' },
+    id, name, avatar, coins: 0, coinsEarned: 0, xp: 0, owned: ['sky', 'stars', 'car'], wear: { hat: null, pet: null, bg: 'sky', effect: 'stars', ride: 'car' },
     skills, games: {}, badges: [], streak: 0, bestStreak: 0, totalCorrect: 0, created: Date.now(), last: Date.now()
   };
   return id;
@@ -716,6 +884,8 @@ function newProfile(name, avatar, forcedId) {
 function ensureProfile(p) { // fills gaps if the data shape grows later
   SKILL_IDS.forEach(k => { if (!p.skills[k]) p.skills[k] = newSkill(); });
   p.games = p.games || {}; p.badges = p.badges || []; p.owned = p.owned || ['sky']; p.wear = p.wear || { bg: 'sky' };
+  ['sky', 'stars', 'car'].forEach(id => { if (!p.owned.includes(id)) p.owned.push(id); });
+  if (!p.wear.bg) p.wear.bg = 'sky'; if (!p.wear.effect) p.wear.effect = 'stars'; if (!p.wear.ride) p.wear.ride = 'car';
 }
 
 /* =========================================================
@@ -773,11 +943,14 @@ function checkBadges(extra = {}) {
   if (p.bestStreak >= 25) award('streak25');
   if (p.totalCorrect >= 100) award('century');
   if (p.coinsEarned >= 500) award('rich');
+  if (p.coinsEarned >= 5000) award('rich2');
+  if (SHOP.island.filter(it => p.owned.includes(it.id)).length >= 7) award('builder');
+  if (p.owned.length - 3 >= 30) award('collector');
   const levels = SKILL_IDS.map(k => p.skills[k].level);
   if (levels.some(l => l >= 3)) award('climb');
   if (levels.some(l => l >= 5)) award('master');
   if (levels.every(l => l >= 5)) award('legend');
-  if (GAMES.every(g => p.games[g.id] && p.games[g.id].plays > 0)) award('explorer');
+  if (GAMES.filter(g => p.games[g.id] && p.games[g.id].plays > 0).length >= 7) award('explorer');
   if (extra.finished) award('first');
   if (extra.stars === 3) award('perfect');
   if (extra.driver >= 1500) award('highway');
@@ -807,22 +980,24 @@ function sfx(kind) {
 }
 function toast(msg, gold = false) {
   const t = document.createElement('div'); t.className = 'toast' + (gold ? ' gold' : ''); t.textContent = msg;
-  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 2600);
+  const box = $('#toasts'); box.appendChild(t); setTimeout(() => t.remove(), 2600);
+  while (box.children.length > 3) box.firstElementChild.remove();
 }
-function cheer(text) {
-  const wrap = $('#gameWrap');
-  const c = document.createElement('div'); c.className = 'cheer'; c.textContent = text || pick(PRAISE);
-  wrap.appendChild(c); setTimeout(() => c.remove(), 950);
+function effectSet() { const p = P(); const e = p && SHOP.effect.find(x => x.id === (p.wear && p.wear.effect)); return e ? e.fx : SHOP.effect[0].fx; }
+function cheer(text, host) {
+  const wrap = host || $('#gameWrap');
+  if (text !== '') { const c = document.createElement('div'); c.className = 'cheer'; c.textContent = text || pick(PRAISE);
+  wrap.appendChild(c); setTimeout(() => c.remove(), 950); }
   if (!reduceMotion) {
     for (let i = 0; i < 10; i++) {
-      const s = document.createElement('span'); s.className = 'spark'; s.textContent = pick(['✨', '⭐', '🪙']);
+      const s = document.createElement('span'); s.className = 'spark'; s.textContent = pick(effectSet());
       s.style.left = '50%'; s.style.top = '40%';
       const ang = Math.random() * Math.PI * 2, d = 80 + Math.random() * 90;
       s.style.setProperty('--dx', Math.cos(ang) * d + 'px'); s.style.setProperty('--dy', Math.sin(ang) * d + 'px');
       wrap.appendChild(s); setTimeout(() => s.remove(), 850);
     }
   }
-  sfx('ok');
+  if (text !== '') sfx('ok');
 }
 
 /* =========================================================
@@ -841,10 +1016,11 @@ function avatarHTML(p, size = 64) {
   const hat = p.wear && p.wear.hat ? SHOP.hat.find(h => h.id === p.wear.hat) : null;
   const pet = p.wear && p.wear.pet ? SHOP.pet.find(h => h.id === p.wear.pet) : null;
   const L = levelInfo(p.xp || 0).L;
-  const ring = L >= 9 ? 'ring-3' : L >= 6 ? 'ring-2' : L >= 3 ? 'ring-1' : '';
+  const ring = p.wear && p.wear.frame ? 'frame-' + p.wear.frame : L >= 9 ? 'ring-3' : L >= 6 ? 'ring-2' : L >= 3 ? 'ring-1' : '';
   return `<div class="avatar ${ring}" style="--s:${size}px;background:${bg.css}" aria-hidden="true">
     <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? `<span class="pet">${pet.icon}</span>` : ''}</div>`;
 }
+function titleOf(p) { const t = p.wear && p.wear.title && SHOP.title.find(x => x.id === p.wear.title); return t ? t.name : ''; }
 function starsHTML(n) { return `<span class="stars" aria-label="${n} of 3 stars">${[1, 2, 3].map(i => i <= n ? '★' : '<span class="off">★</span>').join('')}</span>`; }
 function updateCoinChips() {
   const p = P(); if (!p) return;
@@ -928,7 +1104,8 @@ $('#signIn').addEventListener('submit', async e => {
   if (!name) { $('#siErr').textContent = 'Type your name first.'; $('#siName').focus(); return; }
   signingIn = true; $('#siGo').disabled = true; $('#siGo').textContent = 'Checking…'; $('#siErr').textContent = ''; $('#siOffline').hidden = true;
   try {
-    const r = await api({ action: 'load', name, code });
+    const r = await api({ action: 'load', name, code, games: GAMES.map(g => ({ id: g.id, name: g.name, practices: g.practices })) });
+    if (r.ok && r.games) applyLocks(r.games);
     if (!r.ok) {
       $('#siErr').textContent = r.error === 'bad_code' ? "That code doesn't match. Try again, or ask your teacher."
         : r.error === 'not_on_roster' ? `We couldn't find "${name}" on the class list. Check the spelling, or ask your teacher.`
@@ -1009,6 +1186,7 @@ async function syncNow(id) {
   const body = syncBody(p, true), sent = body.activity.length;
   try {
     const r = await api(body);
+    if (r.ok && r.games) applyLocks(r.games);
     if (r.ok) { p.pending = (p.pending || []).slice(sent); p.syncedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} if (id === store.current) setSyncStatus('ok'); }
     else if (id === store.current) setSyncStatus('error');
   } catch (e) { if (id === store.current) setSyncStatus('offline'); }
@@ -1036,35 +1214,53 @@ function openHub() {
   $('#hubAvatar').innerHTML = avatarHTML(p, 76);
   $('#hubName').textContent = p.name;
   const li = levelInfo(p.xp);
-  $('#hubRank').textContent = `Level ${li.L} · ${li.rank}`;
+  $('#hubRank').innerHTML = `Level ${li.L} · ${li.rank}${titleOf(p) ? ` <span class="title-pill">${esc(titleOf(p))}</span>` : ''}`;
   $('#hubXp').style.width = Math.round(li.into / li.need * 100) + '%';
   $('#hubXpText').textContent = `${li.into} / ${li.need} XP to level ${li.L + 1}`;
   $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off');
   updateCoinChips();
   if (!p.sheetName) $('#syncStatus').textContent = sheetUrl() ? '' : '';
   else if (!syncingIds.has(p.id)) setSyncStatus((p.syncedAt || 0) >= (p.updated || 0) - 2000 ? 'ok' : 'offline');
-  $('#gameGrid').innerHTML = GAMES.map(g => {
-    const st = p.games[g.id] || {};
-    const lv = g.skill ? `<span class="lvl">Lv ${p.skills[g.skill].level}</span>` : `<span class="lvl">Best ${fmt(st.best || 0)}</span>`;
-    const foot = `<div class="gfoot">${starsHTML(st.stars || 0)}${lv}</div>`;
-    if (g.feature) return `<button type="button" class="game-card feature" data-g="${g.id}" style="--card-bg:${g.bg}">
-        <span class="gicon">${g.icon}</span><span class="gtext"><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</span></button>`;
-    return `<button type="button" class="game-card" data-g="${g.id}" style="--card-bg:${g.bg}">
-        <span class="gicon">${g.icon}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
-  }).join('');
-  $$('.game-card').forEach(b => b.addEventListener('click', () => startGame(b.dataset.g)));
+  renderGameGrid();
   show('hub');
+}
+function renderGameGrid() {
+  const p = P(); if (!p) return;
+  $('#gameGrid').innerHTML = GAMES.map(g => {
+    const st = p.games[g.id] || {}, open = isUnlocked(g.id);
+    const lv = !open ? `<span class="lvl">🔒 Locked</span>` : g.skill ? `<span class="lvl">Lv ${p.skills[g.skill].level}</span>` : `<span class="lvl">Best ${fmt(st.best || 0)}</span>`;
+    const foot = `<div class="gfoot">${starsHTML(st.stars || 0)}${lv}</div>`;
+    const cls = `game-card ${g.feature ? 'feature' : ''} ${open ? '' : 'locked'}`;
+    const label = open ? '' : ` aria-label="${g.name}, locked"`;
+    if (g.feature) return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>
+        <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gtext"><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</span></button>`;
+    return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>
+        <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
+  }).join('');
+  $$('.game-card').forEach(b => b.addEventListener('click', () => {
+    if (!isUnlocked(b.dataset.g)) { toast(`${GAME[b.dataset.g].name} is locked for now. Your teacher will open it soon!`); sfx('bad'); return; }
+    startGame(b.dataset.g);
+  }));
+}
+function isUnlocked(id) { return !store.locks || store.locks[id] !== false; }
+function applyLocks(map) {
+  if (!map || typeof map !== 'object') return;
+  const before = JSON.stringify(store.locks || {});
+  store.locks = map;
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+  if (before !== JSON.stringify(map) && currentScreen === 'hub') renderGameGrid();
 }
 $('#switchPlayer').addEventListener('click', () => { if (P()) syncNow(store.current); store.current = null; save(); renderWho(); });
 $('#soundToggle').addEventListener('click', () => { store.sound = !store.sound; save(); $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off'); sfx('tap'); });
 $('#openShop').addEventListener('click', () => openShop('hat'));
 $('#openBadges').addEventListener('click', openBadges);
+$('#openIsland').addEventListener('click', () => openShop('island'));
 $$('[data-back]').forEach(b => b.addEventListener('click', openHub));
 
 /* =========================================================
    Number pad (shared by the round games)
    ========================================================= */
-const Pad = { fields: [], active: 0, onDone: null, locked: false, submitOnly: false };
+const Pad = { fields: [], active: 0, onDone: null, locked: false, submitOnly: false, onChange: null };
 function padHTML() {
   return `<div class="pad" id="pad">${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(d => `<button type="button" class="key" data-k="${d}">${d}</button>`).join('')}
     <button type="button" class="key alt" data-k="back" aria-label="Delete">⌫</button>
@@ -1072,12 +1268,12 @@ function padHTML() {
     <button type="button" class="key go" data-k="ok" id="padOk">Check ✓</button></div>`;
 }
 function padBind(fields, onDone, opts = {}) {
-  Pad.fields = fields; Pad.active = opts.start || 0; Pad.onDone = onDone; Pad.locked = false; Pad.submitOnly = !!opts.submitOnly;
+  Pad.fields = fields; Pad.active = opts.start || 0; Pad.onDone = onDone; Pad.locked = false; Pad.submitOnly = !!opts.submitOnly; Pad.onChange = opts.onChange || null;
   fields.forEach((f, i) => { f.value = f.value || ''; f.el.addEventListener('click', () => { if (Pad.locked) return; Pad.active = i; padRender(); }); });
   $$('#pad .key').forEach(k => k.addEventListener('click', () => padPress(k.dataset.k)));
   padRender();
 }
-function padClear() { Pad.fields = []; Pad.onDone = null; }
+function padClear() { Pad.fields = []; Pad.onDone = null; Pad.onChange = null; }
 function padRender() {
   Pad.fields.forEach((f, i) => {
     f.el.textContent = f.value || f.placeholder || '';
@@ -1089,6 +1285,7 @@ function padRender() {
     const isLast = Pad.submitOnly || Pad.active >= lastMainIndex();
     ok.textContent = isLast ? 'Check ✓' : 'Next ➜';
   }
+  if (Pad.onChange) Pad.onChange();
 }
 function lastMainIndex() { let i = Pad.fields.length - 1; while (i > 0 && Pad.fields[i].scratch) i--; return i; }
 function padPress(k) {
@@ -1215,7 +1412,7 @@ function later(fn, ms) { const t = setTimeout(() => { timers.delete(t); fn(); },
 function clearTimers() { timers.forEach(t => clearTimeout(t)); timers.clear(); }
 
 function startGame(id) {
-  clearTimers(); stopArcade(); padClear();
+  clearTimers(); stopArcade(); padClear(); round = null;
   const g = GAME[id];
   session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp };
   $('#gameTitle').textContent = g.icon + ' ' + g.name;
@@ -1225,7 +1422,7 @@ function startGame(id) {
   if (id === 'driver') return driverPicker();
   if (id === 'runner') return runnerPicker();
   if (id === 'memory') return memoryStart();
-  const total = { column: 6, partial: 5, arrays: 8, divide: 6 }[id];
+  const total = { column: 6, partial: 5, arrays: 8, divide: 6, tens: 8, estimate: 6, story: 4 }[id];
   round = { id, skill: g.skill, total, index: 0, correct: 0, results: [], level0: lvl(g.skill) };
   nextQuestion();
 }
@@ -1264,27 +1461,27 @@ function showExplain(html, youSaid) {
   setTimeout(() => { try { $('#explainGo').focus({ preventScroll: true }); } catch (e) {} }, 50);
 }
 function finishRound() {
-  const pct = round.correct / round.total;
+  const r = round;
+  const pct = r.correct / r.total;
   const stars = pct >= 0.9 ? 3 : pct >= 0.65 ? 2 : 1;
   reward(stars * 5, 20 + stars * 10);
-  const g = gameStats(round.id); g.stars = Math.max(g.stars || 0, stars); g.best = Math.max(g.best || 0, round.correct);
+  const g = gameStats(r.statsKey || r.id); g.stars = Math.max(g.stars || 0, stars); g.best = Math.max(g.best || 0, r.correct);
   checkBadges({ finished: true, stars });
-  logActivity(GAME[round.id].name, `${round.correct} of ${round.total}`, stars, round.skill);
-  const s = P().skills[round.skill];
+  const mixed = r.lesson && r.lesson.mix;
+  logActivity(r.title || GAME[r.id].name, `${r.correct} of ${r.total}`, stars, mixed ? null : r.skill);
+  const s = P().skills[r.skill];
+  const lines = [[`Correct`, `${r.correct} of ${r.total}`]];
+  if (mixed) lines.push(['Covered', `Lessons ${r.topic.n}-1 to ${r.topic.n}-${r.topic.lessons.length - 1}`]);
+  else lines.push([`${SKILLS[r.skill].name}`, `Level ${s.level} of 5`], [`Now practicing`, SKILLS[r.skill].levels[s.level - 1]]);
   showResults({
-    stars,
+    stars, lines,
     title: stars === 3 ? 'Perfect!' : stars === 2 ? 'Great work!' : 'Good practice!',
-    lines: [
-      [`Correct`, `${round.correct} of ${round.total}`],
-      [`${SKILLS[round.skill].name}`, `Level ${s.level} of 5`],
-      [`Now practicing`, SKILLS[round.skill].levels[s.level - 1]]
-    ],
-    again: () => startGame(round.id)
+    again: r.again || (() => startGame(r.id)), next: r.next, back: r.back
   });
 }
 function gameStats(id) { const p = P(); p.games[id] = p.games[id] || { plays: 0, stars: 0, best: 0 }; p.games[id].plays++; return p.games[id]; }
 
-function showResults({ stars, title, lines, again }) {
+function showResults({ stars, title, lines, again, next, back }) {
   const p = P();
   const coins = p.coins - session.coins0, xp = p.xp - session.xp0;
   const extra = [...session.notes.map(n => [n, '⬆️']), ...session.badges.map(b => [`New badge: ${b.name}`, b.icon])];
@@ -1298,15 +1495,17 @@ function showResults({ stars, title, lines, again }) {
       ${extra.map(([a, b]) => `<div class="result-line hl"><span>${esc(a)}</span><span>${b}</span></div>`).join('')}
     </div>
     <div class="result-actions">
-      <button type="button" class="btn leaf" id="playAgain">Play again</button>
-      <button type="button" class="btn plain" id="toMap">⬅ Map</button>
+      ${next ? `<button type="button" class="btn leaf" id="nextStop">${next.label}</button>` : ''}
+      <button type="button" class="btn ${next ? 'plain' : 'leaf'}" id="playAgain">Play again</button>
+      <button type="button" class="btn plain" id="toMap">${back ? back.label : '⬅ Map'}</button>
     </div>`;
   $('#playAgain').addEventListener('click', again);
-  $('#toMap').addEventListener('click', openHub);
+  $('#toMap').addEventListener('click', back ? back.fn : openHub);
+  if (next) $('#nextStop').addEventListener('click', next.fn);
   sfx('coin');
   show('results');
 }
-$('#leaveGame').addEventListener('click', openHub);
+$('#leaveGame').addEventListener('click', () => { if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
 
 const ROUND_GAMES = {};
 
@@ -1399,9 +1598,17 @@ ROUND_GAMES.partial = () => {
   else if (L === 4) { a = rnd(12, 19); b = rnd(12, 49); }
   else { a = rnd(21, 98); b = rnd(21, 98); }
   if (b % 10 === 0) b += rnd(1, 9);
+  if (L >= 4 && a % 10 === 0) a += rnd(1, 9);
+  const tag = `Level ${L}: ${SKILLS.partial.levels[L - 1]}`;
+  if (round.index % 2 === 0) writtenPartial(b, a, L, tag);
+  else areaQuestion(a, b, { tag, proportional: L >= 4 });
+};
+function areaQuestion(a, b, opts = {}) {
   const rows = expand(a), cols = expand(b);
   const body = $('#gameBody');
-  let grid = `<div class="area" style="grid-template-columns:auto repeat(${cols.length}, minmax(0, ${cols.length > 3 ? 96 : 120}px))">`;
+  const colSizes = opts.proportional ? cols.map(c => `minmax(84px, ${Math.max(1, c)}fr)`).join(' ') : `repeat(${cols.length}, minmax(0, ${cols.length > 3 ? 96 : 120}px))`;
+  const rowSizes = opts.proportional ? `grid-template-rows:auto ${rows.map(r => `minmax(84px, ${Math.max(1, r)}fr)`).join(' ')};height:${rows.length > 1 ? 300 : 140}px;width:min(100%, 460px);margin:0 auto;` : '';
+  let grid = `<div class="area" style="grid-template-columns:auto ${colSizes};${rowSizes}">`;
   grid += `<div class="hd">×</div>` + cols.map(c => `<div class="hd">${fmt(c)}</div>`).join('');
   let t = 0;
   rows.forEach((r, ri) => {
@@ -1412,14 +1619,15 @@ ROUND_GAMES.partial = () => {
   body.innerHTML = `
     <div class="play with-pad">
       <div>
-        <div class="prompt">Break it apart. Fill each box, then add them up.</div>
+        <div class="prompt">${opts.prompt || 'Break it apart. Fill each box, then add them up.'}</div>
         <div class="problem" style="font-size:clamp(30px,6vw,44px)">${fmt(a)} × ${fmt(b)}</div>
         ${grid}
         <div class="answer-row">Total = <div class="slot" id="ppTotal"></div></div>
-        <div class="level-tag">Level ${L}: ${SKILLS.partial.levels[L - 1]}</div>
+        <div class="level-tag">${opts.tag || ''}</div>
       </div>
       ${padHTML()}
     </div>`;
+
   const fields = [], parts = [];
   rows.forEach((r, ri) => cols.forEach((c, ci) => { fields.push({ el: $(`[data-pp="${ri}-${ci}"]`, body), max: 6 }); parts.push({ r, c, p: r * c }); }));
   fields.push({ el: $('#ppTotal'), max: 7 });
@@ -1550,6 +1758,206 @@ function explainDivide(n, d, q, r) {
 }
 
 /* =========================================================
+   Question library for Tens Tower, Estimation Station, Story Problems and written partial products
+   ========================================================= */
+const QLIB = {};
+const round10 = n => Math.round(n / 10) * 10;
+const noFive = (lo, hi) => { let n; do { n = rnd(lo, hi); } while (n % 10 === 0 || n % 10 === 5); return n; };
+const ones = (lo, hi) => { let n; do { n = rnd(lo, hi); } while (n % 10 === 0); return n; };
+function singleAnswer({ prompt, problem, tag, max = 6, check, explain, extra = '' }) {
+  $('#gameBody').innerHTML = `
+    <div class="play with-pad">
+      <div>
+        <div class="prompt">${prompt}</div>
+        ${problem ? `<div class="problem">${problem}</div>` : ''}
+        ${extra}
+        <div class="answer-row"><div class="slot" id="oneAns"></div></div>
+        <div class="level-tag">${tag}</div>
+      </div>
+      ${padHTML()}
+    </div>`;
+  padBind([{ el: $('#oneAns'), max, placeholder: '?' }], () => {
+    const v = Pad.fields[0].value; if (!v) return;
+    answered(check(+v), explain(), fmt(+v));
+  }, { submitOnly: true });
+}
+const lvTag = k => `Level ${lvl(k)}: ${SKILLS[k].levels[lvl(k) - 1]}`;
+
+/* 4-1 Multiply multiples of 10 */
+QLIB['4-1'] = () => {
+  const L = Math.min(lvl('t4tens'), 3);
+  let x, y;
+  if (L === 1) { x = rnd(1, 5); y = rnd(2, 5); }
+  else if (L === 2) { x = rnd(2, 9); y = rnd(2, 9); }
+  else if (Math.random() < 0.5) { x = 5; y = pick([2, 4, 6, 8]); } else { x = rnd(3, 9); y = rnd(3, 9); }
+  if (Math.random() < 0.5) [x, y] = [y, x];
+  const a = x * 10, b = y * 10, ans = a * b, fact = x * y;
+  singleAnswer({
+    prompt: 'Use a basic fact, then think about the tens.', problem: `${a} × ${b}`, tag: lvTag('t4tens'), max: 5,
+    check: v => v === ans,
+    explain: () => `<p class="big-fact">${a} × ${b} = <b>${fmt(ans)}</b></p>
+      <p>Basic fact: ${x} × ${y} = ${fact}.</p>
+      <p>${a} is ${x} tens and ${b} is ${y} tens. Tens × tens = hundreds, so ${x} tens × ${y} tens = ${fact} hundreds = ${fmt(ans)}.</p>
+      ${fact % 10 === 0 ? `<p>Careful: ${fact} already ends in a zero. Add the two zeros from the tens after it: ${fact} → ${fmt(ans)}.</p>` : `<p>Shortcut: write ${fact}, then add the two zeros from ${a} and ${b}.</p>`}`
+  });
+};
+/* 4-2 2-digit × multiple of 10 */
+QLIB['4-2'] = () => {
+  const L = lvl('t4tens');
+  const x = L <= 2 ? ones(11, 29) : L === 3 ? ones(11, 49) : ones(11, 98);
+  const t = L <= 2 ? rnd(2, 5) : rnd(2, 9), m = t * 10, ans = x * m;
+  const xt = Math.floor(x / 10) * 10, xo = x % 10;
+  const flip = Math.random() < 0.5;
+  singleAnswer({
+    prompt: 'Think: multiply by the tens digit, then by 10.', problem: flip ? `${m} × ${x}` : `${x} × ${m}`, tag: lvTag('t4tens'), max: 5,
+    check: v => v === ans,
+    explain: () => `<p class="big-fact">${x} × ${m} = <b>${fmt(ans)}</b></p>
+      <p><b>Area model:</b> split ${x} into ${xt} + ${xo}.<br>${m} × ${xt} = ${fmt(m * xt)}<br>${m} × ${xo} = ${fmt(m * xo)}<br>${fmt(m * xt)} + ${fmt(m * xo)} = ${fmt(ans)}</p>
+      <p><b>Or:</b> ${x} × ${t} = ${x * t}, and ${m} is ${t} × 10, so ${x * t} × 10 = ${fmt(ans)}.</p>`
+  });
+};
+/* 4-3 Estimate */
+const NAMES = ['Maya', 'Sam', 'Ari', 'Noah', 'Lina', 'Theo', 'Zoe', 'Kai'];
+QLIB['4-3'] = () => {
+  const L = lvl('t4est');
+  const a = L === 1 ? noFive(12, 49) : noFive(12, 98), b = L === 1 ? noFive(12, 29) : noFive(12, 98);
+  const ra = round10(a), rb = round10(b), est = ra * rb, exact = a * b;
+  const roundWhy = (n, r) => `${n} rounds to ${r}: the ones digit is ${n % 10}, so round ${n % 10 >= 5 ? 'up' : 'down'}.`;
+  const body = $('#gameBody');
+  if (Math.random() < [0.2, 0.3, 0.5, 0.6, 0.5][L - 1]) {
+    // Is it reasonable?
+    const fine = Math.random() < 0.5;
+    let claim = exact;
+    if (!fine) {
+      const opts = shuffle([exact * 10, Math.round(exact / 10), exact + est, Math.max(10, exact - Math.round(est * 0.6))]);
+      claim = opts.find(c => Math.abs(c - est) / est > 0.45) || exact * 10;
+    }
+    const who = pick(NAMES);
+    body.innerHTML = `
+      <div class="prompt">Estimate first, then decide.</div>
+      <div class="claim"><small>${who} says</small>${a} × ${b} = ${fmt(claim)}</div>
+      <div class="story" style="margin-top:6px">Is ${who}'s answer reasonable?</div>
+      <div class="choice-row">
+        <button type="button" class="btn leaf" data-c="1">✓ Reasonable</button>
+        <button type="button" class="btn coral" data-c="0">✗ Not reasonable</button>
+      </div>
+      <div class="level-tag" style="margin-top:10px">${lvTag('t4est')}</div>`;
+    $$('.choice-row .btn', body).forEach(btn => btn.addEventListener('click', () => {
+      $$('.choice-row .btn', body).forEach(x => x.disabled = true);
+      const said = btn.dataset.c === '1';
+      answered(said === fine, `<p class="big-fact">${a} × ${b} ≈ <b>${fmt(est)}</b></p>
+        <p>${roundWhy(a, ra)}<br>${roundWhy(b, rb)}<br>${ra} × ${rb} = ${fmt(est)}.</p>
+        <p>${fine ? `${fmt(claim)} is close to ${fmt(est)}, so it is reasonable.` : `${fmt(claim)} is far from ${fmt(est)}, so it isn't reasonable. The exact answer is ${fmt(exact)}.`}</p>`,
+        said ? 'reasonable' : 'not reasonable');
+    }));
+    return;
+  }
+  body.innerHTML = `
+    <div class="play with-pad">
+      <div>
+        <div class="prompt">Round each number to the nearest ten. Then multiply to estimate.</div>
+        <div class="problem">${a} × ${b}</div>
+        <div class="est-row"><span>${a}</span><span class="est-arrow">→</span><div class="slot" id="ra"></div>
+          <span>${b}</span><span class="est-arrow">→</span><div class="slot" id="rb"></div></div>
+        <div class="est-row"><span id="estLabel">? × ?</span><span>≈</span><div class="slot" id="re" style="min-width:130px"></div></div>
+        <div class="level-tag">${lvTag('t4est')}</div>
+      </div>
+      ${padHTML()}
+    </div>`;
+  const fields = [{ el: $('#ra'), max: 3, placeholder: '?' }, { el: $('#rb'), max: 3, placeholder: '?' }, { el: $('#re'), max: 5, placeholder: '?' }];
+  padBind(fields, () => {
+    if (!fields[2].value) { Pad.active = 2; padRender(); return; }
+    const ok = +fields[0].value === ra && +fields[1].value === rb && +fields[2].value === est;
+    answered(ok, `<p class="big-fact">${a} × ${b} ≈ <b>${fmt(est)}</b></p>
+      <p>${roundWhy(a, ra)}<br>${roundWhy(b, rb)}</p>
+      <p>${ra} × ${rb}: ${ra / 10} × ${rb / 10} = ${ra * rb / 100}, then add two zeros → ${fmt(est)}.</p>
+      <p>The exact answer is ${fmt(exact)}, which is close to ${fmt(est)}. Compatible numbers that are easy to multiply work too, but this stop checks rounding to the nearest ten.</p>`,
+      `${fields[0].value || '?'} × ${fields[1].value || '?'} ≈ ${fields[2].value}`);
+  }, { onChange: () => { const l = $('#estLabel'); if (l) l.textContent = `${fields[0].value || '?'} × ${fields[1].value || '?'}`; } });
+};
+/* Written partial products (top number × bottom number, one row per partial product) */
+function writtenPartial(top, bottom, L, tag) {
+  const tp = expand(top).reverse(), bp = expand(bottom).reverse();
+  const parts = []; bp.forEach(x => tp.forEach(y => parts.push({ x, y, p: x * y })));
+  const hints = L < 5;
+  const body = $('#gameBody');
+  body.innerHTML = `
+    <div class="play with-pad">
+      <div>
+        <div class="prompt">Write each partial product, then add them.${hints ? '' : ' No hints at this level!'}</div>
+        <div class="vrec">
+          <div class="vn">${fmt(top)}</div><div></div>
+          <div class="vn">× ${fmt(bottom)}</div><div></div>
+          <div class="rule"></div><div></div>
+          ${parts.map((pp, i) => `<div class="slot vslot" data-v="${i}"></div><div class="hint">${hints ? `${fmt(pp.x)} × ${fmt(pp.y)}` : ''}</div>`).join('')}
+          <div class="rule"></div><div></div>
+          <div class="slot vslot" id="vTotal"></div><div class="hint">total</div>
+        </div>
+        <div class="level-tag">${tag}</div>
+      </div>
+      ${padHTML()}
+    </div>`;
+  const fields = parts.map((_, i) => ({ el: $(`[data-v="${i}"]`, body), max: 6 }));
+  fields.push({ el: $('#vTotal'), max: 7 });
+  padBind(fields, () => {
+    const last = fields.length - 1;
+    if (!fields[last].value) { Pad.active = last; padRender(); return; }
+    const vals = fields.slice(0, last).map(f => +f.value);
+    const sorted = [...vals].sort((m, n) => m - n).join(), want = parts.map(pp => pp.p).sort((m, n) => m - n).join();
+    const ok = sorted === want && +fields[last].value === top * bottom;
+    answered(ok, `<p class="big-fact">${fmt(top)} × ${fmt(bottom)} = <b>${fmt(top * bottom)}</b></p>
+      <ul class="steps">${parts.map(pp => `<li class="${vals.includes(pp.p) ? '' : 'wrong-part'}">${fmt(pp.x)} × ${fmt(pp.y)} = ${fmt(pp.p)}</li>`).join('')}</ul>
+      <p>Add the partial products: ${parts.map(pp => fmt(pp.p)).join(' + ')} = <b>${fmt(top * bottom)}</b></p>
+      <p>Tip: multiply each part of ${fmt(bottom)} by each part of ${fmt(top)}, starting with the ones.</p>`,
+      fmt(+fields[last].value));
+  });
+}
+/* 4-7 Multi-step word problems */
+const WORD = [
+  { steps: 2, make: (a, b) => { const c = rnd(Math.round(a * b * 0.1), Math.round(a * b * 0.5)); return {
+      text: `The library has ${a} shelves. Each shelf holds ${b} books. ${fmt(c)} books are checked out.`, q: 'How many books are still on the shelves?',
+      hidden: `How many books fit on all the shelves?`, s1: [`${a} × ${b}`, a * b], s2: [`${fmt(a * b)} − ${fmt(c)}`, a * b - c] }; } },
+  { steps: 2, make: (a, b) => { const c = rnd(12, 60); return {
+      text: `A class sells ${a} boxes of cookies with ${b} cookies in each box. They also sell ${c} single cookies.`, q: 'How many cookies do they sell in all?',
+      hidden: `How many cookies are in the boxes?`, s1: [`${a} × ${b}`, a * b], s2: [`${fmt(a * b)} + ${c}`, a * b + c] }; } },
+  { steps: 2, make: (a, b) => { const c = rnd(Math.round(a * b * 0.5), a * b - 5); return {
+      text: `The school has ${a} buses. Each bus holds ${b} students. ${fmt(c)} students ride the buses to the field trip.`, q: 'How many empty seats are there?',
+      hidden: `How many seats are on all the buses?`, s1: [`${a} × ${b}`, a * b], s2: [`${fmt(a * b)} − ${fmt(c)}`, a * b - c] }; } },
+  { steps: 2, make: (a, b) => { const c = rnd(Math.round(a * b * 0.1), Math.round(a * b * 0.4)); return {
+      text: `Sam saves $${a} each week for ${b} weeks. Then he spends $${fmt(c)} on a bike.`, q: 'How much money does he have left?',
+      hidden: `How much money did Sam save?`, s1: [`${a} × ${b}`, a * b], s2: [`${fmt(a * b)} − ${fmt(c)}`, a * b - c] }; } },
+  { steps: 3, make: (a, b) => { const c = rnd(11, 25), d = rnd(11, 30); return {
+      text: `A theater has ${a} rows of ${b} seats downstairs and ${c} rows of ${d} seats upstairs.`, q: 'How many seats are there in all?',
+      hidden: `How many seats are downstairs? How many are upstairs?`, s1: [`${a} × ${b}`, a * b], s1b: [`${c} × ${d}`, c * d], s2: [`${fmt(a * b)} + ${fmt(c * d)}`, a * b + c * d] }; } },
+  { steps: 3, make: (a, b) => { const tot = a * b, c = rnd(Math.round(tot * 0.15), Math.round(tot * 0.35)), d = rnd(Math.round(tot * 0.1), Math.round(tot * 0.3)); return {
+      text: `A bakery makes ${a} trays of muffins with ${b} muffins on each tray. It sells ${fmt(c)} muffins in the morning and ${fmt(d)} in the afternoon.`, q: 'How many muffins are left?',
+      hidden: `How many muffins did the bakery make?`, s1: [`${a} × ${b}`, tot], s1b: [`${fmt(c)} + ${fmt(d)}`, c + d, 'muffins sold'], s2: [`${fmt(tot)} − ${fmt(c + d)}`, tot - c - d] }; } }
+];
+QLIB['4-7'] = () => {
+  const L = lvl('t4word');
+  const pool = WORD.filter(w => L >= 4 ? true : w.steps === 2);
+  const a = L === 1 ? ones(11, 19) : L <= 3 ? ones(12, 39) : ones(12, 59), b = L === 1 ? ones(11, 19) : L === 2 ? ones(12, 29) : ones(12, 49);
+  const w = pick(pool).make(a, b), ans = w.s2[1];
+  singleAnswer({
+    prompt: 'Find the hidden question first. Then answer the real question.',
+    extra: `<div class="word-story">${w.text}<span class="wq">${w.q}</span></div>`,
+    tag: lvTag('t4word'), max: 5,
+    check: v => v === ans,
+    explain: () => `<p><b>Hidden question:</b> ${w.hidden}</p>
+      <p>${w.s1[0]} = ${fmt(w.s1[1])}${w.s1b ? `<br>${w.s1b[0]} = ${fmt(w.s1b[1])}${w.s1b[2] ? ' ' + w.s1b[2] : ''}` : ''}</p>
+      <p><b>Real question:</b> ${w.q}<br>${w.s2[0]} = <b>${fmt(ans)}</b></p>
+      <p>Check: does ${fmt(ans)} make sense? Estimate ${round10(a)} × ${round10(b)} = ${fmt(round10(a) * round10(b))} to see if the first step is close.</p>`
+  });
+};
+
+ROUND_GAMES.tens = () => {
+  const L = lvl('t4tens'), share2 = [0, 0.3, 0.5, 0.8, 0.9][L - 1];
+  (Math.random() < share2 ? QLIB['4-2'] : QLIB['4-1'])();
+};
+ROUND_GAMES.estimate = () => QLIB['4-3']();
+ROUND_GAMES.story = () => QLIB['4-7']();
+
+/* =========================================================
    Memory Reef
    ========================================================= */
 function memoryStart() {
@@ -1648,11 +2056,11 @@ function driverStart(mode) {
   $('#gameBody').innerHTML = `<div class="arcade">
       <div class="ahud"><span id="aPoints">Points 0</span><span id="aCombo"></span><span class="hearts" id="aHearts"></span></div>
       <div class="aq" id="aQ">Get ready…</div>
-      <div class="road" id="road"><div class="stripes" id="stripes"></div><div class="car" id="car">🚗</div></div>
+      <div class="road" id="road"><div class="stripes" id="stripes"></div><div class="car" id="car" style="--rot:${(SHOP.ride.find(r => r.id === P().wear.ride) || SHOP.ride[0]).rot}deg">${(SHOP.ride.find(r => r.id === P().wear.ride) || SHOP.ride[0]).icon}</div></div>
       <div class="steer"><button type="button" class="btn plain" id="left" aria-label="Steer left">◀</button><button type="button" class="btn plain" id="right" aria-label="Steer right">▶</button></div>
     </div>`;
   arcade = { type: 'driver', mode, skill: mode.skill, running: true, lane: 1, hearts: 3, points: 0, combo: 0, correct: 0,
-             speed: 0.1, row: null, pauseUntil: 0, last: performance.now(), stripe: 0, raf: 0 };
+             speed: 0.045, row: null, pauseUntil: 0, last: performance.now(), stripe: 0, raf: 0 };
   arcadeHud(); setLane(1);
   $('#left').addEventListener('click', () => steer(-1));
   $('#right').addEventListener('click', () => steer(1));
@@ -1701,7 +2109,7 @@ function driverHit(row) {
   const boxes = $$('.abox', row.el);
   record(a.skill, ok);
   if (ok) {
-    a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.24, a.speed * 1.06);
+    a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.11, a.speed * 1.04);
     boxes[a.lane].classList.add('good'); sfx('ok'); arcadeHud();
     later(() => { row.el.remove(); driverRow(); }, 220);
   } else {
@@ -1751,7 +2159,7 @@ function hop() {
 function runnerSet() {
   const a = arcade; if (!a || !a.running) return;
   a.blocks.forEach(b => b.el.remove()); a.blocks = [];
-  const q = genMult(lvl('mult')); a.q = q;
+  const q = a.repeat && a.q ? a.q : genMult(lvl('mult')); a.q = q; a.repeat = false;
   $('#aQ').textContent = q.text + ' = ?';
   const vals = shuffle([q.answer, ...distractors(q.answer, rnd(1, 3), q)]);
   const track = $('#track'), w = track.clientWidth;
@@ -1786,8 +2194,11 @@ function runnerResolve(b) { // returns true when this set is finished
   const a = arcade, correct = b.v === a.q.answer;
   if (a.jumping) {
     if (!correct) { a.points += 10; arcadeHud(); return false; }   // good jump
-    record('mult', false); a.combo = 0; sfx('bad');               // jumped over the right one
-    return runnerPause(`${a.q.text} = ${fmt(a.q.answer)}<small>You jumped over the right answer!</small>`, false);
+    a.combo = 0; a.repeat = true; arcadeHud(); sfx('bad');          // jumped over the right one: it comes back
+    const m = document.createElement('div'); m.className = 'abanner'; m.style.top = '22%';
+    m.innerHTML = `Missed it!<small>${fmt(a.q.answer)} was the right answer. It's coming back!</small>`;
+    $('#track').appendChild(m); later(() => m.remove(), 1400);
+    return false;
   }
   if (correct) {
     record('mult', true); a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.34, a.speed * 1.05);
@@ -1813,39 +2224,62 @@ function runnerPause(html, over) {
    Shop + Badges
    ========================================================= */
 let shopTab = 'hat';
+function islandHTML(p, big) {
+  const items = SHOP.island.filter(it => p.owned.includes(it.id));
+  return `<div class="isle ${big ? 'big' : ''}" aria-label="${esc(p.name)}'s island">
+    <div class="isle-sun"></div><div class="isle-land"></div>
+    ${items.map(it => `<span class="isle-item" style="left:${it.x}%;bottom:${it.y}%;font-size:${big ? it.z * 1.25 : it.z}px">${it.icon}</span>`).join('')}
+    ${items.length ? '' : `<div class="isle-empty">Your island is empty. Buy something to put on it!</div>`}
+    <div class="isle-count">${items.length} / ${SHOP.island.length}</div></div>`;
+}
+function itemVisual(tab, it, p) {
+  if (tab === 'bg') return `<span class="swatch" style="background:${it.css}"></span>`;
+  if (tab === 'frame') return `<span class="avatar frame-${it.id}" style="--s:42px;background:#fff"><span class="face">${p.avatar}</span></span>`;
+  if (tab === 'effect') return `<span class="iicon" style="font-size:26px">${it.fx.join('')}</span>`;
+  if (tab === 'title') return `<span class="title-pill big">${esc(it.name)}</span>`;
+  return `<span class="iicon">${it.icon}</span>`;
+}
 function openShop(tab) {
   shopTab = tab || shopTab;
-  const p = P();
-  $('#shopAvatar').innerHTML = avatarHTML(p, 110);
+  const p = P(), T = SHOP_TABS.find(t => t.id === shopTab);
   updateCoinChips();
-  $$('#shopTabs .tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === shopTab));
+  $('#shopTabs').innerHTML = SHOP_TABS.map(t => `<button type="button" class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === shopTab}">${t.label}</button>`).join('');
+  $$('#shopTabs .tab').forEach(t => t.addEventListener('click', () => openShop(t.dataset.tab)));
+  const owned = SHOP[shopTab].filter(it => p.owned.includes(it.id)).length;
+  const help = T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
+  $('#shopTop').innerHTML = shopTab === 'island' ? islandHTML(p, true) :
+    `${avatarHTML(p, 110)}<div class="shop-side"><b>${esc(p.name)}</b>${titleOf(p) ? `<span class="title-pill">${esc(titleOf(p))}</span>` : ''}
+     <div class="note" style="text-align:left">${help}</div><div class="note" style="text-align:left">You own ${owned} of ${SHOP[shopTab].length} ${T.label.toLowerCase()}.</div></div>`;
   const L = levelInfo(p.xp).L;
   $('#shopGrid').innerHTML = SHOP[shopTab].map(it => {
-    const owned = p.owned.includes(it.id), wearing = p.wear[shopTab] === it.id, locked = it.minLevel && L < it.minLevel;
-    const vis = shopTab === 'bg' ? `<span class="swatch" style="background:${it.css}"></span>` : `<span class="iicon">${it.icon}</span>`;
-    const label = wearing ? (shopTab === 'bg' ? 'Using' : 'Wearing ✓') : owned ? (shopTab === 'bg' ? 'Use' : 'Wear') : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${it.price}` : 'Free';
-    return `<button type="button" class="item ${wearing ? 'wearing' : ''} ${locked && !owned ? 'locked' : ''}" data-id="${it.id}">${vis}<span>${it.name}</span><span class="price">${label}</span></button>`;
+    const has = p.owned.includes(it.id), using = !T.place && p.wear[shopTab] === it.id, locked = it.minLevel && L < it.minLevel;
+    const label = T.place ? (has ? 'On your island ✓' : null) : using ? (T.one ? 'Using ✓' : 'Wearing ✓') : has ? (T.one ? 'Use' : 'Wear') : null;
+    const price = label || (locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
+    const rar = !has && RARITY(it.price);
+    return `<button type="button" class="item ${using || (T.place && has) ? 'wearing' : ''} ${locked && !has ? 'locked' : ''}" data-id="${it.id}">
+      ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(shopTab, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
   }).join('');
   $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id)));
   show('shop');
 }
 function shopClick(id) {
-  const p = P(), it = SHOP[shopTab].find(x => x.id === id), L = levelInfo(p.xp).L;
+  const p = P(), it = SHOP[shopTab].find(x => x.id === id), L = levelInfo(p.xp).L, T = SHOP_TABS.find(t => t.id === shopTab);
   if (p.owned.includes(id)) {
-    if (shopTab === 'bg') p.wear.bg = id; else p.wear[shopTab] = p.wear[shopTab] === id ? null : id;
+    if (T.place) return;
+    if (T.one) p.wear[shopTab] = id; else p.wear[shopTab] = p.wear[shopTab] === id ? null : id;
     sfx('tap');
   } else if (it.minLevel && L < it.minLevel) { toast(`Reach level ${it.minLevel} to unlock the ${it.name}.`); return; }
-  else if (p.coins < it.price) { toast(`You need ${it.price - p.coins} more coins. Play a game to earn them!`); return; }
+  else if (p.coins < it.price) { toast(`You need ${fmt(it.price - p.coins)} more coins. Keep practicing to earn them!`); return; }
   else {
-    p.coins -= it.price; p.owned.push(id); p.wear[shopTab] = id; sfx('coin'); toast(`You got the ${it.name}!`, true);
+    p.coins -= it.price; p.owned.push(id); if (!T.place) p.wear[shopTab] = id; sfx('coin'); toast(`You got the ${it.name}!`, true);
     session = null; checkBadges({ bought: true });
   }
   save(); scheduleSync(2000); openShop(shopTab);
+  if (shopTab === 'effect') cheer('', $('#shopTop'));
 }
-$$('#shopTabs .tab').forEach(t => t.addEventListener('click', () => openShop(t.dataset.tab)));
 function openBadges() {
   const p = P();
-  $('#badgeCount').textContent = `${p.badges.length} / ${BADGES.length}`;
+  $('#badgeCount').textContent = `${BADGES.filter(b => p.badges.includes(b.id)).length} / ${BADGES.length}`;
   $('#badgeGrid').innerHTML = BADGES.map(b => {
     const has = p.badges.includes(b.id);
     return `<div class="badge ${has ? '' : 'locked'}"><div class="bicon">${b.icon}</div><b>${b.name}</b><small>${b.desc}</small></div>`;
@@ -1902,7 +2336,15 @@ function renderTeacher() {
         <button type="button" class="btn small" id="shSave">Save link</button></div>
       <div class="note" style="text-align:left">Saving the link here only affects this tablet. To link every tablet at once, put it in the file (see the setup guide).</div>`}
     </div>`;
-  body.innerHTML = sheetPanel + `
+  const linked = !!sheetUrl();
+  const lockPanel = `<div class="t-sheet">
+      <b>Games students can play</b>
+      ${linked ? `<div class="note" style="text-align:left">To lock or unlock a game for everyone, tick or untick its box on the <b>Games</b> tab of your Google Sheet. Tablets get the change when a student signs in or finishes a game.</div>` :
+        `<div class="note" style="text-align:left">Tap a game to lock or unlock it on this tablet.</div>`}
+      <div class="lock-grid">${GAMES.map(g => `<button type="button" class="lock-item ${isUnlocked(g.id) ? 'on' : 'off'}" data-lock="${g.id}" ${linked ? 'disabled' : ''}>
+        <span>${g.icon} ${g.name}</span><b>${isUnlocked(g.id) ? 'Unlocked' : '🔒 Locked'}</b></button>`).join('')}</div>
+    </div>`;
+  body.innerHTML = sheetPanel + lockPanel + `
     <div class="t-summary"><b>${list.length} student${list.length === 1 ? '' : 's'} on this device</b>
       ${list.length ? `<button type="button" class="btn small" id="copyTable">📋 Copy for spreadsheet</button>` : ''}</div>
     ${table}
@@ -1916,6 +2358,11 @@ function renderTeacher() {
     tr.addEventListener('click', open); tr.addEventListener('keydown', e => { if (e.key === 'Enter') open(); });
   });
   if ($('#copyTable')) $('#copyTable').addEventListener('click', () => copyTable(list));
+  $$('[data-lock]').forEach(b => b.addEventListener('click', () => {
+    if (sheetUrl()) return;
+    const id = b.dataset.lock, locks = Object.assign({}, store.locks || {});
+    locks[id] = !isUnlocked(id); store.locks = locks; save(); renderTeacher();
+  }));
   if ($('#shTest')) $('#shTest').addEventListener('click', async () => {
     const st = $('#shState'); st.textContent = 'Checking…';
     try { const r = await (await fetch(sheetUrl(), { redirect: 'follow' })).json(); st.innerHTML = r && r.ok && r.app === 'number-island' ? '<span class="ok-text">Connected ✓</span>' : '<span class="bad-text">That link answered, but it isn\'t the Number Island script.</span>'; }

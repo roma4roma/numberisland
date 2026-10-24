@@ -398,12 +398,17 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .title-pill.big { font-size: 14px; padding: 4px 10px; margin: 8px 0; }
 .isle { position: relative; width: 100%; max-width: 560px; height: 190px; margin: 0 auto; border: 3px solid var(--ink); border-radius: 18px; overflow: hidden;
   background: linear-gradient(#A8E6F7 0 58%, #1FA3B0 58%); }
-.isle.big { height: 250px; }
+.isle.big { height: clamp(280px, 44vw, 400px); max-width: 820px; }
+.isle.editing { outline: 4px dashed var(--plum); outline-offset: 3px; touch-action: none; }
+.isle.editing .isle-item { cursor: grab; }
+.isle-item.lifted { transform: translateX(-50%) scale(1.25); filter: drop-shadow(0 8px 4px rgba(0,0,0,.3)); cursor: grabbing; }
+.isle-edit { position: absolute; right: 10px; top: 8px; z-index: 200; }
+.isle-tip { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); z-index: 200; background: var(--plum); color: #fff; font-weight: 800; font-size: 13px; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
 .isle-sun { position: absolute; right: 7%; top: 9%; width: 38px; height: 38px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 8px rgba(255,201,60,.35); }
-.isle-land { position: absolute; left: 9%; right: 9%; bottom: 12%; height: 46%; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, #FBE3A4, #EBC46E 70%); border: 3px solid #D9A94A; }
+.isle-land { position: absolute; left: 7%; right: 7%; bottom: 11%; height: 50%; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, #FBE3A4, #EBC46E 70%); border: 3px solid #D9A94A; }
 .isle-item { position: absolute; transform: translateX(-50%); line-height: 1; filter: drop-shadow(0 3px 0 rgba(0,0,0,.15)); }
 .isle-empty { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); font-weight: 800; color: var(--sea-deep); background: rgba(255,255,255,.8); padding: 4px 12px; border-radius: 12px; text-align: center; width: max-content; max-width: 80%; }
-.isle-count { position: absolute; left: 10px; top: 8px; background: rgba(255,255,255,.85); border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-weight: 800; font-size: 13px; }
+.isle-count { z-index: 200; position: absolute; left: 10px; top: 8px; background: rgba(255,255,255,.85); border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-weight: 800; font-size: 13px; }
 .avatar.frame-wood { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #9B6B3D; }
 .avatar.frame-leaf { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #3FA34D, 0 0 0 9px #C6F59A; }
 .avatar.frame-ice { box-shadow: 0 0 0 3px #E8FBFF, 0 0 0 7px #7FD6F0, 0 0 14px 4px rgba(127,214,240,.9); }
@@ -536,6 +541,14 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .season-tab { background: var(--sun); }
 .season-tab[aria-selected="true"] { background: var(--ink); }
 .r-season { background: #FFB13C; } .r-boss { background: #E6DBFF; }
+.boss-shadow { filter: brightness(0) drop-shadow(0 0 10px rgba(255, 77, 77, .9)); }
+.boss-face.big { font-size: 130px; }
+.eyebrow-light { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--sun); }
+.eyebrow-dark { font-weight: 800; font-size: 15px; text-transform: uppercase; letter-spacing: 2px; color: var(--coral); }
+.countdown { display: grid; place-items: center; min-width: 74px; padding: 6px 10px; background: var(--sun); color: var(--ink); border: 3px solid var(--ink); border-radius: 14px; font-weight: 800; font-size: 13px; line-height: 1.1; }
+.countdown b { font-family: var(--display); font-weight: 400; font-size: 34px; }
+.countdown.big { grid-auto-flow: column; gap: 8px; font-size: 18px; }
+.countdown.big b { font-size: 44px; }
 @media (max-width: 640px) { .game-card.boss-card .gicon { font-size: 44px; } .game-card.boss-card .gname { font-size: 20px; } .boss-face { font-size: 84px; } }
 
 /* ---------- Toasts ---------- */
@@ -856,9 +869,59 @@ const SHOP = {
     { id: 'volcano', icon: '🌋', name: 'Volcano', price: 1000, x: 47, y: 54, z: 64, minLevel: 5 },
     { id: 'helicopter', icon: '🚁', name: 'Helicopter', price: 1200, x: 76, y: 80, z: 34, minLevel: 6 },
     { id: 'ferris', icon: '🎡', name: 'Ferris wheel', price: 1600, x: 84, y: 44, z: 52, minLevel: 7 },
-    { id: 'castle', icon: '🏰', name: 'Castle', price: 2500, x: 63, y: 54, z: 60, minLevel: 8 }
+    { id: 'castle', icon: '🏰', name: 'Castle', price: 2500, x: 63, y: 54, z: 60, minLevel: 8 },
+    // land: nature and animals
+    { id: 'rocks', icon: '🪨', name: 'Rocks', price: 70, zone: 'land', z: 26 },
+    { id: 'sunflowers', icon: '🌻', name: 'Sunflowers', price: 90, zone: 'land', z: 28 },
+    { id: 'cactus', icon: '🌵', name: 'Cactus', price: 110, zone: 'land', z: 34 },
+    { id: 'mushrooms', icon: '🍄', name: 'Mushrooms', price: 130, zone: 'land', z: 26 },
+    { id: 'flamingo', icon: '🦩', name: 'Flamingo', price: 220, zone: 'land', z: 34 },
+    { id: 'bigtree', icon: '🌳', name: 'Big tree', price: 280, zone: 'land', z: 50 },
+    { id: 'monkey', icon: '🐒', name: 'Monkey', price: 320, zone: 'land', z: 32 },
+    { id: 'penguin', icon: '🐧', name: 'Penguin', price: 380, zone: 'land', z: 30 },
+    { id: 'seal', icon: '🦭', name: 'Seal', price: 450, zone: 'land', z: 34, minLevel: 3 },
+    { id: 'slide', icon: '🛝', name: 'Playground', price: 600, zone: 'land', z: 40, minLevel: 3 },
+    { id: 'llama', icon: '🦙', name: 'Llama', price: 700, zone: 'land', z: 40, minLevel: 4 },
+    { id: 'fountain', icon: '⛲', name: 'Fountain', price: 750, zone: 'land', z: 42, minLevel: 4 },
+    { id: 'house', icon: '🏡', name: 'House', price: 900, zone: 'land', z: 48, minLevel: 4 },
+    { id: 'train', icon: '🚂', name: 'Train', price: 1000, zone: 'land', z: 40, minLevel: 5 },
+    { id: 'elephant', icon: '🐘', name: 'Elephant', price: 1100, zone: 'land', z: 50, minLevel: 5 },
+    { id: 'giraffe', icon: '🦒', name: 'Giraffe', price: 1100, zone: 'land', z: 54, minLevel: 5 },
+    { id: 'treasure', icon: '💰', name: 'Treasure chest', price: 1300, zone: 'land', z: 34, minLevel: 6 },
+    { id: 'shop', icon: '🏪', name: 'Ice cream shop', price: 1500, zone: 'land', z: 48, minLevel: 6 },
+    { id: 'carousel', icon: '🎠', name: 'Carousel', price: 1800, zone: 'land', z: 50, minLevel: 6 },
+    { id: 'school', icon: '🏫', name: 'School', price: 2200, zone: 'land', z: 54, minLevel: 7 },
+    { id: 'lighthouse', icon: '🗼', name: 'Tower', price: 2800, zone: 'land', z: 64, minLevel: 8 },
+    { id: 'trophy', icon: '🏆', name: 'Giant trophy', price: 3500, zone: 'land', z: 46, minLevel: 9 },
+    { id: 'pagoda', icon: '🏯', name: 'Palace', price: 4500, zone: 'land', z: 66, minLevel: 10 },
+    { id: 'stadium', icon: '🏟️', name: 'Stadium', price: 6000, zone: 'land', z: 64, minLevel: 12 },
+    // sea
+    { id: 'canoe', icon: '🛶', name: 'Canoe', price: 200, zone: 'sea', z: 32 },
+    { id: 'octopus', icon: '🐙', name: 'Octopus', price: 500, zone: 'sea', z: 34, minLevel: 3 },
+    { id: 'speedboat', icon: '🚤', name: 'Speedboat', price: 900, zone: 'sea', z: 38, minLevel: 4 },
+    { id: 'cruise', icon: '🛳️', name: 'Cruise ship', price: 3000, zone: 'sea', z: 52, minLevel: 8 },
+    // sky
+    { id: 'cloud', icon: '☁️', name: 'Cloud', price: 150, zone: 'sky', z: 36 },
+    { id: 'balloon', icon: '🎈', name: 'Balloons', price: 250, zone: 'sky', z: 30 },
+    { id: 'kite', icon: '🪁', name: 'Kite', price: 350, zone: 'sky', z: 32 },
+    { id: 'hotair', icon: '🪂', name: 'Parachuter', price: 1000, zone: 'sky', z: 44, minLevel: 5 },
+    { id: 'plane', icon: '✈️', name: 'Airplane', price: 1600, zone: 'sky', z: 38, minLevel: 7 },
+    { id: 'rainbowsky', icon: '🌈', name: 'Rainbow', price: 2400, zone: 'sky', z: 70, minLevel: 8 },
+    { id: 'ufo', icon: '🛸', name: 'Flying saucer', price: 5000, zone: 'sky', z: 44, minLevel: 11 },
+    { id: 'rocketpad', icon: '🚀', name: 'Rocket launch', price: 8000, zone: 'land', z: 60, minLevel: 13 }
   ]
 };
+// Starting spots for island items without one. Students can drag everything wherever they like.
+(() => {
+  const land = [], sea = [], sky = [];
+  for (let y = 22; y <= 52; y += 8) for (let x = 14; x <= 86; x += 8) { const dx = (x - 50) / 41, dy = (y - 35) / 22; if (dx * dx + dy * dy <= 1) land.push([x, y]); }
+  for (let x = 6; x <= 94; x += 11) sea.push([x, 3]);
+  for (let x = 8; x <= 92; x += 12) sky.push([x, 82 - (x % 3) * 3]);
+  const used = new Set(SHOP.island.filter(it => it.x != null).map(it => `${Math.round(it.x / 8)}:${Math.round(it.y / 8)}`));
+  const spots = { land: land.filter(([x, y]) => !used.has(`${Math.round(x / 8)}:${Math.round(y / 8)}`)), sea, sky };
+  const next = { land: 0, sea: 0, sky: 0 };
+  SHOP.island.forEach(it => { if (it.x != null) return; const list = spots[it.zone]; const [x, y] = list[next[it.zone]++ % list.length]; it.x = x; it.y = y; });
+})();
 const SHOP_TABS = [
   { id: 'animal', label: 'Animal', free: true }, { id: 'hat', label: 'Hats', wear: true }, { id: 'pet', label: 'Pets', wear: true }, { id: 'bg', label: 'Backgrounds', one: true },
   { id: 'frame', label: 'Frames', wear: true }, { id: 'effect', label: 'Celebrations', one: true }, { id: 'ride', label: 'Driver rides', one: true },
@@ -954,7 +1017,9 @@ function weekInfo(d = today()) { // ISO week, e.g. 2026-W43
   const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)), n = Math.ceil(((t - y0) / 86400000 + 1) / 7);
   return { id: `${t.getUTCFullYear()}-W${String(n).padStart(2, '0')}`, n };
 }
-function currentBoss() { return BOSSES[weekInfo().n % BOSSES.length]; }
+function currentBoss(d = today()) { return BOSSES[weekInfo(d).n % BOSSES.length]; }
+function isBossDay(d = today()) { return d.getDay() === 5; }
+function daysToFriday(d = today()) { return (5 - d.getDay() + 7) % 7; }
 const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'] : price <= 250 ? ['Rare', 'r-rare'] : price <= 900 ? ['Epic', 'r-epic'] : ['Legendary', 'r-legend'];
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
@@ -1360,7 +1425,16 @@ function renderGameGrid() {
   $('#gameGrid').innerHTML = ordered.map(g => {
     const st = p.games[g.id] || {}, open = isUnlocked(g.id);
     if (g.wide) {
-      const B = currentBoss(), bs = bossCached(), left = Math.max(0, bs.max - bs.total);
+      const B = currentBoss(), bs = bossCached(), left = Math.max(0, bs.max - bs.total), dd = daysToFriday(), weekend = [0, 6].includes(today().getDay());
+      const pet = SHOP.pet.find(x => x.id === B.reward);
+      if (open && !isBossDay()) {
+        const nb = weekend ? currentBoss(new Date(today().getTime() + (dd || 7) * 86400000)) : B;
+        return `<button type="button" class="game-card boss-card preview" data-g="boss">
+          <span class="gicon boss-shadow">${nb.face}</span>
+          <span class="gtext"><span class="eyebrow-light">${weekend && bs.total >= bs.max ? `Your class beat ${B.name}! 🎉 Next up:` : 'Coming Friday'}</span><span class="gname">${nb.name} arrives in ${dd} day${dd === 1 ? '' : 's'}!</span>
+          <span class="gblurb">Practice your facts so you're ready. Beat it together to win the ${SHOP.pet.find(x => x.id === nb.reward).name} ${SHOP.pet.find(x => x.id === nb.reward).icon}</span></span>
+          <span class="countdown"><b>${dd}</b>day${dd === 1 ? '' : 's'}</span></button>`;
+      }
       return `<button type="button" class="game-card boss-card ${open ? '' : 'locked'}" data-g="boss"${open ? '' : ' aria-label="Boss Battle, locked"'}>
         <span class="gicon">${open ? B.face : '🔒'}</span>
         <span class="gtext"><span class="gname">Boss Battle: ${B.name}</span>
@@ -2108,7 +2182,7 @@ function bossCached() {
   if (c && c.week === w) return c;
   if (!sheetUrl()) { // device only: everyone on this tablet fights together
     const hits = (store.localBoss && store.localBoss[w]) || 0, players = Math.max(1, Object.keys(store.profiles).length);
-    return { week: w, total: hits, max: Math.max(60, players * 30), mine: ((P() && P().bossHits) || {})[w] || 0, helpers: 0, local: true };
+    return { week: w, total: hits, max: Math.max(100, players * 100), mine: ((P() && P().bossHits) || {})[w] || 0, helpers: 0, local: true };
   }
   return { week: w, total: 0, max: 600, mine: 0, helpers: 0 };
 }
@@ -2151,8 +2225,27 @@ function hpBarHTML(st, id) {
   return `<div class="boss-hp"><div class="hpbar" ${id ? `id="${id}"` : ''}><i style="width:${Math.round(left / st.max * 100)}%"></i></div>
     <div class="hp-text"><b id="${id ? id + 'Text' : ''}">${fmt(left)} / ${fmt(st.max)} HP</b> left</div></div>`;
 }
+function bossPreview() {
+  const d = today(), dd = daysToFriday(d), weekend = [0, 6].includes(d.getDay());
+  const B = weekend ? currentBoss(new Date(d.getTime() + (dd || 7) * 86400000)) : currentBoss();
+  const pet = SHOP.pet.find(x => x.id === B.reward), last = bossCached(), lastBoss = currentBoss();
+  const prep = ['runner', 'driver', 'memory', 'tens'].filter(id => isUnlocked(id)).map(id => GAME[id]);
+  $('#gameBody').innerHTML = `<div class="boss-intro">
+    <div class="eyebrow-dark">⚡ Coming Friday ⚡</div>
+    <div class="boss-face idle boss-shadow big">${B.face}</div>
+    <h3>${B.name}</h3>
+    <div class="countdown big"><b>${dd}</b>day${dd === 1 ? '' : 's'} to go</div>
+    ${weekend && last.total ? `<p class="story">${last.total >= last.max ? `Your class beat ${lastBoss.name} this week! 🎉` : `${lastBoss.name} got away this week with ${fmt(Math.max(0, last.max - last.total))} HP left.`}</p>` : ''}
+    <p class="story">On Friday, every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit!</p>
+    <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
+    ${prep.length ? `<p class="note" style="margin:4px 0 0">Get ready! Faster facts mean more hits:</p>
+    <div class="foot-row" style="margin-top:0">${prep.map(g => `<button type="button" class="btn small plain" data-prep="${g.id}">${g.icon} ${g.name}</button>`).join('')}</div>` : ''}
+  </div>`;
+  $$('[data-prep]').forEach(b => b.addEventListener('click', () => startGame(b.dataset.prep)));
+}
 async function bossIntro() {
   round = null;
+  if (!isBossDay()) return bossPreview();
   const B = currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
   const render = st => {
     const done = st.total >= st.max;
@@ -2183,6 +2276,7 @@ function bossQuestion() {
   const x = ones(11, L >= 4 ? 98 : 49), t = rnd(2, 9); return { skill: k, text: `${x} × ${t * 10}`, answer: x * t * 10 };
 }
 function bossRound() {
+  if (!isBossDay()) return bossPreview();
   const B = currentBoss();
   const base = bossCached();
   bossFight = { hits: 0, unsent: 0, correct: 0, wrong: 0, combo: 0, end: Date.now() + BOSS_ROUND_SECS * 1000, base, q: null, over: false };
@@ -2549,13 +2643,39 @@ function runnerPause(html, over) {
    Shop + Badges
    ========================================================= */
 let shopTab = 'hat';
+let islandEdit = false;
+function islandPos(p, it) { const q = p.islandPos && p.islandPos[it.id]; return q ? q : { x: it.x, y: it.y }; }
 function islandHTML(p, big) {
   const items = SHOP.island.filter(it => p.owned.includes(it.id));
-  return `<div class="isle ${big ? 'big' : ''}" aria-label="${esc(p.name)}'s island">
+  const total = SHOP.island.filter(it => inShop(it, p)).length;
+  return `<div class="isle ${big ? 'big' : ''} ${islandEdit && big ? 'editing' : ''}" id="${big ? 'isleMain' : ''}" aria-label="${esc(p.name)}'s island">
     <div class="isle-sun"></div><div class="isle-land"></div>
-    ${items.map(it => `<span class="isle-item" style="left:${it.x}%;bottom:${it.y}%;font-size:${big ? it.z * 1.25 : it.z}px">${it.icon}</span>`).join('')}
+    ${items.map(it => { const q = islandPos(p, it); return `<span class="isle-item" data-isle="${it.id}" style="left:${q.x}%;bottom:${q.y}%;font-size:${big ? it.z * 1.15 : it.z * .9}px;z-index:${100 - Math.round(q.y)}">${it.icon}</span>`; }).join('')}
     ${items.length ? '' : `<div class="isle-empty">Your island is empty. Buy something to put on it!</div>`}
-    <div class="isle-count">${items.length} / ${SHOP.island.length}</div></div>`;
+    <div class="isle-count">${items.length} / ${total}</div>
+    ${big && items.length ? `<button type="button" class="btn small ${islandEdit ? 'leaf' : 'plain'} isle-edit" id="isleEdit">${islandEdit ? '✓ Done' : '✋ Move things'}</button>` : ''}
+    ${islandEdit && big ? '<div class="isle-tip">Drag anything to move it</div>' : ''}</div>`;
+}
+function bindIsland() {
+  const box = $('#isleMain'); if (!box) return;
+  const btn = $('#isleEdit');
+  if (btn) btn.addEventListener('click', () => { islandEdit = !islandEdit; if (!islandEdit) { save(); scheduleSync(1500); } openShop('island'); });
+  if (!islandEdit) return;
+  let drag = null;
+  box.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.isle-item'); if (!el) return;
+    e.preventDefault(); drag = el; el.classList.add('lifted'); try { box.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  box.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const r = box.getBoundingClientRect();
+    const x = Math.max(3, Math.min(97, (e.clientX - r.left) / r.width * 100));
+    const y = Math.max(1, Math.min(88, (r.bottom - e.clientY) / r.height * 100 - 4));
+    drag.style.left = x + '%'; drag.style.bottom = y + '%'; drag.style.zIndex = 100 - Math.round(y);
+    const p = P(); p.islandPos = p.islandPos || {}; p.islandPos[drag.dataset.isle] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+  });
+  const end = () => { if (drag) { drag.classList.remove('lifted'); drag = null; save(); } };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
 }
 function itemVisual(tab, it, p) {
   if (tab === 'bg') return `<span class="swatch" style="background:${it.css}"></span>`;
@@ -2600,6 +2720,7 @@ function openShop(tab) {
       ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(cat, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
   }).join('');
   $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id, b.dataset.cat)));
+  if (shopTab === 'island') bindIsland(); else islandEdit = false;
   show('shop');
 }
 function shopClick(id, cat) {

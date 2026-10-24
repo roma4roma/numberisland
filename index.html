@@ -128,6 +128,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
   border: 3px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink);
 }
 .avatar-pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.avatar-pick button { font-size: 28px; }
 .avatar-pick button {
   aspect-ratio: 1; max-width: 100%; font-size: 30px; border: 3px solid var(--ink); border-radius: 14px; background: #fff; cursor: pointer;
 }
@@ -387,6 +388,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .item.wearing { background: var(--leaf-soft); border-color: var(--leaf); }
 .item.locked { opacity: .55; }
 .shop-top { min-height: 140px; position: relative; }
+.avatar-btn { background: none; border: 0; padding: 0; cursor: pointer; position: relative; border-radius: 50%; }
+.avatar-btn::after { content: "✏️"; position: absolute; left: -6px; bottom: -4px; font-size: 18px; background: #fff; border: 2px solid var(--ink); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; }
 .shop-side { display: grid; gap: 4px; max-width: 280px; }
 .item { position: relative; }
 .rarity { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; border: 2px solid var(--ink); border-radius: 999px; padding: 0 7px; white-space: nowrap; }
@@ -574,7 +577,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
     <!-- Hub -->
     <section id="scr-hub" hidden>
       <div class="hub-head">
-        <div id="hubAvatar"></div>
+        <button type="button" id="hubAvatar" class="avatar-btn" aria-label="Change your animal"></button>
         <div class="who">
           <h2 id="hubName">Explorer</h2>
           <div class="rank" id="hubRank">Level 1 · Beachcomber</div>
@@ -725,7 +728,8 @@ const GAMES = [
 ];
 const GAME = Object.fromEntries(GAMES.map(g => [g.id, g]));
 
-const AVATARS = ['🦊', '🐼', '🐯', '🐸', '🐨', '🐙', '🦉', '🐢', '🐰', '🦁', '🐧', '🐬'];
+const AVATARS = ['🦊', '🐼', '🐯', '🐸', '🐨', '🐙', '🦉', '🐢', '🐰', '🦁', '🐧', '🐬', '🐻', '🐵', '🐷', '🐮', '🐺', '🦒'];
+const ANIMAL_NAMES = ['Fox', 'Panda', 'Tiger', 'Frog', 'Koala', 'Octopus', 'Owl', 'Turtle', 'Bunny', 'Lion', 'Penguin', 'Dolphin', 'Bear', 'Monkey', 'Pig', 'Cow', 'Wolf', 'Giraffe'];
 const SHOP = {
   hat: [
     { id: 'cap', icon: '🧢', name: 'Cap', price: 20 },
@@ -825,10 +829,11 @@ const SHOP = {
   ]
 };
 const SHOP_TABS = [
-  { id: 'hat', label: 'Hats', wear: true }, { id: 'pet', label: 'Pets', wear: true }, { id: 'bg', label: 'Backgrounds', one: true },
+  { id: 'animal', label: 'Animal', free: true }, { id: 'hat', label: 'Hats', wear: true }, { id: 'pet', label: 'Pets', wear: true }, { id: 'bg', label: 'Backgrounds', one: true },
   { id: 'frame', label: 'Frames', wear: true }, { id: 'effect', label: 'Celebrations', one: true }, { id: 'ride', label: 'Driver rides', one: true },
   { id: 'title', label: 'Titles', wear: true }, { id: 'island', label: 'My Island', place: true }
 ];
+SHOP.animal = AVATARS.map((a, i) => ({ id: 'animal' + i, icon: a, name: ANIMAL_NAMES[i], price: 0 }));
 const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'] : price <= 250 ? ['Rare', 'r-rare'] : price <= 900 ? ['Epic', 'r-epic'] : ['Legendary', 'r-legend'];
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
@@ -1254,6 +1259,7 @@ $('#switchPlayer').addEventListener('click', () => { if (P()) syncNow(store.curr
 $('#soundToggle').addEventListener('click', () => { store.sound = !store.sound; save(); $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off'); sfx('tap'); });
 $('#openShop').addEventListener('click', () => openShop('hat'));
 $('#openBadges').addEventListener('click', openBadges);
+$('#hubAvatar').addEventListener('click', () => openShop('animal'));
 $('#openIsland').addEventListener('click', () => openShop('island'));
 $$('[data-back]').forEach(b => b.addEventListener('click', openHub));
 
@@ -2246,13 +2252,14 @@ function openShop(tab) {
   $('#shopTabs').innerHTML = SHOP_TABS.map(t => `<button type="button" class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === shopTab}">${t.label}</button>`).join('');
   $$('#shopTabs .tab').forEach(t => t.addEventListener('click', () => openShop(t.dataset.tab)));
   const owned = SHOP[shopTab].filter(it => p.owned.includes(it.id)).length;
-  const help = T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
+  const help = T.free ? "Change your animal any time. It's free! Your hats, pets and everything else stay on." : T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
   $('#shopTop').innerHTML = shopTab === 'island' ? islandHTML(p, true) :
     `${avatarHTML(p, 110)}<div class="shop-side"><b>${esc(p.name)}</b>${titleOf(p) ? `<span class="title-pill">${esc(titleOf(p))}</span>` : ''}
-     <div class="note" style="text-align:left">${help}</div><div class="note" style="text-align:left">You own ${owned} of ${SHOP[shopTab].length} ${T.label.toLowerCase()}.</div></div>`;
+     <div class="note" style="text-align:left">${help}</div>${T.free ? '' : `<div class="note" style="text-align:left">You own ${owned} of ${SHOP[shopTab].length} ${T.label.toLowerCase()}.</div>`}</div>`;
   const L = levelInfo(p.xp).L;
   $('#shopGrid').innerHTML = SHOP[shopTab].map(it => {
-    const has = p.owned.includes(it.id), using = !T.place && p.wear[shopTab] === it.id, locked = it.minLevel && L < it.minLevel;
+    const has = T.free || p.owned.includes(it.id), using = T.free ? p.avatar === it.icon : !T.place && p.wear[shopTab] === it.id, locked = it.minLevel && L < it.minLevel;
+    if (T.free) return `<button type="button" class="item ${using ? 'wearing' : ''}" data-id="${it.id}"><span class="iicon">${it.icon}</span><span>${it.name}</span><span class="price">${using ? 'You ✓' : 'Free'}</span></button>`;
     const label = T.place ? (has ? 'On your island ✓' : null) : using ? (T.one ? 'Using ✓' : 'Wearing ✓') : has ? (T.one ? 'Use' : 'Wear') : null;
     const price = label || (locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
     const rar = !has && RARITY(it.price);
@@ -2264,7 +2271,9 @@ function openShop(tab) {
 }
 function shopClick(id) {
   const p = P(), it = SHOP[shopTab].find(x => x.id === id), L = levelInfo(p.xp).L, T = SHOP_TABS.find(t => t.id === shopTab);
-  if (p.owned.includes(id)) {
+  if (T.free) {
+    if (p.avatar !== it.icon) { p.avatar = it.icon; sfx('coin'); toast(`You're a ${it.name.toLowerCase()} now!`, true); }
+  } else if (p.owned.includes(id)) {
     if (T.place) return;
     if (T.one) p.wear[shopTab] = id; else p.wear[shopTab] = p.wear[shopTab] === id ? null : id;
     sfx('tap');

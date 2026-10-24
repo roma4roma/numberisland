@@ -507,6 +507,37 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
   .vrec .vn { font-size: 28px; } .vrec .vslot { min-width: 110px; }
 }
 
+/* ---------- Boss Battle ---------- */
+.game-card.boss-card { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; color: #fff;
+  background: radial-gradient(circle at 15% 50%, #6D4BC2, #2A1F6B 70%); }
+.game-card.boss-card .gicon { font-size: 60px; }
+.game-card.boss-card .gtext { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.game-card.boss-card .gname { font-size: 26px; }
+.game-card.boss-card .gblurb { color: #E6DBFF; }
+.hpbar { height: 22px; background: #3B1010; border: 3px solid var(--ink); border-radius: 999px; overflow: hidden; }
+.hpbar i { display: block; height: 100%; background: linear-gradient(90deg, #FF4D4D, #FF8A3D); transition: width .4s; }
+.hpbar.small { height: 14px; max-width: 420px; }
+.boss-hp { display: grid; gap: 2px; max-width: 520px; margin: 0 auto; width: 100%; }
+.hp-text { text-align: center; font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+.boss-intro { display: grid; gap: 10px; justify-items: center; text-align: center; }
+.boss-intro h3 { font-size: 32px; color: var(--plum); }
+.boss-face { font-size: 110px; line-height: 1; text-align: center; margin: 6px 0; user-select: none; }
+.boss-face.idle { animation: bob 2.4s ease-in-out infinite; }
+.boss-face.hit { animation: hitShake .35s; }
+@keyframes bob { 50% { transform: translateY(-8px) rotate(3deg); } }
+@keyframes hitShake { 0% { transform: scale(1); filter: none; } 30% { transform: scale(.88) rotate(-8deg); filter: brightness(2) saturate(0); } 100% { transform: scale(1); } }
+.boss-stats { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; font-weight: 700; }
+.boss-prize { background: var(--sun); border: 3px solid var(--ink); border-radius: 14px; padding: 6px 14px; font-weight: 700; }
+.boss-arena { position: relative; display: grid; gap: 6px; }
+.boss-arena .boss-face { font-size: 90px; }
+.boss-top { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.dmg { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); font-family: var(--display); font-size: 46px; color: #FF4D4D; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; pointer-events: none; animation: dmgUp .8s ease-out forwards; z-index: 6; }
+@keyframes dmgUp { to { transform: translate(-50%, -70px); opacity: 0; } }
+.season-tab { background: var(--sun); }
+.season-tab[aria-selected="true"] { background: var(--ink); }
+.r-season { background: #FFB13C; } .r-boss { background: #E6DBFF; }
+@media (max-width: 640px) { .game-card.boss-card .gicon { font-size: 44px; } .game-card.boss-card .gname { font-size: 20px; } .boss-face { font-size: 84px; } }
+
 /* ---------- Toasts ---------- */
 #toasts { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 50%; transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; width: max-content; max-width: calc(100vw - 32px); pointer-events: none; }
 .toast { background: var(--ink); color: #fff; border-radius: 14px; padding: 8px 16px; font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: toastIn .3s; text-align: center; }
@@ -724,7 +755,8 @@ const GAMES = [
   { id: 'estimate', name: 'Estimation Station', icon: '🎯', blurb: 'Round, estimate, and spot answers that make sense.', skill: 't4est', bg: '#FFF0B8', practices: 'Rounding to estimate products; reasonable answers' },
   { id: 'column',   name: 'Column Cliffs',      icon: '🧗', blurb: 'Big + and − in columns.', skill: 'addsub', bg: '#FFD5CC', practices: 'Multi-digit addition and subtraction' },
   { id: 'divide',   name: 'Treasure Split',     icon: '💰', blurb: 'Share coins fairly with division.', skill: 'longdiv', bg: '#FFF6C7', practices: 'Division with remainders' },
-  { id: 'story',    name: 'Story Problems',     icon: '📜', blurb: 'Find the hidden question, then solve.', skill: 't4word', bg: '#DCEBFF', practices: 'Multi-step word problems' }
+  { id: 'story',    name: 'Story Problems',     icon: '📜', blurb: 'Find the hidden question, then solve.', skill: 't4word', bg: '#DCEBFF', practices: 'Multi-step word problems' },
+  { id: 'boss',     name: 'Boss Battle',        icon: '⚔️', blurb: 'Team up with your class to beat this week\'s boss!', skill: null, bg: '#2A1F6B', wide: true, practices: 'Whole-class team-up on mixed facts (great for Fun Friday)' }
 ];
 const GAME = Object.fromEntries(GAMES.map(g => [g.id, g]));
 
@@ -739,7 +771,6 @@ const SHOP = {
     { id: 'tophat', icon: '🎩', name: 'Top hat', price: 60 },
     { id: 'rescue', icon: '⛑️', name: 'Rescue helmet', price: 90 },
     { id: 'grad', icon: '🎓', name: 'Grad cap', price: 120 },
-    { id: 'pumpkin', icon: '🎃', name: 'Pumpkin', price: 180 },
     { id: 'crown', icon: '👑', name: 'Crown', price: 400, minLevel: 5 },
     { id: 'star', icon: '🌟', name: 'Star', price: 750, minLevel: 7 },
     { id: 'gem', icon: '💎', name: 'Diamond', price: 1500, minLevel: 9 }
@@ -834,6 +865,96 @@ const SHOP_TABS = [
   { id: 'title', label: 'Titles', wear: true }, { id: 'island', label: 'My Island', place: true }
 ];
 SHOP.animal = AVATARS.map((a, i) => ({ id: 'animal' + i, icon: a, name: ANIMAL_NAMES[i], price: 0 }));
+
+/* Seasonal items: in the shop only between these dates (month-day), kept forever once bought. */
+const SEASONS = [
+  { id: 'harvest',   name: 'Harvest Moon',   icon: '🌕', from: '09-10', to: '10-12' },
+  { id: 'halloween', name: 'Halloween',      icon: '🎃', from: '10-13', to: '11-07' },
+  { id: 'winter',    name: 'Winter Wonder',  icon: '❄️', from: '12-01', to: '01-12' },
+  { id: 'lunar',     name: 'Lunar New Year', icon: '🧧', from: '01-20', to: '02-20' },
+  { id: 'spring',    name: 'Spring Blossom', icon: '🌸', from: '03-20', to: '04-30' },
+  { id: 'summer',    name: 'Summer Splash',  icon: '🏖️', from: '06-10', to: '08-31' }
+];
+const SEASON_ITEMS = {
+  hat: [
+    { id: 'maple', icon: '🍁', name: 'Maple leaf', price: 120, season: 'harvest' },
+    { id: 'pumpkin', icon: '🎃', name: 'Pumpkin', price: 150, season: 'halloween' },
+    { id: 'snowflake', icon: '❄️', name: 'Snowflake', price: 150, season: 'winter' },
+    { id: 'tulip', icon: '🌷', name: 'Tulip', price: 120, season: 'spring' }
+  ],
+  pet: [
+    { id: 'moonrabbit', icon: '🐇', name: 'Moon rabbit', price: 220, season: 'harvest' },
+    { id: 'bat', icon: '🦇', name: 'Bat', price: 120, season: 'halloween' },
+    { id: 'ghost', icon: '👻', name: 'Ghost', price: 220, season: 'halloween' },
+    { id: 'snowman', icon: '⛄', name: 'Snowman', price: 200, season: 'winter' },
+    { id: 'reindeer', icon: '🦌', name: 'Reindeer', price: 320, season: 'winter' },
+    { id: 'goat', icon: '🐐', name: 'Lucky goat', price: 220, season: 'lunar' },
+    { id: 'ladybug', icon: '🐞', name: 'Ladybug', price: 120, season: 'spring' },
+    { id: 'dolphinpal', icon: '🐬', name: 'Dolphin pal', price: 250, season: 'summer' },
+    // Boss Battle rewards: can't be bought, only won with the class
+    { id: 'kraken', icon: '🦑', name: 'Baby Kraken', price: 0, reward: true },
+    { id: 'sharkpup', icon: '🦈', name: 'Shark pup', price: 0, reward: true },
+    { id: 'dragonling', icon: '🐲', name: 'Dragonling', price: 0, reward: true },
+    { id: 'lobster', icon: '🦞', name: 'Lobster knight', price: 0, reward: true },
+    { id: 'croc', icon: '🐊', name: 'Little croc', price: 0, reward: true },
+    { id: 'puffer', icon: '🐡', name: 'Puffer pal', price: 0, reward: true }
+  ],
+  bg: [
+    { id: 'harvestbg', name: 'Harvest', price: 180, css: 'linear-gradient(160deg,#FFE8B0,#E8743B)', season: 'harvest' },
+    { id: 'spooky', name: 'Spooky', price: 180, css: 'linear-gradient(160deg,#3B1F5C,#FF7A1A)', season: 'halloween' },
+    { id: 'snowy', name: 'Snowy', price: 150, css: 'radial-gradient(circle at 30% 30%,#FFFFFF,#BFE3FF 70%)', season: 'winter' },
+    { id: 'lucky', name: 'Lucky red', price: 180, css: 'linear-gradient(160deg,#FF4D4D,#FFC93C)', season: 'lunar' },
+    { id: 'blossom', name: 'Blossom', price: 150, css: 'linear-gradient(160deg,#FFE4F1,#FF9CC8)', season: 'spring' },
+    { id: 'tropical', name: 'Tropical', price: 180, css: 'linear-gradient(160deg,#7FF0D8,#00A6C8)', season: 'summer' }
+  ],
+  effect: [
+    { id: 'harvestfx', name: 'Harvest', price: 250, fx: ['🌕', '🍂', '🍁'], season: 'harvest' },
+    { id: 'spookyfx', name: 'Spooky', price: 250, fx: ['🎃', '👻', '🦇'], season: 'halloween' },
+    { id: 'snowfx', name: 'Snowfall', price: 250, fx: ['❄️', '⛄', '🎁'], season: 'winter' },
+    { id: 'fortune', name: 'Good fortune', price: 250, fx: ['🧧', '🏮', '🎆'], season: 'lunar' },
+    { id: 'blossomfx', name: 'Blossoms', price: 250, fx: ['🌸', '🌷', '🦋'], season: 'spring' },
+    { id: 'splash', name: 'Splash', price: 250, fx: ['🌊', '🏄', '☀️'], season: 'summer' }
+  ],
+  island: [
+    { id: 'moon', icon: '🌕', name: 'Full moon', price: 300, x: 32, y: 80, z: 34, season: 'harvest' },
+    { id: 'haunted', icon: '🏚️', name: 'Haunted house', price: 600, x: 52, y: 40, z: 42, season: 'halloween' },
+    { id: 'xmastree', icon: '🎄', name: 'Holiday tree', price: 400, x: 10, y: 30, z: 40, season: 'winter' },
+    { id: 'lanterns', icon: '🏮', name: 'Lanterns', price: 350, x: 20, y: 78, z: 30, season: 'lunar' },
+    { id: 'tulips', icon: '🌷', name: 'Tulip bed', price: 200, x: 66, y: 18, z: 26, season: 'spring' },
+    { id: 'surfer', icon: '🏄', name: 'Surfer', price: 400, x: 50, y: 4, z: 36, season: 'summer' }
+  ],
+  title: [
+    { id: 'luckystar', name: 'Lucky Star', price: 200, season: 'lunar' },
+    { id: 'spookster', name: 'Spookster', price: 200, season: 'halloween' }
+  ]
+};
+Object.entries(SEASON_ITEMS).forEach(([cat, items]) => SHOP[cat].push(...items));
+const BOSSES = [
+  { face: '🐙', name: 'The Kraken', reward: 'kraken' },
+  { face: '🦈', name: 'Mega Shark', reward: 'sharkpup' },
+  { face: '🐲', name: 'Sea Dragon', reward: 'dragonling' },
+  { face: '🦞', name: 'Lobster King', reward: 'lobster' },
+  { face: '🐊', name: 'Swamp Croc', reward: 'croc' },
+  { face: '🐡', name: 'Puffer Titan', reward: 'puffer' }
+];
+function today() { try { const o = localStorage.getItem('numberIsland.today'); if (o) return new Date(o + 'T12:00:00'); } catch (e) {} return new Date(); }
+function activeSeason(d = today()) {
+  const md = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  return SEASONS.find(S => S.from <= S.to ? md >= S.from && md <= S.to : md >= S.from || md <= S.to) || null;
+}
+function seasonDaysLeft(S, d = today()) {
+  const [m, dd] = S.to.split('-').map(Number);
+  let end = new Date(d.getFullYear(), m - 1, dd, 23, 59);
+  if (end < d) end = new Date(d.getFullYear() + 1, m - 1, dd, 23, 59);
+  return Math.max(0, Math.ceil((end - d) / 86400000));
+}
+function weekInfo(d = today()) { // ISO week, e.g. 2026-W43
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)), n = Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  return { id: `${t.getUTCFullYear()}-W${String(n).padStart(2, '0')}`, n };
+}
+function currentBoss() { return BOSSES[weekInfo().n % BOSSES.length]; }
 const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'] : price <= 250 ? ['Rare', 'r-rare'] : price <= 900 ? ['Epic', 'r-epic'] : ['Legendary', 'r-legend'];
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
@@ -855,6 +976,7 @@ const BADGES = [
   { id: 'rich2',     icon: '🏦', name: 'Coin Tycoon',     desc: 'Earn 5,000 coins in total' },
   { id: 'builder',   icon: '🏝️', name: 'Island Builder',  desc: 'Put 7 things on your island' },
   { id: 'collector', icon: '🗃️', name: 'Collector',       desc: 'Own 30 things from the shop' },
+  { id: 'bossbeater', icon: '⚔️', name: 'Boss Beater',     desc: 'Help your class beat a weekly boss' },
 ];
 const PRAISE = ['Nice!', 'You got it!', 'Brilliant!', 'Super!', 'Yes!', 'Awesome!', 'Spot on!', 'Great thinking!'];
 
@@ -1171,7 +1293,8 @@ function summaryOf(p) {
 }
 function syncBody(p, withActivity) {
   const copy = JSON.parse(JSON.stringify(p)); delete copy.code; delete copy.pending;
-  return { action: 'save', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [] };
+  const bp = p.bossPend && p.bossPend.hits ? { week: p.bossPend.week, hits: p.bossPend.hits } : { week: weekInfo().id, hits: 0 };
+  return { action: 'save', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [], boss: bp };
 }
 let syncTimer = null; const syncingIds = new Set();
 function setSyncStatus(state) {
@@ -1188,10 +1311,12 @@ async function syncNow(id) {
   const p = store.profiles[id];
   if (!sheetUrl() || !p || !p.sheetName || syncingIds.has(id)) return;
   syncingIds.add(id); if (id === store.current) setSyncStatus('saving');
-  const body = syncBody(p, true), sent = body.activity.length;
+  const body = syncBody(p, true), sent = body.activity.length, sentHits = body.boss.hits;
   try {
     const r = await api(body);
     if (r.ok && r.games) applyLocks(r.games);
+    if (r.ok && sentHits && p.bossPend) { p.bossPend.hits = Math.max(0, p.bossPend.hits - sentHits); }
+    if (r.ok && r.boss) applyBossStatus(r.boss);
     if (r.ok) { p.pending = (p.pending || []).slice(sent); p.syncedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} if (id === store.current) setSyncStatus('ok'); }
     else if (id === store.current) setSyncStatus('error');
   } catch (e) { if (id === store.current) setSyncStatus('offline'); }
@@ -1231,8 +1356,17 @@ function openHub() {
 }
 function renderGameGrid() {
   const p = P(); if (!p) return;
-  $('#gameGrid').innerHTML = GAMES.map(g => {
+  const ordered = isUnlocked('boss') ? [GAME.boss, ...GAMES.filter(g => g.id !== 'boss')] : GAMES;
+  $('#gameGrid').innerHTML = ordered.map(g => {
     const st = p.games[g.id] || {}, open = isUnlocked(g.id);
+    if (g.wide) {
+      const B = currentBoss(), bs = bossCached(), left = Math.max(0, bs.max - bs.total);
+      return `<button type="button" class="game-card boss-card ${open ? '' : 'locked'}" data-g="boss"${open ? '' : ' aria-label="Boss Battle, locked"'}>
+        <span class="gicon">${open ? B.face : '🔒'}</span>
+        <span class="gtext"><span class="gname">Boss Battle: ${B.name}</span>
+        <span class="gblurb">${open ? (left ? `Your class has knocked off ${fmt(bs.total)} of ${fmt(bs.max)} HP. Every right answer hits it!` : 'Defeated this week! 🎉 A new boss comes next week.') : 'Opens when your teacher starts the battle.'}</span>
+        <span class="hpbar small"><i style="width:${Math.round(left / bs.max * 100)}%"></i></span></span></button>`;
+    }
     const lv = !open ? `<span class="lvl">🔒 Locked</span>` : g.skill ? `<span class="lvl">Lv ${p.skills[g.skill].level}</span>` : `<span class="lvl">Best ${fmt(st.best || 0)}</span>`;
     const foot = `<div class="gfoot">${starsHTML(st.stars || 0)}${lv}</div>`;
     const cls = `game-card ${g.feature ? 'feature' : ''} ${open ? '' : 'locked'}`;
@@ -1428,6 +1562,7 @@ function startGame(id) {
   if (id === 'driver') return driverPicker();
   if (id === 'runner') return runnerPicker();
   if (id === 'memory') return memoryStart();
+  if (id === 'boss') return bossIntro();
   const total = { column: 6, partial: 5, arrays: 8, divide: 6, tens: 8, estimate: 6, story: 4 }[id];
   round = { id, skill: g.skill, total, index: 0, correct: 0, results: [], level0: lvl(g.skill) };
   nextQuestion();
@@ -1511,7 +1646,7 @@ function showResults({ stars, title, lines, again, next, back }) {
   sfx('coin');
   show('results');
 }
-$('#leaveGame').addEventListener('click', () => { if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
+$('#leaveGame').addEventListener('click', () => { if (bossFight) { bossFight.over = true; bossFight = null; padClear(); if (P() && P().sheetName) syncNow(store.current); } if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
 
 const ROUND_GAMES = {};
 
@@ -1964,6 +2099,190 @@ ROUND_GAMES.estimate = () => QLIB['4-3']();
 ROUND_GAMES.story = () => QLIB['4-7']();
 
 /* =========================================================
+   Boss Battle: the whole class shares one health bar each week
+   ========================================================= */
+const BOSS_ROUND_SECS = 90;
+let bossFight = null;
+function bossCached() {
+  const w = weekInfo().id, c = store.bossStatus;
+  if (c && c.week === w) return c;
+  if (!sheetUrl()) { // device only: everyone on this tablet fights together
+    const hits = (store.localBoss && store.localBoss[w]) || 0, players = Math.max(1, Object.keys(store.profiles).length);
+    return { week: w, total: hits, max: Math.max(60, players * 30), mine: ((P() && P().bossHits) || {})[w] || 0, helpers: 0, local: true };
+  }
+  return { week: w, total: 0, max: 600, mine: 0, helpers: 0 };
+}
+function applyBossStatus(st) {
+  if (!st || st.week !== weekInfo().id) return;
+  store.bossStatus = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+  checkBossReward(st);
+}
+function checkBossReward(st) {
+  const p = P(); if (!p || st.total < st.max) return;
+  const mine = st.local ? ((p.bossHits || {})[st.week] || 0) : st.mine + ((p.bossPend && p.bossPend.week === st.week) ? p.bossPend.hits : 0);
+  p.bossWins = p.bossWins || [];
+  if (mine <= 0 || p.bossWins.includes(st.week)) return;
+  p.bossWins.push(st.week);
+  const B = currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
+  if (!p.owned.includes(pet.id)) p.owned.push(pet.id);
+  reward(150, 100); award('bossbeater');
+  toast(`⚔️ Your class beat ${B.name}! You won the ${pet.name} ${pet.icon} and 150 coins!`, true);
+  save(); scheduleSync(1500);
+}
+async function bossFetch(extraHits = 0) {
+  const p = P(), w = weekInfo().id;
+  if (!sheetUrl() || !p || !p.sheetName) return bossCached();
+  try {
+    const r = await api({ action: 'boss', name: p.sheetName, code: p.code || '', week: w, hits: extraHits });
+    if (r.ok && r.games) applyLocks(r.games);
+    if (r.ok && r.boss) { applyBossStatus(r.boss); return r.boss; }
+  } catch (e) { /* offline: keep the last known status */ }
+  return null;
+}
+function bossAddHits(n) {
+  const p = P(), w = weekInfo().id;
+  p.bossHits = p.bossHits || {}; p.bossHits[w] = (p.bossHits[w] || 0) + n;
+  if (!sheetUrl() || !p.sheetName) { store.localBoss = store.localBoss || {}; store.localBoss[w] = (store.localBoss[w] || 0) + n; return; }
+  if (!p.bossPend || p.bossPend.week !== w) p.bossPend = { week: w, hits: 0 };
+  p.bossPend.hits += n;
+}
+function hpBarHTML(st, id) {
+  const left = Math.max(0, st.max - st.total);
+  return `<div class="boss-hp"><div class="hpbar" ${id ? `id="${id}"` : ''}><i style="width:${Math.round(left / st.max * 100)}%"></i></div>
+    <div class="hp-text"><b id="${id ? id + 'Text' : ''}">${fmt(left)} / ${fmt(st.max)} HP</b> left</div></div>`;
+}
+async function bossIntro() {
+  round = null;
+  const B = currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
+  const render = st => {
+    const done = st.total >= st.max;
+    $('#gameBody').innerHTML = `<div class="boss-intro">
+      <div class="boss-face idle">${B.face}</div>
+      <h3>${B.name}</h3>
+      ${hpBarHTML(st)}
+      <p class="story">${done ? `Your class beat ${B.name} this week! 🎉 You can keep practicing for coins. A new boss arrives next week.` :
+        `Every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit that does double damage!`}</p>
+      <div class="boss-stats"><span>Your hits this week: <b>${fmt(((P().bossHits || {})[st.week]) || st.mine || 0)}</b></span>${st.helpers ? `<span>Classmates helping: <b>${st.helpers}</b></span>` : ''}</div>
+      <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
+      <button type="button" class="btn coral" id="bossGo" style="font-size:24px">⚔️ ${done ? 'Practice attack' : 'Attack!'} (${BOSS_ROUND_SECS} seconds)</button>
+    </div>`;
+    $('#bossGo').addEventListener('click', bossRound);
+  };
+  render(bossCached());
+  const fresh = await bossFetch();
+  if (fresh && currentScreen === 'game' && !bossFight && $('#bossGo')) render(fresh);
+}
+function bossQuestion() {
+  const kinds = [['mult', 4], ['div', 2], ['mental', 2], ['t4tens', isUnlocked('tens') ? 2 : 0]].filter(k => k[1] > 0);
+  const bag = kinds.flatMap(([k, w]) => Array(w).fill(k)), k = pick(bag);
+  if (k === 'mult') return { skill: k, ...genMult(lvl('mult')) };
+  if (k === 'div') return { skill: k, ...genDiv(lvl('div')) };
+  if (k === 'mental') return { skill: k, ...genMental(lvl('mental'), Math.random() < 0.5 ? '+' : '−') };
+  const L = lvl('t4tens');
+  if (L <= 2 || Math.random() < 0.5) { const x = rnd(2, L <= 1 ? 5 : 9), y = rnd(2, 9); return { skill: k, text: `${x * 10} × ${y * 10}`, answer: x * y * 100 }; }
+  const x = ones(11, L >= 4 ? 98 : 49), t = rnd(2, 9); return { skill: k, text: `${x} × ${t * 10}`, answer: x * t * 10 };
+}
+function bossRound() {
+  const B = currentBoss();
+  const base = bossCached();
+  bossFight = { hits: 0, unsent: 0, correct: 0, wrong: 0, combo: 0, end: Date.now() + BOSS_ROUND_SECS * 1000, base, q: null, over: false };
+  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp };
+  $('#gameBody').innerHTML = `<div class="boss-arena" id="arena">
+      <div class="boss-top"><span class="chip" id="bossTime">⏱ ${BOSS_ROUND_SECS}s</span><span class="chip" id="bossHits">⚔️ 0 hits</span><span class="chip" id="bossCombo" hidden></span></div>
+      ${hpBarHTML(base, 'bossHp')}
+      <div class="boss-face" id="bossFace">${B.face}</div>
+      <div class="play with-pad">
+        <div>
+          <div class="aq" id="bossQ"></div>
+          <div class="answer-row"><div class="slot" id="bossAns"></div></div>
+        </div>
+        ${padHTML()}
+      </div>
+    </div>`;
+  bossNext();
+  const tick = () => {
+    if (!bossFight || bossFight.over) return;
+    const left = Math.max(0, Math.ceil((bossFight.end - Date.now()) / 1000));
+    $('#bossTime').textContent = `⏱ ${left}s`;
+    if (left <= 0) return bossEnd(false);
+    later(tick, 250);
+  };
+  later(tick, 250);
+  const poll = async () => {
+    if (!bossFight || bossFight.over) return;
+    const send = bossFight.unsent; bossFight.unsent = 0;
+    if (send && P().bossPend) P().bossPend.hits = Math.max(0, P().bossPend.hits - send);
+    const st = await bossFetch(send);
+    if (!st && send) { bossFight && (bossFight.unsent += send); if (P().bossPend) P().bossPend.hits += send; }
+    if (st && bossFight && !bossFight.over) { bossFight.base = st; bossFight.baseHits = bossFight.hits; bossHpRender(); if (st.total >= st.max) return bossEnd(true); }
+    later(poll, 12000);
+  };
+  if (sheetUrl() && P().sheetName) later(poll, 12000);
+}
+function bossTotalNow() { const f = bossFight; return f.base.total + (f.base.local ? f.hits : f.hits - (f.baseHits || 0)); }
+function bossHpRender() {
+  const f = bossFight, left = Math.max(0, f.base.max - bossTotalNow());
+  const bar = $('#bossHp i'); if (bar) bar.style.width = Math.round(left / f.base.max * 100) + '%';
+  const t = $('#bossHpText'); if (t) t.textContent = `${fmt(left)} / ${fmt(f.base.max)} HP`;
+  $('#bossHits').textContent = `⚔️ ${f.hits} hit${f.hits === 1 ? '' : 's'}`;
+  const cb = $('#bossCombo'); cb.textContent = f.combo >= 3 ? '🔥 Power hits!' : f.combo > 1 ? `Combo ×${f.combo}` : ''; cb.hidden = !cb.textContent;
+}
+function bossNext() {
+  const f = bossFight; if (!f || f.over) return;
+  f.q = bossQuestion();
+  $('#bossQ').textContent = f.q.text + ' = ?';
+  padBind([{ el: $('#bossAns'), max: 5, placeholder: '?' }], () => {
+    const v = Pad.fields[0].value; if (!v || f.over) return;
+    Pad.locked = true;
+    const ok = +v === f.q.answer;
+    record(f.q.skill, ok);
+    const face = $('#bossFace');
+    if (ok) {
+      f.combo++; f.correct++;
+      const dmg = f.combo >= 3 ? 2 : 1; f.hits += dmg; f.unsent += dmg; bossAddHits(dmg);
+      face.classList.remove('hit'); void face.offsetWidth; face.classList.add('hit');
+      const pop = document.createElement('div'); pop.className = 'dmg'; pop.textContent = `−${dmg}`; $('#arena').appendChild(pop); setTimeout(() => pop.remove(), 800);
+      sfx(dmg > 1 ? 'coin' : 'ok'); bossHpRender();
+      if (bossTotalNow() >= f.base.max && !f.base.local) { /* confirm with the sheet before declaring victory */ }
+      if (bossTotalNow() >= f.base.max && f.base.local) return bossEnd(true);
+      later(bossNext, 250);
+    } else {
+      f.combo = 0; f.wrong++; sfx('bad'); bossHpRender();
+      const arena = $('#arena'); arena.classList.remove('shake'); void arena.offsetWidth; arena.classList.add('shake');
+      arcadeBanner(arena, `${f.q.text} = ${fmt(f.q.answer)}<small>${currentBoss().name} blocked that one!</small>`, 1300);
+      later(bossNext, 1300);
+    }
+  }, { submitOnly: true });
+}
+async function bossEnd(victory) {
+  const f = bossFight; if (!f || f.over) return;
+  f.over = true; padClear();
+  const B = currentBoss(), p = P();
+  const stars = f.hits >= 25 ? 3 : f.hits >= 12 ? 2 : 1;
+  reward(stars * 5, 20 + stars * 10);
+  const g = gameStats('boss'); g.best = Math.max(g.best || 0, f.hits); g.stars = Math.max(g.stars || 0, stars);
+  checkBadges({ finished: true, stars });
+  logActivity('Boss Battle', `${f.hits} hits (${f.correct} right, ${f.wrong} missed)`, stars, null);
+  let st = f.base.local ? bossCached() : null;
+  if (!f.base.local) {
+    const send = f.unsent; f.unsent = 0;
+    if (send && p.bossPend) p.bossPend.hits = Math.max(0, p.bossPend.hits - send);
+    const fresh = await bossFetch(send);
+    if (!fresh && send) { p.bossPend = p.bossPend || { week: weekInfo().id, hits: 0 }; p.bossPend.hits += send; save(); }
+    st = fresh || { ...f.base, total: bossTotalNow() };
+  }
+  if (st.local) checkBossReward(st);
+  const left = Math.max(0, st.max - st.total), beat = left === 0;
+  if (beat && !reduceMotion) for (let i = 0; i < 3; i++) setTimeout(() => cheer('', $('#gameWrap')), i * 300);
+  showResults({
+    stars, title: beat ? `${B.name} is defeated! 🎉` : 'Great attack!',
+    lines: [['Your hits this round', `⚔️ ${f.hits}`], ['Right answers', `${f.correct} of ${f.correct + f.wrong}`], ['Boss health left', beat ? 'None! You did it!' : `${fmt(left)} of ${fmt(st.max)} HP`]],
+    again: () => startGame('boss')
+  });
+  bossFight = null;
+}
+
+/* =========================================================
    Memory Reef
    ========================================================= */
 function memoryStart() {
@@ -2245,46 +2564,61 @@ function itemVisual(tab, it, p) {
   if (tab === 'title') return `<span class="title-pill big">${esc(it.name)}</span>`;
   return `<span class="iicon">${it.icon}</span>`;
 }
+function shopTabs() {
+  const S = activeSeason(), tabs = [...SHOP_TABS];
+  if (S) tabs.splice(1, 0, { id: 'season', label: `${S.icon} ${S.name}`, season: S });
+  return tabs;
+}
+function inShop(it, p) { return p.owned.includes(it.id) || ((!it.season || (activeSeason() || {}).id === it.season)); }
+function shopEntries(tab, p) {
+  if (tab === 'season') { const S = activeSeason(); return S ? Object.entries(SEASON_ITEMS).flatMap(([cat, items]) => items.filter(it => it.season === S.id).map(it => ({ it, cat }))) : []; }
+  return SHOP[tab].filter(it => inShop(it, p)).map(it => ({ it, cat: tab }));
+}
 function openShop(tab) {
-  shopTab = tab || shopTab;
-  const p = P(), T = SHOP_TABS.find(t => t.id === shopTab);
+  const tabs = shopTabs();
+  shopTab = tab && tabs.some(t => t.id === tab) ? tab : tabs.some(t => t.id === shopTab) ? shopTab : 'hat';
+  const p = P(), T = tabs.find(t => t.id === shopTab);
   updateCoinChips();
-  $('#shopTabs').innerHTML = SHOP_TABS.map(t => `<button type="button" class="tab" role="tab" data-tab="${t.id}" aria-selected="${t.id === shopTab}">${t.label}</button>`).join('');
+  $('#shopTabs').innerHTML = tabs.map(t => `<button type="button" class="tab ${t.season ? 'season-tab' : ''}" role="tab" data-tab="${t.id}" aria-selected="${t.id === shopTab}">${t.label}</button>`).join('');
   $$('#shopTabs .tab').forEach(t => t.addEventListener('click', () => openShop(t.dataset.tab)));
-  const owned = SHOP[shopTab].filter(it => p.owned.includes(it.id)).length;
-  const help = T.free ? "Change your animal any time. It's free! Your hats, pets and everything else stay on." : T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
+  const entries = shopEntries(shopTab, p);
+  const owned = entries.filter(e => p.owned.includes(e.it.id)).length;
+  const help = T.season ? `Only here for ${seasonDaysLeft(T.season)} more day${seasonDaysLeft(T.season) === 1 ? '' : 's'}! Anything you buy is yours to keep.` :
+    T.free ? "Change your animal any time. It's free! Your hats, pets and everything else stay on." : T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
   $('#shopTop').innerHTML = shopTab === 'island' ? islandHTML(p, true) :
     `${avatarHTML(p, 110)}<div class="shop-side"><b>${esc(p.name)}</b>${titleOf(p) ? `<span class="title-pill">${esc(titleOf(p))}</span>` : ''}
-     <div class="note" style="text-align:left">${help}</div>${T.free ? '' : `<div class="note" style="text-align:left">You own ${owned} of ${SHOP[shopTab].length} ${T.label.toLowerCase()}.</div>`}</div>`;
+     <div class="note" style="text-align:left">${help}</div>${T.free ? '' : `<div class="note" style="text-align:left">You own ${owned} of ${entries.length}${T.season ? ' seasonal items' : ' ' + T.label.toLowerCase()}.</div>`}</div>`;
   const L = levelInfo(p.xp).L;
-  $('#shopGrid').innerHTML = SHOP[shopTab].map(it => {
-    const has = T.free || p.owned.includes(it.id), using = T.free ? p.avatar === it.icon : !T.place && p.wear[shopTab] === it.id, locked = it.minLevel && L < it.minLevel;
-    if (T.free) return `<button type="button" class="item ${using ? 'wearing' : ''}" data-id="${it.id}"><span class="iicon">${it.icon}</span><span>${it.name}</span><span class="price">${using ? 'You ✓' : 'Free'}</span></button>`;
-    const label = T.place ? (has ? 'On your island ✓' : null) : using ? (T.one ? 'Using ✓' : 'Wearing ✓') : has ? (T.one ? 'Use' : 'Wear') : null;
-    const price = label || (locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
-    const rar = !has && RARITY(it.price);
-    return `<button type="button" class="item ${using || (T.place && has) ? 'wearing' : ''} ${locked && !has ? 'locked' : ''}" data-id="${it.id}">
-      ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(shopTab, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
+  $('#shopGrid').innerHTML = entries.map(({ it, cat }) => {
+    const C = SHOP_TABS.find(t => t.id === cat);
+    if (C.free) { const using = p.avatar === it.icon; return `<button type="button" class="item ${using ? 'wearing' : ''}" data-id="${it.id}" data-cat="${cat}"><span class="iicon">${it.icon}</span><span>${it.name}</span><span class="price">${using ? 'You ✓' : 'Free'}</span></button>`; }
+    const has = p.owned.includes(it.id), using = !C.place && p.wear[cat] === it.id, locked = it.minLevel && L < it.minLevel;
+    const label = C.place ? (has ? 'On your island ✓' : null) : using ? (C.one ? 'Using ✓' : 'Wearing ✓') : has ? (C.one ? 'Use' : 'Wear') : null;
+    const price = label || (it.reward ? '🏆 Boss reward' : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
+    const rar = !has && (it.reward ? ['Boss reward', 'r-boss'] : it.season ? ['Seasonal', 'r-season'] : RARITY(it.price));
+    return `<button type="button" class="item ${using || (C.place && has) ? 'wearing' : ''} ${(locked || it.reward) && !has ? 'locked' : ''}" data-id="${it.id}" data-cat="${cat}">
+      ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(cat, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
   }).join('');
-  $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id)));
+  $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id, b.dataset.cat)));
   show('shop');
 }
-function shopClick(id) {
-  const p = P(), it = SHOP[shopTab].find(x => x.id === id), L = levelInfo(p.xp).L, T = SHOP_TABS.find(t => t.id === shopTab);
-  if (T.free) {
+function shopClick(id, cat) {
+  const p = P(), it = SHOP[cat].find(x => x.id === id), L = levelInfo(p.xp).L, C = SHOP_TABS.find(t => t.id === cat);
+  if (C.free) {
     if (p.avatar !== it.icon) { p.avatar = it.icon; sfx('coin'); toast(`You're a ${it.name.toLowerCase()} now!`, true); }
   } else if (p.owned.includes(id)) {
-    if (T.place) return;
-    if (T.one) p.wear[shopTab] = id; else p.wear[shopTab] = p.wear[shopTab] === id ? null : id;
+    if (C.place) return;
+    if (C.one) p.wear[cat] = id; else p.wear[cat] = p.wear[cat] === id ? null : id;
     sfx('tap');
-  } else if (it.minLevel && L < it.minLevel) { toast(`Reach level ${it.minLevel} to unlock the ${it.name}.`); return; }
+  } else if (it.reward) { toast('Beat a weekly Boss Battle with your class to win this one!'); return; }
+  else if (it.minLevel && L < it.minLevel) { toast(`Reach level ${it.minLevel} to unlock the ${it.name}.`); return; }
   else if (p.coins < it.price) { toast(`You need ${fmt(it.price - p.coins)} more coins. Keep practicing to earn them!`); return; }
   else {
-    p.coins -= it.price; p.owned.push(id); if (!T.place) p.wear[shopTab] = id; sfx('coin'); toast(`You got the ${it.name}!`, true);
+    p.coins -= it.price; p.owned.push(id); if (!C.place) p.wear[cat] = id; sfx('coin'); toast(`You got the ${it.name}!`, true);
     session = null; checkBadges({ bought: true });
   }
   save(); scheduleSync(2000); openShop(shopTab);
-  if (shopTab === 'effect') cheer('', $('#shopTop'));
+  if (cat === 'effect') cheer('', $('#shopTop'));
 }
 function openBadges() {
   const p = P();

@@ -1,0 +1,1983 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Number Island</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Lilita+One&display=swap">
+<style>
+/* Layout: one centered island board (max 900px) floating on a patterned sea; chunky ink-outlined "sticker" cards.
+   Deliberately single-theme (a bright island world), so every color is set explicitly. */
+:root {
+  --sea: #0E6B7A;
+  --sea-deep: #094C57;
+  --foam: #DDF5F1;
+  --sand: #FFF7E3;
+  --sand-2: #F7E6BD;
+  --ink: #1E2A33;
+  --ink-soft: #55636D;
+  --sun: #FFC93C;
+  --sun-deep: #E9A800;
+  --coral: #FF6B57;
+  --leaf: #23A866;
+  --leaf-soft: #D5F5E3;
+  --coral-soft: #FFE1DB;
+  --sky: #BDEBFA;
+  --plum: #6D4BC2;
+  --display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --body: "Baloo 2", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--sea); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--sea);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(120, 225, 230, .35), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Cpath d='M0 20 Q15 8 30 20 T60 20 T90 20 T120 20' fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='3'/%3E%3C/svg%3E");
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.45;
+  padding-block: 12px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button { font-family: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--plum); outline-offset: 2px; }
+
+#app { max-width: 900px; margin: 0 auto; }
+.board {
+  background: var(--sand);
+  border: 3px solid var(--ink);
+  border-radius: 24px;
+  box-shadow: 0 8px 0 var(--sea-deep);
+  padding: 18px;
+  position: relative;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-spacing: .5px; text-wrap: balance; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: var(--display); font-size: 19px; letter-spacing: .4px;
+  padding: 9px 18px; min-height: 46px;
+  border: 3px solid var(--ink); border-radius: 14px;
+  background: var(--sun); color: var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer; transition: transform .08s, box-shadow .08s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.btn.leaf { background: var(--leaf); color: #fff; }
+.btn.coral { background: var(--coral); color: #fff; }
+.btn.plain { background: #fff; }
+.btn.small { font-size: 15px; padding: 5px 12px; min-height: 38px; border-width: 2px; box-shadow: 0 3px 0 var(--ink); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.link-btn { background: none; border: 0; color: var(--ink-soft); font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 15px; padding: 6px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #fff; border: 2px solid var(--ink); border-radius: 999px;
+  padding: 1px 10px; font-weight: 800; font-size: 15px; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.chip.coins { background: var(--sun); }
+
+/* ---------- Avatar ---------- */
+.avatar {
+  --s: 64px;
+  width: var(--s); height: var(--s); flex: none;
+  border-radius: 50%; border: 3px solid var(--ink);
+  background: linear-gradient(160deg, #C9F1FF, #7FD3EE);
+  position: relative; display: grid; place-items: center;
+  font-size: calc(var(--s) * .56); line-height: 1;
+}
+.avatar .face { transform: translateY(4%); }
+.avatar .hat { position: absolute; top: calc(var(--s) * -.32); left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: calc(var(--s) * .46); }
+.avatar .pet { position: absolute; right: calc(var(--s) * -.2); bottom: calc(var(--s) * -.08); font-size: calc(var(--s) * .38); }
+.avatar.ring-1 { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #9FB4C0; }
+.avatar.ring-2 { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--sun-deep); }
+.avatar.ring-3 { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--plum), 0 0 14px 4px rgba(255, 201, 60, .8); }
+
+/* ---------- Who's playing ---------- */
+.title-row { text-align: center; padding: 6px 0 14px; }
+.logo { font-size: clamp(38px, 8vw, 60px); color: var(--sea); line-height: 1; }
+.logo span { color: var(--coral); }
+.tagline { color: var(--ink-soft); font-weight: 700; margin-top: 4px; }
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.profile-card {
+  background: #fff; border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 4px 0 var(--ink);
+  padding: 22px 8px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-weight: 800; font-size: 18px; min-width: 0;
+}
+.profile-card .pname { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-card small { color: var(--ink-soft); font-weight: 700; font-size: 14px; }
+.profile-card.new { background: var(--foam); border-style: dashed; justify-content: center; }
+.profile-card.new .plus { font-family: var(--display); font-size: 40px; line-height: 1; color: var(--sea); }
+.new-player { display: grid; gap: 14px; max-width: 560px; margin: 0 auto; }
+.new-player label { font-weight: 800; }
+.text-input {
+  width: 100%; font: 700 22px var(--body); padding: 8px 14px;
+  border: 3px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink);
+}
+.avatar-pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.avatar-pick button {
+  aspect-ratio: 1; max-width: 100%; font-size: 30px; border: 3px solid var(--ink); border-radius: 14px; background: #fff; cursor: pointer;
+}
+.avatar-pick button[aria-pressed="true"] { background: var(--sun); transform: translateY(-3px); box-shadow: 0 3px 0 var(--ink); }
+.foot-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.note { color: var(--ink-soft); font-size: 14px; text-align: center; }
+
+/* ---------- Hub ---------- */
+.hub-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 6px 16px; }
+.hub-head .who { flex: 1 1 200px; min-width: 0; }
+.hub-head .who h2 { font-size: 28px; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank { font-weight: 800; color: var(--sea); }
+.xpbar { height: 14px; background: #fff; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; margin-top: 4px; max-width: 300px; }
+.xpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--leaf), #6BDB9E); transition: width .6s; }
+.xp-text { font-size: 13px; color: var(--ink-soft); font-weight: 700; }
+.hub-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.section-label { font-family: var(--display); font-size: 22px; margin: 4px 4px 10px; color: var(--sea-deep); }
+.game-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.game-card {
+  position: relative; text-align: left; cursor: pointer; min-width: 0;
+  border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 5px 0 var(--ink);
+  padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 2px;
+  background: var(--card-bg, #fff); transition: transform .1s;
+}
+.game-card:hover { transform: translateY(-2px); }
+.game-card:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+.game-card .gicon { font-size: 34px; line-height: 1.1; }
+.game-card .gname { font-family: var(--display); font-size: 20px; line-height: 1.1; }
+.game-card .gblurb { font-size: 14px; font-weight: 600; color: var(--ink-soft); line-height: 1.25; }
+.game-card .gfoot { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 6px; gap: 6px; }
+.stars { color: var(--sun-deep); letter-spacing: 1px; font-size: 16px; white-space: nowrap; }
+.stars .off { color: #D6C9A6; }
+.lvl { font-size: 12px; font-weight: 800; background: var(--ink); color: #fff; border-radius: 8px; padding: 0 7px; white-space: nowrap; }
+.game-card.feature { grid-column: span 2; flex-direction: row; align-items: center; gap: 14px; }
+.game-card.feature .gicon { font-size: 56px; }
+.game-card.feature .gtext { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.game-card.feature .gname { font-size: 26px; }
+
+/* ---------- Game shell ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+  background: var(--sand); padding: 4px 0 10px; border-bottom: 3px dashed var(--sand-2); margin-bottom: 12px;
+}
+.topbar h2 { font-size: 22px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progress-dots { display: flex; gap: 5px; justify-content: center; margin-top: 2px; }
+.progress-dots i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; }
+.progress-dots i.ok { background: var(--leaf); }
+.progress-dots i.no { background: var(--coral); }
+.progress-dots i.now { background: var(--sun); transform: scale(1.2); }
+.game-wrap { position: relative; min-height: 360px; }
+.prompt { text-align: center; font-weight: 800; color: var(--ink-soft); font-size: 18px; margin-bottom: 6px; }
+.problem { font-family: var(--display); font-size: clamp(36px, 8vw, 54px); text-align: center; line-height: 1.1; }
+.level-tag { text-align: center; font-size: 14px; color: var(--ink-soft); font-weight: 700; }
+
+.play { display: grid; gap: 16px; align-items: center; }
+@media (min-width: 720px) { .play.with-pad { grid-template-columns: 1fr 250px; } }
+
+/* number pad */
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 300px; width: 100%; margin: 0 auto; }
+.key {
+  font-family: var(--display); font-size: 28px; height: 58px; cursor: pointer;
+  border: 3px solid var(--ink); border-radius: 14px; background: #fff; box-shadow: 0 4px 0 var(--ink);
+  touch-action: manipulation; user-select: none;
+}
+.key:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.key.alt { background: var(--sand-2); }
+.key.go { background: var(--leaf); color: #fff; font-size: 19px; }
+.slot {
+  display: inline-grid; place-items: center; min-width: 110px; height: 64px; padding: 0 12px;
+  font-family: var(--display); font-size: 38px; background: #fff;
+  border: 3px solid var(--ink); border-radius: 14px; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.slot.empty { color: #C8BFA8; }
+.slot.active { border-color: var(--plum); box-shadow: 0 0 0 4px rgba(109, 75, 194, .25); }
+.answer-row { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-family: var(--display); font-size: 28px; }
+
+/* explain + cheer overlays */
+.explain {
+  position: absolute; inset: 0; z-index: 20; background: rgba(255, 247, 227, .97);
+  border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 10px 6px; text-align: center; gap: 8px; overflow: auto;
+}
+.explain h3 { font-size: 28px; color: var(--coral); }
+.explain .you { font-weight: 700; color: var(--ink-soft); }
+.explain .card { background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 16px; max-width: 560px; width: 100%; text-align: left; }
+.explain .card p { margin: 6px 0; }
+.big-fact { font-family: var(--display); font-size: 30px; text-align: center; margin: 4px 0 !important; }
+.big-fact b { color: var(--leaf); font-weight: 400; }
+.steps { margin: 6px 0; padding-left: 22px; }
+.steps li { margin: 4px 0; }
+.wrong-part { color: var(--coral); font-weight: 800; }
+.cheer {
+  position: absolute; left: 50%; top: 40%; z-index: 25; pointer-events: none;
+  transform: translate(-50%, -50%); font-family: var(--display); font-size: 44px; color: var(--leaf);
+  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; white-space: nowrap;
+  animation: pop .9s ease-out forwards;
+}
+@keyframes pop { 0% { transform: translate(-50%, -30%) scale(.5); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(-50%, -80%) scale(1); opacity: 0; } }
+.spark { position: absolute; z-index: 24; pointer-events: none; font-size: 22px; animation: fly .8s ease-out forwards; }
+@keyframes fly { to { transform: translate(var(--dx), var(--dy)) rotate(200deg); opacity: 0; } }
+.shake { animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+/* ---------- Column Cliffs ---------- */
+.col-grid { display: grid; gap: 5px; justify-content: center; font-family: var(--display); font-variant-numeric: tabular-nums; }
+.col-grid .cd { display: grid; place-items: center; height: 46px; font-size: 36px; }
+.col-grid .op { font-size: 34px; }
+.col-grid .rule { grid-column: 1 / -1; height: 4px; background: var(--ink); border-radius: 2px; }
+.col-grid .cslot { height: 54px; font-size: 32px; min-width: 0; padding: 0; border-radius: 10px; }
+.col-grid .carry { height: 30px; font-size: 18px; min-width: 0; padding: 0; border-width: 2px; border-style: dashed; border-radius: 8px; background: var(--foam); }
+.col-grid .carry.empty { color: transparent; }
+.col-grid .place { font: 700 11px var(--body); color: var(--ink-soft); text-align: center; text-transform: uppercase; letter-spacing: .5px; }
+.col-static { display: inline-grid; gap: 2px 6px; font-family: var(--display); font-size: 26px; font-variant-numeric: tabular-nums; }
+.col-static .c { text-align: center; min-width: 20px; }
+.col-static .cr { font-size: 15px; color: var(--coral); text-align: center; }
+.col-static .rule { grid-column: 1 / -1; height: 3px; background: var(--ink); }
+.col-static .ans { color: var(--leaf); }
+
+/* ---------- Area Builder ---------- */
+.area { display: grid; gap: 4px; justify-content: center; max-width: 100%; }
+.area .hd { font-family: var(--display); font-size: 22px; display: grid; place-items: center; color: var(--sea-deep); padding: 2px 4px; }
+.area .cell {
+  border: 3px solid var(--ink); border-radius: 12px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 0;
+}
+.area .cell small { font-weight: 800; font-size: 14px; white-space: nowrap; }
+.area .cell .slot { min-width: 0; width: 100%; height: 44px; font-size: 22px; padding: 0 4px; }
+.tint-0 { background: #FFE6A6; } .tint-1 { background: #CDEFD9; } .tint-2 { background: #CBE8FF; } .tint-3 { background: #FFD5CC; }
+.tint-4 { background: #E6DBFF; } .tint-5 { background: #FFF0B8; } .tint-6 { background: #D7F7F2; } .tint-7 { background: #FBD9EC; }
+
+/* ---------- Array Garden ---------- */
+.garden {
+  display: grid; gap: 3px; margin: 6px auto; padding: 8px; background: #8FD16B; border: 3px solid var(--ink); border-radius: 16px;
+  touch-action: none; user-select: none; width: max-content; max-width: 100%;
+}
+.garden .plot {
+  width: var(--cell); height: var(--cell); border-radius: 7px; background: #6DB24C; display: grid; place-items: center;
+  font-size: calc(var(--cell) * .72); line-height: 1; cursor: pointer;
+}
+.garden .plot.on { background: #FFF3B5; }
+.garden .plot.on::after { content: "🌻"; }
+.garden .plot.hint::after { content: "🌱"; }
+.garden-status { text-align: center; font-family: var(--display); font-size: 24px; min-height: 34px; }
+.mini-garden { display: inline-grid; gap: 2px; padding: 6px; background: #8FD16B; border: 2px solid var(--ink); border-radius: 10px; }
+.mini-garden span { width: 16px; height: 16px; border-radius: 4px; background: #FFF3B5; font-size: 12px; line-height: 16px; text-align: center; }
+
+/* ---------- Treasure Split ---------- */
+.crew { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; font-size: 30px; margin: 4px 0; }
+.story { text-align: center; font-weight: 700; font-size: 18px; max-width: 520px; margin: 0 auto; }
+.rem-label { font-family: var(--display); font-size: 26px; color: var(--ink-soft); }
+.div-steps { display: grid; grid-template-columns: auto auto; gap: 2px 14px; justify-content: center; font-variant-numeric: tabular-nums; font-weight: 700; }
+.div-steps .r { text-align: right; }
+
+/* ---------- Memory Reef ---------- */
+.reef { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 520px; margin: 0 auto; }
+.mcard {
+  aspect-ratio: 1.15; max-width: 100%; border: 3px solid var(--ink); border-radius: 14px; cursor: pointer; position: relative;
+  background: repeating-linear-gradient(45deg, #13889A 0 10px, #0E7383 10px 20px); box-shadow: 0 4px 0 var(--ink);
+  font-family: var(--display); color: var(--ink); padding: 0;
+}
+.mcard::before { content: "🐚"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; }
+.mcard.up, .mcard.done { background: #fff; }
+.mcard.up::before, .mcard.done::before { content: none; }
+.mcard .mface { display: none; }
+.mcard.up .mface, .mcard.done .mface { display: grid; place-items: center; position: absolute; inset: 0; font-size: clamp(18px, 4.5vw, 28px); }
+.mcard.done { background: var(--leaf-soft); border-color: var(--leaf); box-shadow: 0 4px 0 var(--leaf); cursor: default; }
+.mcard.bad { animation: shake .4s; background: var(--coral-soft); }
+.mem-hud { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 10px; }
+
+/* ---------- Arcade (Driver + Runner) ---------- */
+.arcade { background: var(--ink); color: #fff; border-radius: 18px; padding: 10px; border: 3px solid var(--ink); }
+.ahud { display: flex; justify-content: space-between; align-items: center; font-weight: 800; padding: 0 4px 6px; gap: 8px; font-variant-numeric: tabular-nums; }
+.hearts { letter-spacing: 2px; }
+.aq { background: var(--sun); color: var(--ink); border-radius: 12px; text-align: center; font-family: var(--display); font-size: 30px; padding: 4px; margin-bottom: 8px; }
+.road {
+  position: relative; height: 330px; overflow: hidden; border-radius: 12px; touch-action: none; cursor: pointer;
+  border-left: 16px solid #3E9B45; border-right: 16px solid #3E9B45;
+  background:
+    linear-gradient(90deg, transparent calc(33.33% - 2px), rgba(255,255,255,.55) calc(33.33% - 2px) calc(33.33% + 2px), transparent calc(33.33% + 2px) calc(66.66% - 2px), rgba(255,255,255,.55) calc(66.66% - 2px) calc(66.66% + 2px), transparent calc(66.66% + 2px)),
+    #3B3F49;
+  -webkit-mask-image: none;
+}
+.road .stripes { position: absolute; inset: -40px 0 0; background: repeating-linear-gradient(180deg, transparent 0 22px, #3B3F49 22px 44px); opacity: .9; pointer-events: none; }
+.car { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) rotate(90deg); font-size: 46px; line-height: 1; transition: left .12s ease; z-index: 3; }
+.arow { position: absolute; left: 0; right: 0; top: 0; height: 46px; z-index: 2; will-change: transform; }
+.abox {
+  position: absolute; top: 0; transform: translateX(-50%); min-width: 62px; padding: 4px 10px;
+  background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 4px 0 #000;
+  font-family: var(--display); font-size: 24px; text-align: center; font-variant-numeric: tabular-nums;
+}
+.abox.good { background: var(--leaf); color: #fff; }
+.abox.bad { background: var(--coral); color: #fff; }
+.steer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.steer .btn { font-size: 30px; min-height: 56px; }
+.abanner {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 5;
+  background: var(--sand); color: var(--ink); border: 3px solid var(--ink); border-radius: 14px; padding: 8px 16px;
+  font-family: var(--display); font-size: 26px; text-align: center; white-space: nowrap; box-shadow: 0 5px 0 #000;
+}
+.abanner small { display: block; font-family: var(--body); font-weight: 800; font-size: 15px; color: var(--coral); }
+.track {
+  position: relative; height: 250px; overflow: hidden; border-radius: 12px; touch-action: none; cursor: pointer;
+  background: linear-gradient(#8ED8F2 0 62%, #F3D58B 62% 66%, #E8C36E 66%);
+}
+.track .sun { position: absolute; right: 8%; top: 12%; width: 46px; height: 46px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 8px rgba(255,201,60,.35); }
+.runner { position: absolute; left: 10%; bottom: 74px; font-size: 48px; line-height: 1; z-index: 3; transform: scaleX(-1); }
+.runner.hop { animation: hop .75s cubic-bezier(.3,.7,.4,1); }
+@keyframes hop { 0% { translate: 0 0; } 50% { translate: 0 -118px; } 100% { translate: 0 0; } }
+.block {
+  position: absolute; bottom: 74px; left: 0; z-index: 2; will-change: transform;
+  min-width: 60px; padding: 6px 8px; background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 10px;
+  font-family: var(--display); font-size: 22px; text-align: center; box-shadow: 0 4px 0 #000;
+}
+.ahint { font-size: 14px; color: #C9D6DE; text-align: center; margin-top: 8px; }
+.mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.mode-btn {
+  border: 3px solid var(--ink); border-radius: 16px; background: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer;
+  padding: 12px; font-family: var(--display); font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.mode-btn small { font-family: var(--body); font-weight: 700; font-size: 14px; color: var(--ink-soft); }
+.mode-btn .big { font-size: 40px; line-height: 1; }
+.picker { display: grid; gap: 14px; text-align: center; }
+.picker h3 { font-size: 26px; }
+.runner-pick { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.runner-pick button { font-size: 38px; width: 70px; height: 70px; border: 3px solid var(--ink); border-radius: 16px; background: #fff; cursor: pointer; }
+.runner-pick button[aria-pressed="true"] { background: var(--sun); box-shadow: 0 4px 0 var(--ink); transform: translateY(-3px); }
+
+/* ---------- Results ---------- */
+.results { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 8px 0; }
+.results h2 { font-size: 36px; color: var(--sea-deep); }
+.big-stars { font-size: 64px; letter-spacing: 6px; line-height: 1; }
+.big-stars span { display: inline-block; animation: starIn .5s backwards; }
+.big-stars span:nth-child(2) { animation-delay: .2s; } .big-stars span:nth-child(3) { animation-delay: .4s; }
+.big-stars .off { filter: grayscale(1) opacity(.3); }
+@keyframes starIn { from { transform: scale(0) rotate(-90deg); } }
+.result-lines { display: grid; gap: 6px; width: 100%; max-width: 420px; }
+.result-line { display: flex; justify-content: space-between; gap: 10px; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.result-line.hl { background: var(--leaf-soft); }
+.result-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+
+/* ---------- Shop + Badges ---------- */
+.shop-top { display: flex; align-items: center; gap: 22px; justify-content: center; padding: 26px 0 12px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+.tab { border: 3px solid var(--ink); border-radius: 999px; background: #fff; padding: 4px 16px; font-weight: 800; cursor: pointer; font-size: 16px; }
+.tab[aria-selected="true"] { background: var(--ink); color: #fff; }
+.item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+.item {
+  border: 3px solid var(--ink); border-radius: 16px; background: #fff; padding: 10px 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 800; box-shadow: 0 4px 0 var(--ink); min-width: 0;
+}
+.item .iicon { font-size: 36px; line-height: 1.1; }
+.item .swatch { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--ink); }
+.item .price { font-size: 14px; }
+.item.wearing { background: var(--leaf-soft); border-color: var(--leaf); }
+.item.locked { opacity: .55; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.badge { border: 3px solid var(--ink); border-radius: 16px; background: #fff; padding: 10px; text-align: center; min-width: 0; }
+.badge .bicon { font-size: 40px; line-height: 1.1; }
+.badge b { display: block; font-family: var(--display); font-weight: 400; font-size: 18px; }
+.badge small { color: var(--ink-soft); font-weight: 600; font-size: 13px; line-height: 1.2; display: block; }
+.badge.locked { background: var(--sand-2); border-style: dashed; }
+.badge.locked .bicon { filter: grayscale(1) opacity(.35); }
+
+/* ---------- Teacher ---------- */
+.recent-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 6px; }
+.recent-row button { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; padding: 2px 12px 2px 4px; font-weight: 800; cursor: pointer; font-size: 16px; }
+.t-sheet { background: var(--foam); border: 3px solid var(--ink); border-radius: 14px; padding: 10px 14px; margin-bottom: 12px; display: grid; gap: 8px; }
+.t-sheet .row-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.t-sheet .text-input { font-size: 15px; padding: 4px 10px; flex: 1 1 260px; min-width: 0; }
+.ok-text { color: var(--leaf); font-weight: 800; } .bad-text { color: var(--coral); font-weight: 800; }
+.pin-box { max-width: 340px; margin: 10px auto; display: grid; gap: 10px; text-align: center; }
+.pin-err { color: var(--coral); font-weight: 800; min-height: 24px; }
+.t-summary { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.t-table-wrap { overflow-x: auto; border: 3px solid var(--ink); border-radius: 14px; background: #fff; }
+.t-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+.t-table th, .t-table td { padding: 6px 8px; border-bottom: 1px solid var(--sand-2); text-align: left; white-space: nowrap; }
+.t-table th { background: var(--sand-2); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+.t-table tr.row { cursor: pointer; }
+.t-table tr.row:hover td { background: var(--foam); }
+.sk { display: inline-block; border-radius: 8px; padding: 0 6px; font-weight: 800; border: 2px solid transparent; }
+.sk.none { color: #A9A08A; }
+.sk.g { background: var(--leaf-soft); border-color: var(--leaf); }
+.sk.y { background: #FFF0B8; border-color: var(--sun-deep); }
+.sk.r { background: var(--coral-soft); border-color: var(--coral); }
+.t-detail { margin-top: 14px; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 14px; }
+.t-detail-head { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; padding-top: 14px; }
+.t-skill { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--sand-2); }
+.t-skill .lvl-ctl { display: flex; align-items: center; gap: 6px; }
+.t-skill small { color: var(--ink-soft); font-weight: 600; display: block; }
+.legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; margin: 8px 0; color: var(--ink-soft); font-weight: 700; }
+.t-tools { display: grid; gap: 10px; margin-top: 14px; }
+.t-tools .row-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.t-tools .text-input { max-width: 180px; font-size: 18px; padding: 4px 10px; }
+
+/* ---------- Toasts ---------- */
+#toasts { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 50%; transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; width: max-content; max-width: calc(100vw - 32px); pointer-events: none; }
+.toast { background: var(--ink); color: #fff; border-radius: 14px; padding: 8px 16px; font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: toastIn .3s; text-align: center; }
+.toast.gold { background: var(--sun); color: var(--ink); border: 3px solid var(--ink); }
+@keyframes toastIn { from { transform: translateY(20px); opacity: 0; } }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .board { padding: 12px; border-radius: 18px; }
+  .game-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .game-card.feature .gicon { font-size: 44px; }
+  .game-card .gname { font-size: 18px; }
+  .hub-head .who h2 { font-size: 24px; }
+  .avatar-pick { grid-template-columns: repeat(4, 1fr); }
+  .road { height: 290px; }
+  .key { height: 52px; }
+  .topbar h2 { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <div class="board">
+
+    <!-- Who's playing -->
+    <section id="scr-who">
+      <div class="title-row">
+        <h1 class="logo">Number <span>Island</span></h1>
+        <div class="tagline">Grade 4 math adventures</div>
+      </div>
+      <div id="whoList">
+        <h2 class="section-label">Who's playing?</h2>
+        <div class="profile-grid" id="profileGrid"></div>
+      </div>
+      <form id="signIn" class="new-player" hidden>
+        <h2 class="section-label" style="margin:0">Sign in to play</h2>
+        <label for="siName">Your name</label>
+        <input id="siName" class="text-input" maxlength="30" autocomplete="off" placeholder="Type your name">
+        <label for="siCode">Your secret code</label>
+        <input id="siCode" class="text-input" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="The code from your teacher">
+        <div class="pin-err" id="siErr" role="alert"></div>
+        <div class="foot-row" style="margin-top:0">
+          <button type="button" class="btn plain" id="siOffline" hidden>Play on this tablet for now</button>
+          <button type="submit" class="btn leaf" id="siGo">Let's go ➜</button>
+        </div>
+        <div id="siRecent"></div>
+      </form>
+      <form id="newPlayer" class="new-player" hidden>
+        <h2 class="section-label" style="margin:0" id="newTitle">New explorer</h2>
+        <label for="newName" id="newNameLabel">Your first name</label>
+        <input id="newName" class="text-input" maxlength="14" autocomplete="off" placeholder="Type your name">
+        <label>Pick your animal</label>
+        <div class="avatar-pick" id="avatarPick"></div>
+        <div class="foot-row">
+          <button type="button" class="btn plain" id="cancelNew">Back</button>
+          <button type="submit" class="btn leaf" id="createBtn">Start exploring</button>
+        </div>
+      </form>
+      <p class="note" id="whoNote">Progress is saved on this device.</p>
+      <div class="foot-row"><button type="button" class="link-btn" id="teacherLink1">Teacher</button></div>
+    </section>
+
+    <!-- Hub -->
+    <section id="scr-hub" hidden>
+      <div class="hub-head">
+        <div id="hubAvatar"></div>
+        <div class="who">
+          <h2 id="hubName">Explorer</h2>
+          <div class="rank" id="hubRank">Level 1 · Beachcomber</div>
+          <div class="xpbar"><i id="hubXp" style="width:0%"></i></div>
+          <div class="xp-text" id="hubXpText">0 / 80 XP to next level</div>
+        </div>
+        <div class="hub-actions">
+          <span class="chip coins" id="hubCoins">🪙 0</span>
+          <button type="button" class="btn small" id="openShop">🛍️ Shop</button>
+          <button type="button" class="btn small plain" id="openBadges">🏅 Badges</button>
+        </div>
+      </div>
+      <h2 class="section-label">Pick an adventure</h2>
+      <div class="game-grid" id="gameGrid"></div>
+      <div class="foot-row">
+        <button type="button" class="link-btn" id="switchPlayer">Switch player</button>
+        <button type="button" class="link-btn" id="soundToggle">Sound: on</button>
+        <button type="button" class="link-btn" id="teacherLink2">Teacher</button>
+      </div>
+      <p class="note" id="syncStatus" aria-live="polite"></p>
+    </section>
+
+    <!-- Game -->
+    <section id="scr-game" hidden>
+      <div class="topbar">
+        <button type="button" class="btn small plain" id="leaveGame">⬅ Map</button>
+        <div>
+          <h2 id="gameTitle">Game</h2>
+          <div class="progress-dots" id="progressDots"></div>
+        </div>
+        <span class="chip coins" id="gameCoins">🪙 0</span>
+      </div>
+      <div class="game-wrap" id="gameWrap">
+        <div id="gameBody"></div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="scr-results" hidden>
+      <div class="results" id="resultsBody"></div>
+    </section>
+
+    <!-- Shop -->
+    <section id="scr-shop" hidden>
+      <div class="topbar">
+        <button type="button" class="btn small plain" data-back>⬅ Map</button>
+        <h2>Island Shop</h2>
+        <span class="chip coins" id="shopCoins">🪙 0</span>
+      </div>
+      <div class="shop-top"><div id="shopAvatar"></div><div class="note" style="text-align:left;max-width:260px">Spend coins on hats, pets and backgrounds. Tap something you own to wear it or take it off.</div></div>
+      <div class="tabs" role="tablist" id="shopTabs">
+        <button type="button" class="tab" role="tab" data-tab="hat" aria-selected="true">Hats</button>
+        <button type="button" class="tab" role="tab" data-tab="pet" aria-selected="false">Pets</button>
+        <button type="button" class="tab" role="tab" data-tab="bg" aria-selected="false">Backgrounds</button>
+      </div>
+      <div class="item-grid" id="shopGrid"></div>
+    </section>
+
+    <!-- Badges -->
+    <section id="scr-badges" hidden>
+      <div class="topbar">
+        <button type="button" class="btn small plain" data-back>⬅ Map</button>
+        <h2>Badges</h2>
+        <span class="chip" id="badgeCount">0 / 0</span>
+      </div>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </section>
+
+    <!-- Teacher -->
+    <section id="scr-teacher" hidden>
+      <div class="topbar">
+        <button type="button" class="btn small plain" id="leaveTeacher">⬅ Back</button>
+        <h2>Teacher View</h2>
+        <span></span>
+      </div>
+      <form class="pin-box" id="pinForm">
+        <label for="pinInput"><b>Enter the teacher PIN</b></label>
+        <input id="pinInput" class="text-input" type="password" inputmode="numeric" autocomplete="off" maxlength="8" style="text-align:center">
+        <button type="submit" class="btn leaf">Open</button>
+        <div class="pin-err" id="pinErr"></div>
+        <p class="note">The PIN starts as 1234. Change it once you're in.</p>
+      </form>
+      <div id="teacherBody" hidden></div>
+    </section>
+
+  </div>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* =========================================================
+   CLASS SHEET LINK
+   Paste your Google Apps Script web app link between the quotes below.
+   Leave it empty to save progress on each device only.
+   ========================================================= */
+const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = n => Number(n).toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const reduceMotion = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+
+/* =========================================================
+   Data
+   ========================================================= */
+const SKILLS = {
+  mult:    { name: 'Multiplication facts', short: '× facts',
+             levels: ['×2, ×5, ×10', '×2 to ×5', '×2 to ×9', 'up to 12 × 12', 'tens, like 7 × 30'] },
+  div:     { name: 'Division facts', short: '÷ facts',
+             levels: ['÷2, ÷5, ÷10', '÷2 to ÷5', '÷2 to ÷9', 'up to 144 ÷ 12', 'tens, like 240 ÷ 6'] },
+  mental:  { name: 'Mental + and −', short: 'Mental ±',
+             levels: ['2-digit ± 1-digit', '± tens', '2-digit, no regrouping', '2-digit with regrouping', '3-digit ± 2-digit'] },
+  addsub:  { name: 'Multi-digit + and −', short: 'Big ±',
+             levels: ['2-digit numbers', '3-digit numbers', '4-digit numbers', '5-digit numbers', '6-digit numbers'] },
+  partial: { name: 'Partial products', short: 'Partial ×',
+             levels: ['1-digit × 2-digit', '1-digit × 3-digit', '1-digit × 4-digit', 'teens × 2-digit', '2-digit × 2-digit'] },
+  arrays:  { name: 'Arrays & area', short: 'Arrays',
+             levels: ['up to 5 × 5', 'up to 6 × 6', 'up to 8 × 8', 'up to 10 × 10', 'up to 12 × 12'] },
+  longdiv: { name: 'Dividing big numbers', short: 'Big ÷',
+             levels: ['division facts', '2-digit ÷ 1-digit', '2-digit with remainders', '3-digit ÷ 1-digit', '4-digit ÷ 1-digit'] }
+};
+const SKILL_IDS = Object.keys(SKILLS);
+
+const GAMES = [
+  { id: 'driver',  name: 'Math Driver',    icon: '🚗', blurb: 'Steer into the right answer. Pick ×, ÷, + or −.', skill: null, bg: '#FFE6A6', feature: true },
+  { id: 'runner',  name: 'Fact Runner',    icon: '🏃', blurb: 'Jump the wrong answers.', skill: 'mult', bg: '#CBE8FF' },
+  { id: 'column',  name: 'Column Cliffs',  icon: '🧗', blurb: 'Big + and − in columns.', skill: 'addsub', bg: '#FFD5CC' },
+  { id: 'partial', name: 'Area Builder',   icon: '🧱', blurb: 'Multiply with partial products.', skill: 'partial', bg: '#E6DBFF' },
+  { id: 'arrays',  name: 'Array Garden',   icon: '🌻', blurb: 'Plant rows and columns.', skill: 'arrays', bg: '#CDEFD9' },
+  { id: 'divide',  name: 'Treasure Split', icon: '💰', blurb: 'Share coins fairly with division.', skill: 'longdiv', bg: '#FFF0B8' },
+  { id: 'memory',  name: 'Memory Reef',    icon: '🐚', blurb: 'Match facts to products.', skill: 'mult', bg: '#D7F7F2' }
+];
+const GAME = Object.fromEntries(GAMES.map(g => [g.id, g]));
+
+const AVATARS = ['🦊', '🐼', '🐯', '🐸', '🐨', '🐙', '🦉', '🐢', '🐰', '🦁', '🐧', '🐬'];
+const SHOP = {
+  hat: [
+    { id: 'cap', icon: '🧢', name: 'Cap', price: 20 },
+    { id: 'bow', icon: '🎀', name: 'Bow', price: 20 },
+    { id: 'sunhat', icon: '👒', name: 'Sun hat', price: 40 },
+    { id: 'tophat', icon: '🎩', name: 'Top hat', price: 60 },
+    { id: 'grad', icon: '🎓', name: 'Grad cap', price: 90 },
+    { id: 'crown', icon: '👑', name: 'Crown', price: 150, minLevel: 5 }
+  ],
+  pet: [
+    { id: 'chick', icon: '🐣', name: 'Chick', price: 30 },
+    { id: 'crab', icon: '🦀', name: 'Crab', price: 45 },
+    { id: 'fish', icon: '🐠', name: 'Fish', price: 45 },
+    { id: 'parrot', icon: '🦜', name: 'Parrot', price: 70 },
+    { id: 'unicorn', icon: '🦄', name: 'Unicorn', price: 120, minLevel: 4 },
+    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 200, minLevel: 7 }
+  ],
+  bg: [
+    { id: 'sky', name: 'Sky', price: 0, css: 'linear-gradient(160deg,#C9F1FF,#7FD3EE)' },
+    { id: 'sunset', name: 'Sunset', price: 40, css: 'linear-gradient(160deg,#FFD580,#FF7E67)' },
+    { id: 'jungle', name: 'Jungle', price: 40, css: 'linear-gradient(160deg,#C6F59A,#3FA34D)' },
+    { id: 'lagoon', name: 'Lagoon', price: 40, css: 'linear-gradient(160deg,#B4FFE9,#18AFA0)' },
+    { id: 'berry', name: 'Berry', price: 60, css: 'linear-gradient(160deg,#FFC7E6,#C45BB0)' },
+    { id: 'galaxy', name: 'Galaxy', price: 100, css: 'radial-gradient(circle at 30% 30%,#8E7CF0,#2A1F6B 70%)', minLevel: 3 },
+    { id: 'gold', name: 'Gold', price: 250, css: 'linear-gradient(160deg,#FFF6B8,#F0B400)', minLevel: 8 }
+  ]
+};
+const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
+
+const BADGES = [
+  { id: 'first',     icon: '🐚', name: 'First Shell',     desc: 'Finish your first game' },
+  { id: 'perfect',   icon: '⭐', name: 'Perfect Round',   desc: 'Earn 3 stars in a game' },
+  { id: 'streak10',  icon: '🔥', name: 'On Fire',         desc: 'Get 10 right in a row' },
+  { id: 'streak25',  icon: '🌋', name: 'Volcano',         desc: 'Get 25 right in a row' },
+  { id: 'century',   icon: '💯', name: 'Century',         desc: 'Answer 100 questions correctly' },
+  { id: 'explorer',  icon: '🧭', name: 'Explorer',        desc: 'Play all 7 games' },
+  { id: 'climb',     icon: '📈', name: 'Climber',         desc: 'Reach level 3 in any skill' },
+  { id: 'master',    icon: '🏆', name: 'Skill Master',    desc: 'Reach level 5 in any skill' },
+  { id: 'legend',    icon: '👑', name: 'Island Legend',   desc: 'Reach level 5 in every skill' },
+  { id: 'shopper',   icon: '🛍️', name: 'Trader',          desc: 'Buy something in the shop' },
+  { id: 'highway',   icon: '🏁', name: 'Highway Hero',    desc: 'Score 1,500 in Math Driver' },
+  { id: 'jumper',    icon: '🦘', name: 'Jump Champ',      desc: 'Score 1,500 in Fact Runner' },
+  { id: 'memory',    icon: '🧠', name: 'Sharp Memory',    desc: 'Clear Memory Reef in 9 moves or fewer' },
+  { id: 'rich',      icon: '💎', name: 'Treasure Keeper', desc: 'Earn 500 coins in total' }
+];
+const PRAISE = ['Nice!', 'You got it!', 'Brilliant!', 'Super!', 'Yes!', 'Awesome!', 'Spot on!', 'Great thinking!'];
+
+/* =========================================================
+   Storage (saved on this device only)
+   ========================================================= */
+const KEY = 'numberIsland.v1';
+let store = { profiles: {}, current: null, pin: '1234', sound: true };
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { const d = JSON.parse(raw); if (d && typeof d === 'object') store = Object.assign(store, d); }
+  } catch (e) { /* storage blocked: play without saving */ }
+  if (!store.profiles || typeof store.profiles !== 'object') store.profiles = {};
+}
+function save() {
+  if (store.current && store.profiles[store.current]) store.profiles[store.current].updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* ignore */ }
+}
+const P = () => store.profiles[store.current];
+
+function newSkill() { return { level: 1, streak: 0, miss: 0, correct: 0, total: 0, recent: [] }; }
+function newProfile(name, avatar, forcedId) {
+  const id = forcedId || 'p' + Date.now().toString(36) + rnd(100, 999);
+  const skills = {}; SKILL_IDS.forEach(k => skills[k] = newSkill());
+  store.profiles[id] = {
+    id, name, avatar, coins: 0, coinsEarned: 0, xp: 0, owned: ['sky'], wear: { hat: null, pet: null, bg: 'sky' },
+    skills, games: {}, badges: [], streak: 0, bestStreak: 0, totalCorrect: 0, created: Date.now(), last: Date.now()
+  };
+  return id;
+}
+function ensureProfile(p) { // fills gaps if the data shape grows later
+  SKILL_IDS.forEach(k => { if (!p.skills[k]) p.skills[k] = newSkill(); });
+  p.games = p.games || {}; p.badges = p.badges || []; p.owned = p.owned || ['sky']; p.wear = p.wear || { bg: 'sky' };
+}
+
+/* =========================================================
+   Levels, rewards, badges
+   ========================================================= */
+function levelInfo(xp) {
+  let L = 1, need = 80, acc = 0;
+  while (xp >= acc + need) { acc += need; L++; need = 80 + 30 * (L - 1); }
+  return { L, into: xp - acc, need, rank: RANKS[Math.min(L, RANKS.length) - 1] };
+}
+function reward(coins, xp) {
+  const p = P(); const before = levelInfo(p.xp).L;
+  p.coins += coins; p.coinsEarned += coins; p.xp += xp;
+  const after = levelInfo(p.xp);
+  if (after.L > before) {
+    toast(`🎉 Level ${after.L}! You're now a ${after.rank}.`, true);
+    sfx('level');
+    if (session) session.notes.push(`Reached level ${after.L}: ${after.rank}`);
+  }
+  updateCoinChips();
+}
+let session = null; // per-round notes: level changes, badges
+
+function record(skill, ok) {
+  const p = P(); const s = p.skills[skill];
+  s.total++; if (ok) s.correct++;
+  s.recent.push(ok ? 1 : 0); if (s.recent.length > 20) s.recent.shift();
+  if (ok) {
+    s.streak++; s.miss = 0; p.totalCorrect++; p.streak++; p.bestStreak = Math.max(p.bestStreak, p.streak);
+    if (s.streak >= 4 && s.level < 5) {
+      s.level++; s.streak = 0;
+      toast(`⬆️ ${SKILLS[skill].short} level ${s.level}: ${SKILLS[skill].levels[s.level - 1]}`);
+      if (session) session.notes.push(`${SKILLS[skill].name} went up to level ${s.level}`);
+    }
+    reward(2, 10);
+  } else {
+    s.streak = 0; s.miss++; p.streak = 0;
+    if (s.miss >= 2 && s.level > 1) { s.level--; s.miss = 0; } // quietly eases off after two misses
+  }
+  p.last = Date.now();
+  checkBadges(); save(); scheduleSync();
+}
+const lvl = skill => P().skills[skill].level;
+
+function award(id) {
+  const p = P(); if (p.badges.includes(id)) return;
+  p.badges.push(id);
+  const b = BADGES.find(x => x.id === id);
+  toast(`🏅 New badge: ${b.name}!`, true); sfx('level');
+  if (session) session.badges.push(b);
+}
+function checkBadges(extra = {}) {
+  const p = P(); if (!p) return;
+  if (p.bestStreak >= 10) award('streak10');
+  if (p.bestStreak >= 25) award('streak25');
+  if (p.totalCorrect >= 100) award('century');
+  if (p.coinsEarned >= 500) award('rich');
+  const levels = SKILL_IDS.map(k => p.skills[k].level);
+  if (levels.some(l => l >= 3)) award('climb');
+  if (levels.some(l => l >= 5)) award('master');
+  if (levels.every(l => l >= 5)) award('legend');
+  if (GAMES.every(g => p.games[g.id] && p.games[g.id].plays > 0)) award('explorer');
+  if (extra.finished) award('first');
+  if (extra.stars === 3) award('perfect');
+  if (extra.driver >= 1500) award('highway');
+  if (extra.runner >= 1500) award('jumper');
+  if (extra.memoryMoves != null && extra.memoryMoves <= 9) award('memory');
+  if (extra.bought) award('shopper');
+  save();
+}
+
+/* =========================================================
+   Sound + feedback
+   ========================================================= */
+let actx = null;
+function sfx(kind) {
+  if (!store.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = { ok: [660, 880], bad: [220, 180], coin: [988, 1319], level: [523, 659, 784, 1047], tap: [440] }[kind] || [440];
+    notes.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = kind === 'bad' ? 'triangle' : 'sine'; o.frequency.value = f;
+      const t = actx.currentTime + i * 0.09;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.18);
+    });
+  } catch (e) { /* no audio */ }
+}
+function toast(msg, gold = false) {
+  const t = document.createElement('div'); t.className = 'toast' + (gold ? ' gold' : ''); t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+function cheer(text) {
+  const wrap = $('#gameWrap');
+  const c = document.createElement('div'); c.className = 'cheer'; c.textContent = text || pick(PRAISE);
+  wrap.appendChild(c); setTimeout(() => c.remove(), 950);
+  if (!reduceMotion) {
+    for (let i = 0; i < 10; i++) {
+      const s = document.createElement('span'); s.className = 'spark'; s.textContent = pick(['✨', '⭐', '🪙']);
+      s.style.left = '50%'; s.style.top = '40%';
+      const ang = Math.random() * Math.PI * 2, d = 80 + Math.random() * 90;
+      s.style.setProperty('--dx', Math.cos(ang) * d + 'px'); s.style.setProperty('--dy', Math.sin(ang) * d + 'px');
+      wrap.appendChild(s); setTimeout(() => s.remove(), 850);
+    }
+  }
+  sfx('ok');
+}
+
+/* =========================================================
+   Screens
+   ========================================================= */
+const SCREENS = ['who', 'hub', 'game', 'results', 'shop', 'badges', 'teacher'];
+let currentScreen = 'who';
+function show(name) {
+  SCREENS.forEach(s => { $('#scr-' + s).hidden = s !== name; });
+  currentScreen = name;
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+
+function avatarHTML(p, size = 64) {
+  const bg = SHOP.bg.find(b => b.id === (p.wear && p.wear.bg)) || SHOP.bg[0];
+  const hat = p.wear && p.wear.hat ? SHOP.hat.find(h => h.id === p.wear.hat) : null;
+  const pet = p.wear && p.wear.pet ? SHOP.pet.find(h => h.id === p.wear.pet) : null;
+  const L = levelInfo(p.xp || 0).L;
+  const ring = L >= 9 ? 'ring-3' : L >= 6 ? 'ring-2' : L >= 3 ? 'ring-1' : '';
+  return `<div class="avatar ${ring}" style="--s:${size}px;background:${bg.css}" aria-hidden="true">
+    <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? `<span class="pet">${pet.icon}</span>` : ''}</div>`;
+}
+function starsHTML(n) { return `<span class="stars" aria-label="${n} of 3 stars">${[1, 2, 3].map(i => i <= n ? '★' : '<span class="off">★</span>').join('')}</span>`; }
+function updateCoinChips() {
+  const p = P(); if (!p) return;
+  ['#hubCoins', '#gameCoins', '#shopCoins'].forEach(id => { $(id).textContent = '🪙 ' + fmt(p.coins); });
+}
+
+/* ---------- Who's playing ---------- */
+let chosenAvatar = AVATARS[0];
+let pendingSignIn = null; // { name, code, offline } while a new sheet player picks an animal
+function renderWho() {
+  pendingSignIn = null;
+  $('#newTitle').textContent = 'New explorer'; $('#newNameLabel').hidden = false; $('#newName').hidden = false;
+  if (sheetUrl()) return renderSignIn();
+  $('#signIn').hidden = true;
+  $('#whoNote').textContent = 'Progress is saved on this device.';
+  const list = Object.values(store.profiles).sort((a, b) => (b.last || 0) - (a.last || 0));
+  const grid = $('#profileGrid');
+  grid.innerHTML = list.map(p => `
+    <button type="button" class="profile-card" data-id="${p.id}">
+      ${avatarHTML(p, 62)}
+      <span class="pname">${esc(p.name)}</span>
+      <small>Level ${levelInfo(p.xp).L} · 🪙 ${fmt(p.coins)}</small>
+    </button>`).join('') + `
+    <button type="button" class="profile-card new" id="addPlayer"><span class="plus">+</span><span>New player</span></button>`;
+  $$('.profile-card[data-id]', grid).forEach(b => b.addEventListener('click', () => { store.current = b.dataset.id; ensureProfile(P()); save(); openHub(); }));
+  $('#addPlayer').addEventListener('click', openNewPlayer);
+  const none = list.length === 0;
+  $('#whoList').hidden = none; $('#newPlayer').hidden = !none; $('#cancelNew').hidden = none;
+  if (none) renderAvatarPick();
+  show('who');
+}
+function openNewPlayer() {
+  $('#whoList').hidden = true; $('#newPlayer').hidden = false; $('#cancelNew').hidden = false;
+  $('#newName').value = ''; renderAvatarPick();
+  setTimeout(() => { try { $('#newName').focus(); } catch (e) {} }, 50);
+}
+function renderAvatarPick() {
+  const box = $('#avatarPick');
+  box.innerHTML = AVATARS.map(a => `<button type="button" aria-pressed="${a === chosenAvatar}" data-a="${a}" aria-label="Animal ${a}">${a}</button>`).join('');
+  $$('button', box).forEach(b => b.addEventListener('click', () => { chosenAvatar = b.dataset.a; $$('button', box).forEach(x => x.setAttribute('aria-pressed', x === b)); sfx('tap'); }));
+}
+$('#newPlayer').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#newName').value.trim();
+  if (!name) { $('#newName').classList.add('shake'); setTimeout(() => $('#newName').classList.remove('shake'), 400); $('#newName').focus(); return; }
+  if (pendingSignIn) {
+    const { name: nm, code, offline } = pendingSignIn;
+    const id = sheetKey(nm);
+    newProfile(nm, chosenAvatar, id);
+    Object.assign(store.profiles[id], { code, sheetName: nm, pending: [] });
+    store.current = id; pendingSignIn = null; save();
+    toast(`Welcome to Number Island, ${nm}!`, true);
+    openHub();
+    if (!offline) syncNow(id);
+    return;
+  }
+  store.current = newProfile(name.slice(0, 14), chosenAvatar); save();
+  toast(`Welcome to Number Island, ${name}!`, true);
+  openHub();
+});
+$('#cancelNew').addEventListener('click', () => { if (pendingSignIn) return renderWho(); $('#whoList').hidden = false; $('#newPlayer').hidden = true; });
+
+/* ---------- Sign in (class sheet mode) ---------- */
+const sheetKey = name => 'n:' + String(name).trim().replace(/\s+/g, ' ').toLowerCase();
+function renderSignIn() {
+  $('#whoList').hidden = true; $('#newPlayer').hidden = true; $('#signIn').hidden = false;
+  $('#whoNote').textContent = 'Your progress saves to your class, so you can play on any tablet.';
+  $('#siErr').textContent = ''; $('#siOffline').hidden = true; $('#siCode').value = '';
+  const recent = Object.values(store.profiles).filter(p => p.sheetName).sort((a, b) => (b.last || 0) - (a.last || 0)).slice(0, 8);
+  $('#siRecent').innerHTML = recent.length ? `<p class="note" style="margin:4px 0 0">Played on this tablet:</p><div class="recent-row">${recent.map(p =>
+    `<button type="button" data-n="${esc(p.sheetName)}">${avatarHTML(p, 30)}${esc(p.sheetName)}</button>`).join('')}</div>` : '';
+  $$('#siRecent button').forEach(b => b.addEventListener('click', () => { $('#siName').value = b.dataset.n; $('#siCode').focus(); }));
+  show('who');
+  setTimeout(() => { try { ($('#siName').value ? $('#siCode') : $('#siName')).focus(); } catch (e) {} }, 50);
+}
+let signingIn = false;
+$('#signIn').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (signingIn) return;
+  const name = $('#siName').value.trim(), code = $('#siCode').value.trim();
+  if (!name) { $('#siErr').textContent = 'Type your name first.'; $('#siName').focus(); return; }
+  signingIn = true; $('#siGo').disabled = true; $('#siGo').textContent = 'Checking…'; $('#siErr').textContent = ''; $('#siOffline').hidden = true;
+  try {
+    const r = await api({ action: 'load', name, code });
+    if (!r.ok) {
+      $('#siErr').textContent = r.error === 'bad_code' ? "That code doesn't match. Try again, or ask your teacher."
+        : r.error === 'not_on_roster' ? `We couldn't find "${name}" on the class list. Check the spelling, or ask your teacher.`
+        : 'Something went wrong with the class sheet. Ask your teacher.';
+      return;
+    }
+    const key = sheetKey(r.name), local = store.profiles[key];
+    if (r.profile && !(local && (local.updated || 0) > (r.profile.updated || 0))) {
+      store.profiles[key] = Object.assign(r.profile, { id: key, pending: local ? local.pending || [] : [] });
+    }
+    if (store.profiles[key]) {
+      Object.assign(store.profiles[key], { code, sheetName: r.name });
+      store.current = key; ensureProfile(P()); save(); openHub(); syncNow(key);
+    } else {
+      startAvatarStep(r.name, code, false);
+    }
+  } catch (err) {
+    const key = sheetKey(name), local = store.profiles[key];
+    if (local && (local.code || '') === code) {
+      store.current = key; ensureProfile(P()); save(); openHub();
+      toast("Can't reach the class sheet. Your progress will save when the internet is back.");
+    } else {
+      $('#siErr').textContent = "Can't reach the class sheet right now. Check the internet, or play on this tablet for now.";
+      $('#siOffline').hidden = false;
+    }
+  } finally {
+    signingIn = false; $('#siGo').disabled = false; $('#siGo').textContent = "Let's go ➜";
+  }
+});
+$('#siOffline').addEventListener('click', () => {
+  const name = $('#siName').value.trim(), code = $('#siCode').value.trim();
+  if (name) startAvatarStep(name, code, true);
+});
+function startAvatarStep(name, code, offline) {
+  pendingSignIn = { name, code, offline };
+  $('#signIn').hidden = true; $('#newPlayer').hidden = false; $('#cancelNew').hidden = false;
+  $('#newTitle').textContent = `Hi, ${name}! Pick your animal`;
+  $('#newNameLabel').hidden = true; $('#newName').hidden = true; $('#newName').value = name;
+  renderAvatarPick();
+}
+
+/* ---------- Class sheet sync ---------- */
+function sheetUrl() { return (CLASS_SHEET_URL || store.sheetUrl || '').trim(); }
+async function api(body) {
+  const url = sheetUrl(); if (!url) throw new Error('no_url');
+  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctrl.signal, redirect: 'follow' });
+    return await res.json();
+  } finally { clearTimeout(t); }
+}
+function summaryOf(p) {
+  const li = levelInfo(p.xp), cols = ['Player level', 'Coins', 'Badges', 'Best streak'], vals = [li.L, p.coins, p.badges.length, p.bestStreak];
+  SKILL_IDS.forEach(k => { const s = p.skills[k], a = acc(s); cols.push(`${SKILLS[k].short} level`, `${SKILLS[k].short} recent %`); vals.push(s.total ? s.level : '', a == null ? '' : a); });
+  const c = SKILL_IDS.reduce((n, k) => n + p.skills[k].correct, 0), t = SKILL_IDS.reduce((n, k) => n + p.skills[k].total, 0);
+  cols.push('Correct', 'Answered'); vals.push(c, t);
+  return { cols, vals };
+}
+function syncBody(p, withActivity) {
+  const copy = JSON.parse(JSON.stringify(p)); delete copy.code; delete copy.pending;
+  return { action: 'save', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [] };
+}
+let syncTimer = null; const syncingIds = new Set();
+function setSyncStatus(state) {
+  const el = $('#syncStatus'); if (!el) return;
+  el.textContent = !sheetUrl() || !P() || !P().sheetName ? '' :
+    state === 'saving' ? '☁️ Saving to your class…' : state === 'ok' ? '☁️ Saved to your class' :
+    state === 'offline' ? "☁️ Can't reach your class right now. Progress will save later." : state === 'error' ? '☁️ The class sheet had a problem saving. Tell your teacher.' : '';
+}
+function scheduleSync(ms = 6000) {
+  const p = P(); if (!sheetUrl() || !p || !p.sheetName) return;
+  clearTimeout(syncTimer); syncTimer = setTimeout(() => syncNow(p.id), ms);
+}
+async function syncNow(id) {
+  const p = store.profiles[id];
+  if (!sheetUrl() || !p || !p.sheetName || syncingIds.has(id)) return;
+  syncingIds.add(id); if (id === store.current) setSyncStatus('saving');
+  const body = syncBody(p, true), sent = body.activity.length;
+  try {
+    const r = await api(body);
+    if (r.ok) { p.pending = (p.pending || []).slice(sent); p.syncedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} if (id === store.current) setSyncStatus('ok'); }
+    else if (id === store.current) setSyncStatus('error');
+  } catch (e) { if (id === store.current) setSyncStatus('offline'); }
+  finally { syncingIds.delete(id); if (p.pending && p.pending.length && sent && p.syncedAt) {} }
+}
+function logActivity(game, result, stars, skill) {
+  const p = P(); if (!p || !p.sheetName) return;
+  p.pending = p.pending || [];
+  p.pending.push({ time: new Date().toISOString(), game, result, stars, skill: skill ? SKILLS[skill].name : '', level: skill ? p.skills[skill].level : '' });
+  save(); syncNow(p.id);
+}
+window.addEventListener('pagehide', () => {
+  const p = P(); const url = sheetUrl();
+  if (!url || !p || !p.sheetName || !navigator.sendBeacon) return;
+  if ((p.syncedAt || 0) >= (p.updated || 0)) return;
+  try { navigator.sendBeacon(url, new Blob([JSON.stringify(syncBody(p, false))], { type: 'text/plain' })); } catch (e) {}
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && P()) syncNow(store.current); });
+
+/* ---------- Hub ---------- */
+function openHub() {
+  stopArcade(); clearTimers();
+  const p = P(); if (!p) return renderWho();
+  ensureProfile(p);
+  $('#hubAvatar').innerHTML = avatarHTML(p, 76);
+  $('#hubName').textContent = p.name;
+  const li = levelInfo(p.xp);
+  $('#hubRank').textContent = `Level ${li.L} · ${li.rank}`;
+  $('#hubXp').style.width = Math.round(li.into / li.need * 100) + '%';
+  $('#hubXpText').textContent = `${li.into} / ${li.need} XP to level ${li.L + 1}`;
+  $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off');
+  updateCoinChips();
+  if (!p.sheetName) $('#syncStatus').textContent = sheetUrl() ? '' : '';
+  else if (!syncingIds.has(p.id)) setSyncStatus((p.syncedAt || 0) >= (p.updated || 0) - 2000 ? 'ok' : 'offline');
+  $('#gameGrid').innerHTML = GAMES.map(g => {
+    const st = p.games[g.id] || {};
+    const lv = g.skill ? `<span class="lvl">Lv ${p.skills[g.skill].level}</span>` : `<span class="lvl">Best ${fmt(st.best || 0)}</span>`;
+    const foot = `<div class="gfoot">${starsHTML(st.stars || 0)}${lv}</div>`;
+    if (g.feature) return `<button type="button" class="game-card feature" data-g="${g.id}" style="--card-bg:${g.bg}">
+        <span class="gicon">${g.icon}</span><span class="gtext"><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</span></button>`;
+    return `<button type="button" class="game-card" data-g="${g.id}" style="--card-bg:${g.bg}">
+        <span class="gicon">${g.icon}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
+  }).join('');
+  $$('.game-card').forEach(b => b.addEventListener('click', () => startGame(b.dataset.g)));
+  show('hub');
+}
+$('#switchPlayer').addEventListener('click', () => { if (P()) syncNow(store.current); store.current = null; save(); renderWho(); });
+$('#soundToggle').addEventListener('click', () => { store.sound = !store.sound; save(); $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off'); sfx('tap'); });
+$('#openShop').addEventListener('click', () => openShop('hat'));
+$('#openBadges').addEventListener('click', openBadges);
+$$('[data-back]').forEach(b => b.addEventListener('click', openHub));
+
+/* =========================================================
+   Number pad (shared by the round games)
+   ========================================================= */
+const Pad = { fields: [], active: 0, onDone: null, locked: false, submitOnly: false };
+function padHTML() {
+  return `<div class="pad" id="pad">${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(d => `<button type="button" class="key" data-k="${d}">${d}</button>`).join('')}
+    <button type="button" class="key alt" data-k="back" aria-label="Delete">⌫</button>
+    <button type="button" class="key" data-k="0">0</button>
+    <button type="button" class="key go" data-k="ok" id="padOk">Check ✓</button></div>`;
+}
+function padBind(fields, onDone, opts = {}) {
+  Pad.fields = fields; Pad.active = opts.start || 0; Pad.onDone = onDone; Pad.locked = false; Pad.submitOnly = !!opts.submitOnly;
+  fields.forEach((f, i) => { f.value = f.value || ''; f.el.addEventListener('click', () => { if (Pad.locked) return; Pad.active = i; padRender(); }); });
+  $$('#pad .key').forEach(k => k.addEventListener('click', () => padPress(k.dataset.k)));
+  padRender();
+}
+function padClear() { Pad.fields = []; Pad.onDone = null; }
+function padRender() {
+  Pad.fields.forEach((f, i) => {
+    f.el.textContent = f.value || f.placeholder || '';
+    f.el.classList.toggle('empty', !f.value);
+    f.el.classList.toggle('active', i === Pad.active);
+  });
+  const ok = $('#padOk');
+  if (ok) {
+    const isLast = Pad.submitOnly || Pad.active >= lastMainIndex();
+    ok.textContent = isLast ? 'Check ✓' : 'Next ➜';
+  }
+}
+function lastMainIndex() { let i = Pad.fields.length - 1; while (i > 0 && Pad.fields[i].scratch) i--; return i; }
+function padPress(k) {
+  if (Pad.locked || !Pad.fields.length) return;
+  const f = Pad.fields[Pad.active];
+  if (k === 'back') {
+    if (f.value) f.value = f.value.slice(0, -1);
+    else if (f.backTo != null) { Pad.active = f.backTo; const g = Pad.fields[Pad.active]; g.value = g.value.slice(0, -1); }
+    else if (Pad.active > 0 && !f.scratch) { Pad.active--; const g = Pad.fields[Pad.active]; g.value = g.value.slice(0, -1); }
+  } else if (k === 'ok') {
+    if (Pad.submitOnly || Pad.active >= lastMainIndex() || f.scratch) { if (Pad.onDone) Pad.onDone(); return; }
+    Pad.active++;
+  } else {
+    if (f.value === '0' && f.max > 1) f.value = '';
+    if (f.value.length < f.max) f.value += k;
+    if (f.max === 1) {
+      if (f.after != null) Pad.active = f.after;
+      else if (f.auto && Pad.active < lastMainIndex()) Pad.active++;
+    }
+  }
+  sfx('tap');
+  padRender();
+}
+document.addEventListener('keydown', e => {
+  if (currentScreen !== 'game') return;
+  if (arcade && arcade.running) return arcadeKey(e);
+  if (!Pad.fields.length) {
+    if (e.key === 'Enter' && $('#explainGo')) { e.preventDefault(); $('#explainGo').click(); }
+    return;
+  }
+  if (/^[0-9]$/.test(e.key)) { e.preventDefault(); padPress(e.key); }
+  else if (e.key === 'Backspace') { e.preventDefault(); padPress('back'); }
+  else if (e.key === 'Enter') { e.preventDefault(); if ($('#explainGo')) $('#explainGo').click(); else padPress('ok'); }
+});
+
+/* =========================================================
+   Question generators
+   ========================================================= */
+function genMult(L) {
+  let a, b;
+  if (L === 1) { a = pick([2, 5, 10]); b = rnd(1, 10); }
+  else if (L === 2) { a = rnd(2, 5); b = rnd(2, 10); }
+  else if (L === 3) { a = rnd(3, 9); b = rnd(2, 9); }
+  else if (L === 4) { a = rnd(6, 12); b = rnd(3, 12); }
+  else if (Math.random() < 0.5) { a = rnd(2, 9); b = rnd(2, 9) * 10; }
+  else { a = rnd(6, 12); b = rnd(6, 12); }
+  if (Math.random() < 0.5) [a, b] = [b, a];
+  return { a, b, text: `${a} × ${b}`, answer: a * b, explain: () => explainMult(a, b) };
+}
+function explainMult(a, b) {
+  const p = a * b, has = x => a === x || b === x, other = x => (a === x ? b : a);
+  const tensF = [a, b].find(n => n > 10 && n % 10 === 0 && n !== 10 * 1 && n <= 90 && [a, b].some(m => m < 10));
+  let tip;
+  if (tensF) { const o = tensF === a ? b : a; tip = `${o} × ${tensF / 10} = ${o * tensF / 10}. So ${o} × ${tensF} = ${o * tensF / 10} tens = <b>${fmt(p)}</b>.`; }
+  else if (has(1)) tip = `Any number times 1 stays the same.`;
+  else if (has(2)) { const o = other(2); tip = `Times 2 means double: ${o} + ${o} = ${p}.`; }
+  else if (has(10)) { const o = other(10); tip = `Times 10: put a zero after ${o} → ${p}.`; }
+  else if (has(5)) { const o = other(5); tip = `Times 5 is half of times 10: ${o} × 10 = ${o * 10}, and half of that is ${p}.`; }
+  else if (has(9)) { const o = other(9); tip = `Times 9: do ${o} × 10 = ${o * 10}, then take away one ${o}: ${o * 10} − ${o} = ${p}.`; }
+  else if (has(4)) { const o = other(4); tip = `Times 4 is double, then double again: ${o} → ${o * 2} → ${p}.`; }
+  else if (has(11) && Math.min(a, b) < 10) { const o = other(11); tip = `Times 11: ${o} × 10 + ${o} = ${o * 10} + ${o} = ${p}.`; }
+  else {
+    const big = Math.max(a, b), small = Math.min(a, b);
+    const split = big > 10 ? 10 : 5, rest = big - split;
+    tip = `Break ${big} into ${split} + ${rest}:<br>${small} × ${split} = ${small * split}<br>${small} × ${rest} = ${small * rest}<br>${small * split} + ${small * rest} = ${p}`;
+  }
+  return `<p class="big-fact">${a} × ${b} = <b>${fmt(p)}</b></p><p>${tip}</p>`;
+}
+function genDiv(L) {
+  let d, q;
+  if (L === 1) { d = pick([2, 5, 10]); q = rnd(1, 10); }
+  else if (L === 2) { d = rnd(2, 5); q = rnd(2, 10); }
+  else if (L === 3) { d = rnd(3, 9); q = rnd(2, 9); }
+  else if (L === 4) { d = rnd(6, 12); q = rnd(3, 12); }
+  else { d = rnd(2, 9); q = rnd(2, 9) * 10; }
+  const n = d * q;
+  return { a: d, b: q, text: `${fmt(n)} ÷ ${d}`, answer: q, explain: () =>
+    `<p class="big-fact">${fmt(n)} ÷ ${d} = <b>${q}</b></p><p>Think multiplication: ${d} × <b>${q}</b> = ${fmt(n)}.</p>` +
+    (L === 5 ? `<p>Shortcut: ${n / 10} ÷ ${d} = ${q / 10}, so ${n} ÷ ${d} = ${q / 10} tens = ${q}.</p>` : `<p>Ask yourself: how many groups of ${d} make ${n}?</p>`) };
+}
+function genMental(L, op) {
+  const add = op === '+', s = add ? '+' : '−';
+  for (let t = 0; t < 500; t++) {
+    let a, b;
+    if (L === 1) { a = rnd(11, 98); b = rnd(1, 9); }
+    else if (L === 2) { a = rnd(11, 89); b = rnd(1, 8) * 10; }
+    else if (L <= 4) { a = rnd(11, 98); b = rnd(11, 98); }
+    else { a = rnd(101, 989); b = rnd(11, 98); }
+    if (!add && b >= a) [a, b] = [b, a];
+    if (!add && b >= a) continue;
+    const regroup = add ? (a % 10 + b % 10 >= 10) : (a % 10 < b % 10);
+    if ((L === 1 || L === 3) && regroup) continue;
+    if (L === 4 && !regroup) continue;
+    if (L === 2 && add && a + b >= 100) continue;
+    const ans = add ? a + b : a - b;
+    return { a, b, text: `${a} ${s} ${b}`, answer: ans, explain: () => {
+      const tens = Math.floor(b / 10) * 10, ones = b % 10;
+      let body;
+      if (tens && ones) {
+        const mid = add ? a + tens : a - tens;
+        body = `<p>Split ${b} into ${tens} and ${ones}.</p><p>${a} ${s} ${tens} = ${mid}<br>${mid} ${s} ${ones} = ${ans}</p>`;
+      } else if (tens) body = `<p>Only the tens change: ${Math.floor(a / 10)} tens ${s} ${tens / 10} tens = ${Math.floor(ans / 10)} tens. The ones stay ${a % 10}.</p>`;
+      else body = `<p>Count ${add ? 'on' : 'back'} ${b} from ${a}: you land on ${ans}.</p>`;
+      return `<p class="big-fact">${a} ${s} ${b} = <b>${ans}</b></p>${body}`;
+    } };
+  }
+  return genMental(1, op);
+}
+function distractors(ans, n, q) {
+  const set = new Set(), c = [ans + 1, ans - 1, ans + 2, ans - 2, ans + 10, ans - 10];
+  if (q && q.a != null) c.push(ans + q.a, ans - q.a, ans + q.b, ans - q.b);
+  shuffle(c).forEach(v => { if (set.size < n && v >= 0 && v !== ans) set.add(v); });
+  let guard = 0;
+  while (set.size < n && guard++ < 200) { const v = ans + rnd(-12, 12); if (v >= 0 && v !== ans) set.add(v); }
+  return [...set];
+}
+
+/* =========================================================
+   Round games (fixed number of questions, stars at the end)
+   ========================================================= */
+let round = null;
+const timers = new Set();
+function later(fn, ms) { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); return t; }
+function clearTimers() { timers.forEach(t => clearTimeout(t)); timers.clear(); }
+
+function startGame(id) {
+  clearTimers(); stopArcade(); padClear();
+  const g = GAME[id];
+  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp };
+  $('#gameTitle').textContent = g.icon + ' ' + g.name;
+  $('#progressDots').innerHTML = '';
+  updateCoinChips();
+  show('game');
+  if (id === 'driver') return driverPicker();
+  if (id === 'runner') return runnerPicker();
+  if (id === 'memory') return memoryStart();
+  const total = { column: 6, partial: 5, arrays: 8, divide: 6 }[id];
+  round = { id, skill: g.skill, total, index: 0, correct: 0, results: [], level0: lvl(g.skill) };
+  nextQuestion();
+}
+function renderDots() {
+  if (!round) return;
+  $('#progressDots').innerHTML = Array.from({ length: round.total }, (_, i) => {
+    const r = round.results[i];
+    return `<i class="${r === true ? 'ok' : r === false ? 'no' : i === round.index - 1 ? 'now' : ''}"></i>`;
+  }).join('');
+}
+function nextQuestion() {
+  padClear();
+  if (round.index >= round.total) return finishRound();
+  round.index++;
+  renderDots();
+  ROUND_GAMES[round.id]();
+}
+function answered(ok, explainHtml, youSaid) {
+  Pad.locked = true;
+  round.results[round.index - 1] = ok;
+  if (ok) round.correct++;
+  record(round.skill, ok);
+  renderDots();
+  if (ok) { cheer(); later(nextQuestion, 1000); }
+  else { sfx('bad'); showExplain(explainHtml, youSaid); }
+}
+function showExplain(html, youSaid) {
+  const ex = document.createElement('div');
+  ex.className = 'explain';
+  ex.innerHTML = `<h3>Not quite. Here's how!</h3>${youSaid ? `<div class="you">You said ${esc(youSaid)}</div>` : ''}
+    <div class="card">${html}</div>
+    <button type="button" class="btn leaf" id="explainGo">Got it ➜</button>`;
+  $('#gameWrap').appendChild(ex);
+  padClear();
+  $('#explainGo').addEventListener('click', () => { ex.remove(); nextQuestion(); });
+  setTimeout(() => { try { $('#explainGo').focus({ preventScroll: true }); } catch (e) {} }, 50);
+}
+function finishRound() {
+  const pct = round.correct / round.total;
+  const stars = pct >= 0.9 ? 3 : pct >= 0.65 ? 2 : 1;
+  reward(stars * 5, 20 + stars * 10);
+  const g = gameStats(round.id); g.stars = Math.max(g.stars || 0, stars); g.best = Math.max(g.best || 0, round.correct);
+  checkBadges({ finished: true, stars });
+  logActivity(GAME[round.id].name, `${round.correct} of ${round.total}`, stars, round.skill);
+  const s = P().skills[round.skill];
+  showResults({
+    stars,
+    title: stars === 3 ? 'Perfect!' : stars === 2 ? 'Great work!' : 'Good practice!',
+    lines: [
+      [`Correct`, `${round.correct} of ${round.total}`],
+      [`${SKILLS[round.skill].name}`, `Level ${s.level} of 5`],
+      [`Now practicing`, SKILLS[round.skill].levels[s.level - 1]]
+    ],
+    again: () => startGame(round.id)
+  });
+}
+function gameStats(id) { const p = P(); p.games[id] = p.games[id] || { plays: 0, stars: 0, best: 0 }; p.games[id].plays++; return p.games[id]; }
+
+function showResults({ stars, title, lines, again }) {
+  const p = P();
+  const coins = p.coins - session.coins0, xp = p.xp - session.xp0;
+  const extra = [...session.notes.map(n => [n, '⬆️']), ...session.badges.map(b => [`New badge: ${b.name}`, b.icon])];
+  $('#resultsBody').innerHTML = `
+    ${avatarHTML(p, 86)}
+    <h2>${title}</h2>
+    <div class="big-stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? '' : 'off'}">⭐</span>`).join('')}</div>
+    <div class="result-lines">
+      ${lines.map(([a, b]) => `<div class="result-line"><span>${a}</span><span>${b}</span></div>`).join('')}
+      <div class="result-line hl"><span>Earned</span><span>🪙 ${fmt(coins)} · ${fmt(xp)} XP</span></div>
+      ${extra.map(([a, b]) => `<div class="result-line hl"><span>${esc(a)}</span><span>${b}</span></div>`).join('')}
+    </div>
+    <div class="result-actions">
+      <button type="button" class="btn leaf" id="playAgain">Play again</button>
+      <button type="button" class="btn plain" id="toMap">⬅ Map</button>
+    </div>`;
+  $('#playAgain').addEventListener('click', again);
+  $('#toMap').addEventListener('click', openHub);
+  sfx('coin');
+  show('results');
+}
+$('#leaveGame').addEventListener('click', openHub);
+
+const ROUND_GAMES = {};
+
+/* ---------- Column Cliffs: multi-digit + and − ---------- */
+const PLACES = ['Ones', 'Tens', 'Hundreds', 'Thousands', 'Ten thousands', 'Hundred thousands', 'Millions'];
+const PLACE_SHORT = ['ones', 'tens', 'hund', 'thou', '10k', '100k', 'mil'];
+ROUND_GAMES.column = () => {
+  const L = lvl('addsub'), n = L + 1, lo = 10 ** (n - 1), hi = 10 ** n - 1;
+  const op = round.index % 2 === 1 ? '+' : '−';
+  let a, b;
+  if (op === '+') { a = rnd(lo, hi); b = rnd(lo, hi); }
+  else { a = rnd(Math.min(lo * 2, hi), hi); b = rnd(Math.max(1, Math.floor(a / 10)), a - 1); }
+  const ans = op === '+' ? a + b : a - b;
+  const W = Math.max(String(a).length, String(b).length, String(ans).length) + (op === '+' ? 0 : 0);
+  const cols = op === '+' ? Math.max(W, String(a).length + 1) : W; // room for a final carry when adding
+  const da = String(a).padStart(cols, ' '), db = String(b).padStart(cols, ' ');
+  const body = $('#gameBody');
+  const avail = Math.min(560, (body.clientWidth || 340) - 10);
+  const cw = Math.max(30, Math.min(52, Math.floor(avail / (cols + 1)) - 5));
+  let g = `<div class="col-grid" style="grid-template-columns:repeat(${cols + 1}, ${cw}px)">`;
+  g += `<div></div>` + Array.from({ length: cols }, (_, i) => `<div class="place">${PLACE_SHORT[cols - 1 - i] || ''}</div>`).join('');
+  g += `<div></div>` + Array.from({ length: cols }, (_, i) => `<div class="slot carry" data-carry="${cols - 1 - i}"></div>`).join('');
+  g += `<div></div>` + [...da].map(c => `<div class="cd">${c.trim()}</div>`).join('');
+  g += `<div class="cd op">${op}</div>` + [...db].map(c => `<div class="cd">${c.trim()}</div>`).join('');
+  g += `<div class="rule"></div>`;
+  g += `<div></div>` + Array.from({ length: cols }, (_, i) => `<div class="slot cslot" data-ans="${cols - 1 - i}"></div>`).join('');
+  g += `</div>`;
+  body.innerHTML = `
+    <div class="play with-pad">
+      <div>
+        <div class="prompt">${op === '+' ? 'Add' : 'Subtract'}, starting with the ones. Use the dashed boxes for ${op === '+' ? 'carrying' : 'regrouping'}.</div>
+        ${g}
+        <div class="level-tag">Level ${L}: ${SKILLS.addsub.levels[L - 1]}</div>
+      </div>
+      ${padHTML()}
+    </div>`;
+  const ansCells = []; for (let p = 0; p < cols; p++) ansCells.push($(`[data-ans="${p}"]`, body));
+  const carryCells = []; for (let p = 0; p < cols; p++) carryCells.push($(`[data-carry="${p}"]`, body));
+  const fields = ansCells.map(el => ({ el, max: 1, auto: true }));
+  carryCells.forEach((el, p) => fields.push({ el, max: 1, scratch: true, after: Math.min(p, cols - 1), backTo: null }));
+  padBind(fields, () => {
+    const digits = ansCells.map((_, p) => fields[p].value).reverse(); // left → right
+    if (digits.every(d => !d)) { $('#gameBody .col-grid').classList.add('shake'); setTimeout(() => { const x = $('#gameBody .col-grid'); if (x) x.classList.remove('shake'); }, 400); return; }
+    let started = false, valid = true, str = '';
+    digits.forEach(d => { if (d) { started = true; str += d; } else if (started) valid = false; });
+    const val = valid ? parseInt(str, 10) : NaN;
+    const ok = val === ans;
+    answered(ok, explainColumn(a, b, op, ans), valid ? fmt(val) : 'a number with a gap in it');
+  }, { submitOnly: true });
+};
+function explainColumn(a, b, op, ans) {
+  const A = String(a).split('').reverse().map(Number), B = String(b).split('').reverse().map(Number);
+  const n = Math.max(A.length, B.length);
+  const steps = []; const marks = Array(n + 1).fill('');
+  if (op === '+') {
+    let carry = 0;
+    for (let i = 0; i < n; i++) {
+      const x = A[i] || 0, y = B[i] || 0, s = x + y + carry;
+      steps.push(`<b>${PLACES[i]}:</b> ${x} + ${y}${carry ? ' + 1 carried' : ''} = ${s}${s >= 10 ? ` → write ${s % 10}, carry 1 to the ${PLACES[i + 1].toLowerCase()}` : ''}`);
+      carry = s >= 10 ? 1 : 0; if (carry) marks[i + 1] = '1';
+    }
+    if (carry) steps.push(`<b>${PLACES[n]}:</b> write the carried 1.`);
+  } else {
+    const T = [...A];
+    for (let i = 0; i < n; i++) {
+      const y = B[i] || 0;
+      if (T[i] < y) {
+        let j = i + 1; while (T[j] === 0) { T[j] = 9; marks[j] = '9'; j++; }
+        T[j] -= 1; marks[j] = String(T[j]); const before = T[i]; T[i] += 10; marks[i] = String(T[i]);
+        steps.push(`<b>${PLACES[i]}:</b> ${before} is less than ${y}, so regroup from the ${PLACES[j].toLowerCase()}. Now ${T[i]} − ${y} = ${T[i] - y}`);
+      } else steps.push(`<b>${PLACES[i]}:</b> ${T[i]} − ${y} = ${T[i] - y}`);
+    }
+  }
+  const cols = Math.max(String(a).length, String(b).length, String(ans).length);
+  const row = (str, cls = '') => [...String(str).padStart(cols, ' ')].map(c => `<span class="c ${cls}">${c.trim()}</span>`).join('');
+  const markRow = Array.from({ length: cols }, (_, k) => `<span class="cr">${marks[cols - 1 - k] || ''}</span>`).join('');
+  const html = `<div style="text-align:center"><div class="col-static" style="grid-template-columns:repeat(${cols + 1}, auto)">
+    <span></span>${markRow}<span></span>${row(a)}<span class="c">${op}</span>${row(b)}<span class="rule"></span><span></span>${row(ans, 'ans')}</div></div>`;
+  return `<p class="big-fact">${fmt(a)} ${op} ${fmt(b)} = <b>${fmt(ans)}</b></p>${html}<ol class="steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>`;
+}
+
+/* ---------- Area Builder: partial products ---------- */
+function expand(n) { const s = String(n); return [...s].map((d, i) => +d * 10 ** (s.length - 1 - i)).filter(x => x > 0); }
+ROUND_GAMES.partial = () => {
+  const L = lvl('partial');
+  let a, b;
+  if (L === 1) { a = rnd(3, 9); b = rnd(12, 98); }
+  else if (L === 2) { a = rnd(3, 9); b = rnd(112, 989); }
+  else if (L === 3) { a = rnd(3, 9); b = rnd(1102, 9899); }
+  else if (L === 4) { a = rnd(12, 19); b = rnd(12, 49); }
+  else { a = rnd(21, 98); b = rnd(21, 98); }
+  if (b % 10 === 0) b += rnd(1, 9);
+  const rows = expand(a), cols = expand(b);
+  const body = $('#gameBody');
+  let grid = `<div class="area" style="grid-template-columns:auto repeat(${cols.length}, minmax(0, ${cols.length > 3 ? 96 : 120}px))">`;
+  grid += `<div class="hd">×</div>` + cols.map(c => `<div class="hd">${fmt(c)}</div>`).join('');
+  let t = 0;
+  rows.forEach((r, ri) => {
+    grid += `<div class="hd">${fmt(r)}</div>`;
+    cols.forEach((c, ci) => { grid += `<div class="cell tint-${(t++) % 8}"><small>${fmt(r)} × ${fmt(c)}</small><div class="slot" data-pp="${ri}-${ci}"></div></div>`; });
+  });
+  grid += `</div>`;
+  body.innerHTML = `
+    <div class="play with-pad">
+      <div>
+        <div class="prompt">Break it apart. Fill each box, then add them up.</div>
+        <div class="problem" style="font-size:clamp(30px,6vw,44px)">${fmt(a)} × ${fmt(b)}</div>
+        ${grid}
+        <div class="answer-row">Total = <div class="slot" id="ppTotal"></div></div>
+        <div class="level-tag">Level ${L}: ${SKILLS.partial.levels[L - 1]}</div>
+      </div>
+      ${padHTML()}
+    </div>`;
+  const fields = [], parts = [];
+  rows.forEach((r, ri) => cols.forEach((c, ci) => { fields.push({ el: $(`[data-pp="${ri}-${ci}"]`, body), max: 6 }); parts.push({ r, c, p: r * c }); }));
+  fields.push({ el: $('#ppTotal'), max: 7 });
+  padBind(fields, () => {
+    if (!fields[fields.length - 1].value) { Pad.active = fields.length - 1; padRender(); $('#ppTotal').classList.add('shake'); setTimeout(() => $('#ppTotal').classList.remove('shake'), 400); return; }
+    const wrongParts = parts.map((pp, i) => +fields[i].value !== pp.p);
+    const totalOk = +fields[fields.length - 1].value === a * b;
+    const ok = totalOk && wrongParts.every(w => !w);
+    const lines = parts.map((pp, i) => {
+      const dr = +String(pp.r)[0], dc = +String(pp.c)[0], z = String(pp.r).length - 1 + String(pp.c).length - 1;
+      const how = z ? ` <small>(${dr} × ${dc} = ${dr * dc}, then add ${z} zero${z > 1 ? 's' : ''})</small>` : '';
+      return `<li class="${wrongParts[i] ? 'wrong-part' : ''}">${fmt(pp.r)} × ${fmt(pp.c)} = ${fmt(pp.p)}${how}${wrongParts[i] && fields[i].value ? ` · you wrote ${fmt(+fields[i].value)}` : ''}</li>`;
+    }).join('');
+    answered(ok, `<p class="big-fact">${fmt(a)} × ${fmt(b)} = <b>${fmt(a * b)}</b></p>
+      <p>Multiply each part:</p><ul class="steps">${lines}</ul>
+      <p>Add the parts: ${parts.map(pp => fmt(pp.p)).join(' + ')} = <b>${fmt(a * b)}</b></p>`,
+      totalOk ? 'the right total, but check the red boxes' : fmt(+fields[fields.length - 1].value));
+  });
+};
+
+/* ---------- Array Garden ---------- */
+ROUND_GAMES.arrays = () => {
+  const L = lvl('arrays'), max = [5, 6, 8, 10, 12][L - 1];
+  const r = rnd(2, max), c = rnd(2, max);
+  const size = max;
+  const body = $('#gameBody');
+  const avail = Math.min(470, (body.clientWidth || 340) - 30);
+  const cell = Math.max(20, Math.min(40, Math.floor(avail / size) - 3));
+  body.innerHTML = `
+    <div class="prompt">Plant <b>${r} row${r > 1 ? 's' : ''}</b> of <b>${c}</b> sunflowers. Tap or drag from the top-left corner.</div>
+    <div class="problem" style="font-size:clamp(30px,6vw,42px)">${r} × ${c}</div>
+    <div class="garden" id="garden" style="--cell:${cell}px;grid-template-columns:repeat(${size}, var(--cell))">
+      ${Array.from({ length: size * size }, (_, i) => `<div class="plot" data-r="${Math.floor(i / size)}" data-c="${i % size}"></div>`).join('')}
+    </div>
+    <div class="garden-status" id="gStatus">Nothing planted yet</div>
+    <div class="foot-row" style="margin-top:4px">
+      <button type="button" class="btn plain small" id="gClear">Clear</button>
+      <button type="button" class="btn leaf" id="gDone">Done planting ➜</button>
+    </div>
+    <div class="level-tag">Level ${L}: ${SKILLS.arrays.levels[L - 1]}</div>`;
+  let sel = { r: 0, c: 0 }, down = false;
+  const garden = $('#garden');
+  const paint = () => {
+    $$('.plot', garden).forEach(p => p.classList.toggle('on', +p.dataset.r < sel.r && +p.dataset.c < sel.c));
+    $('#gStatus').textContent = sel.r ? `${sel.r} row${sel.r > 1 ? 's' : ''} of ${sel.c}` : 'Nothing planted yet';
+  };
+  const at = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.classList.contains('plot') && garden.contains(el) ? el : null; };
+  garden.addEventListener('pointerdown', e => { const el = at(e); if (!el) return; down = true; try { garden.setPointerCapture(e.pointerId); } catch (x) {} sel = { r: +el.dataset.r + 1, c: +el.dataset.c + 1 }; paint(); sfx('tap'); });
+  garden.addEventListener('pointermove', e => { if (!down) return; const el = at(e); if (!el) return; const n = { r: +el.dataset.r + 1, c: +el.dataset.c + 1 }; if (n.r !== sel.r || n.c !== sel.c) { sel = n; paint(); } });
+  const up = () => { down = false; };
+  garden.addEventListener('pointerup', up); garden.addEventListener('pointercancel', up);
+  $('#gClear').addEventListener('click', () => { sel = { r: 0, c: 0 }; paint(); });
+  const explain = (extra = '') => `<p class="big-fact">${r} × ${c} = <b>${r * c}</b></p>
+    <div style="text-align:center"><div class="mini-garden" style="grid-template-columns:repeat(${c}, 16px)">${'<span>🌻</span>'.repeat(r * c)}</div></div>
+    ${extra}<p>A row goes across ↔. ${r} rows of ${c}: ${Array(Math.min(r, 6)).fill(c).join(' + ')}${r > 6 ? ' + …' : ''} = ${r * c}.</p>`;
+  $('#gDone').addEventListener('click', () => {
+    if (!sel.r) { garden.classList.add('shake'); setTimeout(() => garden.classList.remove('shake'), 400); return; }
+    const exact = sel.r === r && sel.c === c, turned = sel.r === c && sel.c === r;
+    if (!exact && !turned) return answered(false, explain(), `${sel.r} rows of ${sel.c}`);
+    if (turned && !exact) toast(`That's ${sel.r} rows of ${sel.c}. Same total, but rows go across ↔.`);
+    // Phase 2: count them
+    $('#gDone').hidden = true; $('#gClear').hidden = true;
+    garden.style.pointerEvents = 'none';
+    const status = $('#gStatus');
+    status.innerHTML = `How many sunflowers in all?`;
+    const wrap = document.createElement('div');
+    wrap.className = 'play';
+    wrap.innerHTML = `<div class="answer-row"><span>${r} × ${c} =</span><div class="slot" id="arrAns"></div></div>${padHTML()}`;
+    status.after(wrap);
+    padBind([{ el: $('#arrAns'), max: 3 }], () => {
+      const v = $('#arrAns').textContent;
+      if (!Pad.fields[0].value) return;
+      const ok = +Pad.fields[0].value === r * c;
+      answered(ok, explain(), v);
+    }, { submitOnly: true });
+    try { wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  });
+};
+
+/* ---------- Treasure Split: division ---------- */
+ROUND_GAMES.divide = () => {
+  const L = lvl('longdiv');
+  let d, n;
+  if (L === 1) { d = rnd(2, 9); n = d * rnd(2, 10); }
+  else if (L === 2) { d = rnd(2, 6); n = d * rnd(Math.ceil(11), Math.floor(99 / d)); if (n < 10) n = d * 11; }
+  else if (L === 3) { d = rnd(3, 9); for (let t = 0; t < 50; t++) { n = rnd(20, 99); if (n % d) break; } }
+  else if (L === 4) { d = rnd(2, 9); n = rnd(100, 999); }
+  else { d = rnd(3, 9); n = rnd(1000, 9999); }
+  const q = Math.floor(n / d), r = n % d, showRem = L >= 3;
+  const crew = Array.from({ length: d }, () => '🦜').join('');
+  const body = $('#gameBody');
+  body.innerHTML = `
+    <div class="play with-pad">
+      <div>
+        <div class="crew" aria-hidden="true">${crew}</div>
+        <div class="story">${d} parrots share <b>${fmt(n)}</b> gold coins equally. How many does each parrot get?${showRem ? ' How many are left over?' : ''}</div>
+        <div class="problem" style="font-size:clamp(32px,7vw,48px)">${fmt(n)} ÷ ${d}</div>
+        <div class="answer-row">
+          <div class="slot" id="dq"></div>
+          ${showRem ? `<span class="rem-label">R</span><div class="slot" id="dr" style="min-width:70px"></div>` : ''}
+        </div>
+        <div class="level-tag">Level ${L}: ${SKILLS.longdiv.levels[L - 1]}</div>
+      </div>
+      ${padHTML()}
+    </div>`;
+  const fields = [{ el: $('#dq'), max: 4, placeholder: '?' }];
+  if (showRem) fields.push({ el: $('#dr'), max: 1, placeholder: '0' });
+  padBind(fields, () => {
+    if (!fields[0].value) { Pad.active = 0; padRender(); return; }
+    const gq = +fields[0].value, gr = showRem ? +(fields[1].value || 0) : 0;
+    const ok = gq === q && gr === r;
+    answered(ok, explainDivide(n, d, q, r), `${fmt(gq)}${showRem ? ' R ' + gr : ''}`);
+  });
+};
+function explainDivide(n, d, q, r) {
+  let rem = n; const steps = [];
+  for (const place of [1000, 100, 10, 1]) {
+    const chunk = Math.floor(rem / (d * place)) * place;
+    if (chunk > 0) { steps.push({ chunk, take: d * chunk, left: rem - d * chunk, from: rem }); rem -= d * chunk; }
+  }
+  const rows = steps.map(s => `<span class="r">${fmt(s.from)} − ${fmt(s.take)}</span><span>(${d} × ${fmt(s.chunk)}) leaves ${fmt(s.left)}</span>`).join('');
+  return `<p class="big-fact">${fmt(n)} ÷ ${d} = <b>${fmt(q)}${r ? ' R ' + r : ''}</b></p>
+    ${steps.length > 1 ? `<p>Take away big groups of ${d} at a time:</p><div class="div-steps">${rows}</div>
+    <p>Add up the groups: ${steps.map(s => fmt(s.chunk)).join(' + ')} = <b>${fmt(q)}</b>${r ? `, with ${r} left over` : ''}.</p>` :
+    `<p>Think: ${d} × ${fmt(q)} = ${fmt(d * q)}${r ? `, and ${fmt(n)} − ${fmt(d * q)} = ${r} left over` : ''}.</p>`}
+    <p>Check: ${d} × ${fmt(q)}${r ? ' + ' + r : ''} = ${fmt(n)} ✓</p>
+    ${r ? `<p>The remainder must be smaller than ${d}. If it's bigger, another parrot could get a coin!</p>` : ''}`;
+}
+
+/* =========================================================
+   Memory Reef
+   ========================================================= */
+function memoryStart() {
+  round = null;
+  const L = lvl('mult'), pairs = [], used = new Set();
+  let guard = 0;
+  while (pairs.length < 6 && guard++ < 500) { const q = genMult(L); if (!used.has(q.answer)) { used.add(q.answer); pairs.push(q); } }
+  const cards = shuffle(pairs.flatMap(q => [{ key: q.answer, face: q.text }, { key: q.answer, face: fmt(q.answer) }]));
+  const st = { first: null, lock: false, matched: 0, moves: 0, t0: Date.now() };
+  $('#gameBody').innerHTML = `
+    <div class="prompt">Find each fact and its product. Level ${L}: ${SKILLS.mult.levels[L - 1]}</div>
+    <div class="mem-hud"><span id="memMoves">Moves: 0</span><span id="memPairs">Pairs: 0 / 6</span></div>
+    <div class="reef">${cards.map((c, i) => `<button type="button" class="mcard" data-i="${i}" aria-label="Hidden card"><span class="mface">${c.face}</span></button>`).join('')}</div>`;
+  $$('.mcard').forEach(el => el.addEventListener('click', () => {
+    const i = +el.dataset.i;
+    if (st.lock || el.classList.contains('up') || el.classList.contains('done')) return;
+    el.classList.add('up'); el.setAttribute('aria-label', cards[i].face); sfx('tap');
+    if (st.first === null) { st.first = i; return; }
+    const j = st.first; st.first = null; st.moves++; $('#memMoves').textContent = 'Moves: ' + st.moves;
+    const a = $(`.mcard[data-i="${j}"]`);
+    if (cards[i].key === cards[j].key) {
+      later(() => {
+        a.classList.add('done'); el.classList.add('done'); st.matched++; $('#memPairs').textContent = `Pairs: ${st.matched} / 6`;
+        reward(2, 5); cheer(cards[i].key + '!');
+        if (st.matched === 6) later(() => memoryEnd(st), 900);
+      }, 300);
+    } else {
+      st.lock = true;
+      later(() => { a.classList.add('bad'); el.classList.add('bad'); }, 500);
+      later(() => { [a, el].forEach(x => { x.classList.remove('up', 'bad'); x.setAttribute('aria-label', 'Hidden card'); }); st.lock = false; }, 1100);
+    }
+  }));
+}
+function memoryEnd(st) {
+  const stars = st.moves <= 9 ? 3 : st.moves <= 13 ? 2 : 1;
+  const secs = Math.round((Date.now() - st.t0) / 1000);
+  reward(stars * 5, 20 + stars * 10);
+  const g = gameStats('memory'); g.stars = Math.max(g.stars || 0, stars);
+  g.bestMoves = g.bestMoves ? Math.min(g.bestMoves, st.moves) : st.moves;
+  checkBadges({ finished: true, stars, memoryMoves: st.moves });
+  logActivity('Memory Reef', `${st.moves} moves`, stars, null);
+  showResults({ stars, title: stars === 3 ? 'Sharp memory!' : 'All pairs found!',
+    lines: [['Moves', `${st.moves} (best ${g.bestMoves})`], ['Time', `${secs} seconds`], ['3 stars', 'in 9 moves or fewer']],
+    again: () => startGame('memory') });
+}
+
+/* =========================================================
+   Arcade games: Math Driver + Fact Runner
+   ========================================================= */
+let arcade = null;
+function stopArcade() { if (arcade) { arcade.running = false; cancelAnimationFrame(arcade.raf); arcade = null; } }
+function arcadeKey(e) {
+  if (arcade.type === 'driver') {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); steer(-1); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); steer(1); }
+  } else if (e.code === 'Space' || e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); hop(); }
+}
+function heartsTxt(n) { return '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, 3 - n)); }
+function arcadeHud() {
+  $('#aPoints').textContent = `Points ${fmt(arcade.points)}`;
+  $('#aHearts').textContent = heartsTxt(arcade.hearts);
+  $('#aCombo').textContent = arcade.combo > 1 ? `Combo ×${Math.min(arcade.combo, 5)}` : '';
+}
+function arcadeBanner(host, html, ms) {
+  const b = document.createElement('div'); b.className = 'abanner'; b.innerHTML = html;
+  host.appendChild(b); later(() => b.remove(), ms);
+}
+function arcadeEnd() {
+  const a = arcade; stopArcade();
+  const id = a.type;
+  const stars = a.correct >= 15 ? 3 : a.correct >= 7 ? 2 : 1;
+  reward(stars * 5, 20 + stars * 10);
+  const g = gameStats(id); const best = Math.max(g.best || 0, a.points); g.best = best; g.stars = Math.max(g.stars || 0, stars);
+  checkBadges({ finished: true, stars, [id]: a.points });
+  logActivity(GAME[id].name + (a.mode ? ` (${a.mode.name})` : ''), `${a.correct} correct, ${fmt(a.points)} points`, stars, a.skill);
+  showResults({ stars, title: a.points >= best && a.points > 0 ? 'New best score!' : 'Out of hearts!',
+    lines: [['Points', `${fmt(a.points)} (best ${fmt(best)})`], ['Correct answers', a.correct], ['3 stars', '15 correct in one run']],
+    again: () => startGame(id) });
+}
+
+/* ---------- Math Driver ---------- */
+const DRIVE_MODES = [
+  { op: '×', skill: 'mult', name: 'Multiply' }, { op: '÷', skill: 'div', name: 'Divide' },
+  { op: '+', skill: 'mental', name: 'Add' }, { op: '−', skill: 'mental', name: 'Subtract' }
+];
+function driverPicker() {
+  round = null;
+  $('#gameBody').innerHTML = `<div class="picker">
+    <h3>Choose your road</h3>
+    <div class="mode-grid">${DRIVE_MODES.map((m, i) => `<button type="button" class="mode-btn" data-m="${i}"><span class="big">${m.op}</span>${m.name}<small>Level ${lvl(m.skill)}: ${SKILLS[m.skill].levels[lvl(m.skill) - 1]}</small></button>`).join('')}</div>
+    <p class="note">Steer with the ◀ ▶ buttons, the arrow keys, or by tapping a lane. Drive into the right answer!</p></div>`;
+  $$('.mode-btn').forEach(b => b.addEventListener('click', () => driverStart(DRIVE_MODES[+b.dataset.m])));
+}
+const LANES = [100 / 6, 50, 500 / 6];
+function driverStart(mode) {
+  $('#gameBody').innerHTML = `<div class="arcade">
+      <div class="ahud"><span id="aPoints">Points 0</span><span id="aCombo"></span><span class="hearts" id="aHearts"></span></div>
+      <div class="aq" id="aQ">Get ready…</div>
+      <div class="road" id="road"><div class="stripes" id="stripes"></div><div class="car" id="car">🚗</div></div>
+      <div class="steer"><button type="button" class="btn plain" id="left" aria-label="Steer left">◀</button><button type="button" class="btn plain" id="right" aria-label="Steer right">▶</button></div>
+    </div>`;
+  arcade = { type: 'driver', mode, skill: mode.skill, running: true, lane: 1, hearts: 3, points: 0, combo: 0, correct: 0,
+             speed: 0.1, row: null, pauseUntil: 0, last: performance.now(), stripe: 0, raf: 0 };
+  arcadeHud(); setLane(1);
+  $('#left').addEventListener('click', () => steer(-1));
+  $('#right').addEventListener('click', () => steer(1));
+  $('#road').addEventListener('pointerdown', e => {
+    const r = $('#road').getBoundingClientRect();
+    setLane(Math.max(0, Math.min(2, Math.floor((e.clientX - r.left) / r.width * 3))));
+  });
+  later(driverRow, 600);
+  arcade.raf = requestAnimationFrame(driverLoop);
+}
+function setLane(l) { if (!arcade) return; arcade.lane = l; $('#car').style.left = LANES[l] + '%'; }
+function steer(d) { if (!arcade) return; setLane(Math.max(0, Math.min(2, arcade.lane + d))); }
+function driverQ() {
+  const m = arcade.mode, L = lvl(m.skill);
+  return m.op === '×' ? genMult(L) : m.op === '÷' ? genDiv(L) : genMental(L, m.op);
+}
+function driverRow() {
+  if (!arcade || !arcade.running) return;
+  const q = driverQ(); arcade.q = q;
+  $('#aQ').textContent = q.text + ' = ?';
+  const vals = shuffle([q.answer, ...distractors(q.answer, 2, q)]);
+  const el = document.createElement('div'); el.className = 'arow';
+  el.innerHTML = vals.map((v, i) => `<div class="abox" style="left:${LANES[i]}%">${fmt(v)}</div>`).join('');
+  $('#road').appendChild(el);
+  arcade.row = { el, y: -60, vals, done: false };
+}
+function driverLoop(now) {
+  const a = arcade; if (!a || !a.running) return;
+  const dt = Math.min(40, now - a.last); a.last = now;
+  if (now >= a.pauseUntil) {
+    a.stripe = (a.stripe + dt * a.speed) % 44;
+    $('#stripes').style.transform = `translateY(${a.stripe}px)`;
+    const row = a.row;
+    if (row && !row.done) {
+      row.y += dt * a.speed * 1.6;
+      row.el.style.transform = `translateY(${row.y}px)`;
+      const road = $('#road'), carTop = road.clientHeight - 64;
+      if (row.y + 44 >= carTop) driverHit(row);
+    }
+  }
+  a.raf = requestAnimationFrame(driverLoop);
+}
+function driverHit(row) {
+  const a = arcade; row.done = true;
+  const v = row.vals[a.lane], ok = v === a.q.answer;
+  const boxes = $$('.abox', row.el);
+  record(a.skill, ok);
+  if (ok) {
+    a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.24, a.speed * 1.06);
+    boxes[a.lane].classList.add('good'); sfx('ok'); arcadeHud();
+    later(() => { row.el.remove(); driverRow(); }, 220);
+  } else {
+    a.combo = 0; a.hearts--; arcadeHud(); sfx('bad');
+    boxes[a.lane].classList.add('bad'); boxes[row.vals.indexOf(a.q.answer)].classList.add('good');
+    a.pauseUntil = performance.now() + 1900;
+    arcadeBanner($('#road'), `${a.q.text} = ${fmt(a.q.answer)}<small>${a.hearts > 0 ? 'Remember this one!' : 'Last heart gone'}</small>`, 1900);
+    later(() => { row.el.remove(); if (!arcade) return; if (a.hearts <= 0) arcadeEnd(); else driverRow(); }, 1900);
+  }
+}
+
+/* ---------- Fact Runner ---------- */
+let runnerFace = '🦊';
+function runnerPicker() {
+  round = null;
+  runnerFace = P().avatar;
+  const opts = [...new Set([P().avatar, '🦊', '🐯', '🐸', '🐼', '🐰'])].slice(0, 6);
+  $('#gameBody').innerHTML = `<div class="picker">
+    <h3>Pick your runner</h3>
+    <div class="runner-pick">${opts.map(o => `<button type="button" data-f="${o}" aria-pressed="${o === runnerFace}">${o}</button>`).join('')}</div>
+    <p class="note">Run into the right answer. Jump over the wrong ones by tapping the beach or pressing Space.<br>Level ${lvl('mult')}: ${SKILLS.mult.levels[lvl('mult') - 1]}</p>
+    <div><button type="button" class="btn leaf" id="runGo">Start running ➜</button></div></div>`;
+  $$('.runner-pick button').forEach(b => b.addEventListener('click', () => { runnerFace = b.dataset.f; $$('.runner-pick button').forEach(x => x.setAttribute('aria-pressed', x === b)); sfx('tap'); }));
+  $('#runGo').addEventListener('click', runnerStart);
+}
+function runnerStart() {
+  $('#gameBody').innerHTML = `<div class="arcade">
+      <div class="ahud"><span id="aPoints">Points 0</span><span id="aCombo"></span><span class="hearts" id="aHearts"></span></div>
+      <div class="aq" id="aQ">Get ready…</div>
+      <div class="track" id="track"><div class="sun"></div><div class="runner" id="runner">${runnerFace}</div></div>
+      <div class="steer" style="grid-template-columns:1fr"><button type="button" class="btn plain" id="jumpBtn">⤴ Jump</button></div>
+      <div class="ahint">Wrong answer coming? Jump! Right answer? Run into it.</div>
+    </div>`;
+  arcade = { type: 'runner', skill: 'mult', running: true, hearts: 3, points: 0, combo: 0, correct: 0,
+             speed: 0.2, blocks: [], jumping: false, jumpUntil: 0, pauseUntil: 0, last: performance.now(), raf: 0, q: null };
+  arcadeHud();
+  $('#track').addEventListener('pointerdown', e => { e.preventDefault(); hop(); });
+  $('#jumpBtn').addEventListener('click', hop);
+  later(runnerSet, 700);
+  arcade.raf = requestAnimationFrame(runnerLoop);
+}
+function hop() {
+  const a = arcade; if (!a || a.type !== 'runner' || a.jumping) return;
+  a.jumping = true; a.jumpUntil = performance.now() + 750;
+  const r = $('#runner'); r.classList.remove('hop'); void r.offsetWidth; r.classList.add('hop');
+}
+function runnerSet() {
+  const a = arcade; if (!a || !a.running) return;
+  a.blocks.forEach(b => b.el.remove()); a.blocks = [];
+  const q = genMult(lvl('mult')); a.q = q;
+  $('#aQ').textContent = q.text + ' = ?';
+  const vals = shuffle([q.answer, ...distractors(q.answer, rnd(1, 3), q)]);
+  const track = $('#track'), w = track.clientWidth;
+  const gap = Math.max(200, a.speed * 820 + 120);
+  vals.forEach((v, i) => {
+    const el = document.createElement('div'); el.className = 'block'; el.textContent = fmt(v);
+    track.appendChild(el);
+    const b = { el, x: w + 20 + i * gap, v, done: false };
+    el.style.transform = `translateX(${b.x}px)`;
+    a.blocks.push(b);
+  });
+}
+function runnerLoop(now) {
+  const a = arcade; if (!a || !a.running) return;
+  const dt = Math.min(40, now - a.last); a.last = now;
+  if (a.jumping && now > a.jumpUntil) { a.jumping = false; }
+  if (now >= a.pauseUntil && a.blocks.length) {
+    const runner = $('#runner'), track = $('#track');
+    const rx = runner.offsetLeft, rw = runner.offsetWidth;
+    for (const b of a.blocks) {
+      b.x -= dt * a.speed;
+      b.el.style.transform = `translateX(${b.x}px)`;
+      if (!b.done && b.x <= rx + rw - 12) { b.done = true; if (runnerResolve(b)) break; }
+    }
+    a.blocks = a.blocks.filter(b => { if (b.x < -100) { b.el.remove(); return false; } return true; });
+    if (a.blocks.length === 0 && !a.waiting) { a.waiting = true; later(() => { a.waiting = false; runnerSet(); }, 300); }
+    if (track.clientWidth === 0) {} // hidden; nothing to do
+  }
+  a.raf = requestAnimationFrame(runnerLoop);
+}
+function runnerResolve(b) { // returns true when this set is finished
+  const a = arcade, correct = b.v === a.q.answer;
+  if (a.jumping) {
+    if (!correct) { a.points += 10; arcadeHud(); return false; }   // good jump
+    record('mult', false); a.combo = 0; sfx('bad');               // jumped over the right one
+    return runnerPause(`${a.q.text} = ${fmt(a.q.answer)}<small>You jumped over the right answer!</small>`, false);
+  }
+  if (correct) {
+    record('mult', true); a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.34, a.speed * 1.05);
+    sfx('ok'); arcadeHud(); b.el.style.background = 'var(--leaf)';
+    later(runnerSet, 250); a.blocks.forEach(x => x.done = true);
+    return true;
+  }
+  record('mult', false); a.combo = 0; a.hearts--; sfx('bad'); arcadeHud();
+  b.el.style.background = 'var(--coral)';
+  return runnerPause(`${a.q.text} = ${fmt(a.q.answer)}<small>${a.hearts > 0 ? 'Oops! Remember this one.' : 'Last heart gone'}</small>`, a.hearts <= 0);
+}
+function runnerPause(html, over) {
+  const a = arcade;
+  a.blocks.forEach(x => x.done = true);
+  a.pauseUntil = performance.now() + 1900;
+  arcadeBanner($('#track'), html, 1900);
+  a.waiting = true;
+  later(() => { if (!arcade) return; a.waiting = false; if (over) arcadeEnd(); else runnerSet(); }, 1900);
+  return true;
+}
+
+/* =========================================================
+   Shop + Badges
+   ========================================================= */
+let shopTab = 'hat';
+function openShop(tab) {
+  shopTab = tab || shopTab;
+  const p = P();
+  $('#shopAvatar').innerHTML = avatarHTML(p, 110);
+  updateCoinChips();
+  $$('#shopTabs .tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === shopTab));
+  const L = levelInfo(p.xp).L;
+  $('#shopGrid').innerHTML = SHOP[shopTab].map(it => {
+    const owned = p.owned.includes(it.id), wearing = p.wear[shopTab] === it.id, locked = it.minLevel && L < it.minLevel;
+    const vis = shopTab === 'bg' ? `<span class="swatch" style="background:${it.css}"></span>` : `<span class="iicon">${it.icon}</span>`;
+    const label = wearing ? (shopTab === 'bg' ? 'Using' : 'Wearing ✓') : owned ? (shopTab === 'bg' ? 'Use' : 'Wear') : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${it.price}` : 'Free';
+    return `<button type="button" class="item ${wearing ? 'wearing' : ''} ${locked && !owned ? 'locked' : ''}" data-id="${it.id}">${vis}<span>${it.name}</span><span class="price">${label}</span></button>`;
+  }).join('');
+  $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id)));
+  show('shop');
+}
+function shopClick(id) {
+  const p = P(), it = SHOP[shopTab].find(x => x.id === id), L = levelInfo(p.xp).L;
+  if (p.owned.includes(id)) {
+    if (shopTab === 'bg') p.wear.bg = id; else p.wear[shopTab] = p.wear[shopTab] === id ? null : id;
+    sfx('tap');
+  } else if (it.minLevel && L < it.minLevel) { toast(`Reach level ${it.minLevel} to unlock the ${it.name}.`); return; }
+  else if (p.coins < it.price) { toast(`You need ${it.price - p.coins} more coins. Play a game to earn them!`); return; }
+  else {
+    p.coins -= it.price; p.owned.push(id); p.wear[shopTab] = id; sfx('coin'); toast(`You got the ${it.name}!`, true);
+    session = null; checkBadges({ bought: true });
+  }
+  save(); scheduleSync(2000); openShop(shopTab);
+}
+$$('#shopTabs .tab').forEach(t => t.addEventListener('click', () => openShop(t.dataset.tab)));
+function openBadges() {
+  const p = P();
+  $('#badgeCount').textContent = `${p.badges.length} / ${BADGES.length}`;
+  $('#badgeGrid').innerHTML = BADGES.map(b => {
+    const has = p.badges.includes(b.id);
+    return `<div class="badge ${has ? '' : 'locked'}"><div class="bicon">${b.icon}</div><b>${b.name}</b><small>${b.desc}</small></div>`;
+  }).join('');
+  show('badges');
+}
+
+/* =========================================================
+   Teacher view (PIN protected; shows players on this device)
+   ========================================================= */
+let teacherFrom = 'who', teacherSel = null;
+function openTeacher(from) {
+  teacherFrom = from; stopArcade(); clearTimers();
+  $('#pinForm').hidden = false; $('#teacherBody').hidden = true; $('#pinInput').value = ''; $('#pinErr').textContent = '';
+  show('teacher');
+  setTimeout(() => { try { $('#pinInput').focus(); } catch (e) {} }, 50);
+}
+$('#teacherLink1').addEventListener('click', () => openTeacher('who'));
+$('#teacherLink2').addEventListener('click', () => openTeacher('hub'));
+$('#leaveTeacher').addEventListener('click', () => { if (teacherFrom === 'hub' && P()) openHub(); else renderWho(); });
+$('#pinForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if ($('#pinInput').value === String(store.pin || '1234')) { $('#pinForm').hidden = true; $('#teacherBody').hidden = false; teacherSel = null; renderTeacher(); }
+  else { $('#pinErr').textContent = 'That PIN is not right. Try again.'; $('#pinInput').value = ''; }
+});
+function acc(s) { return s.recent.length ? Math.round(s.recent.reduce((x, y) => x + y, 0) / s.recent.length * 100) : null; }
+function skillChip(s) {
+  if (!s.total) return `<span class="sk none">–</span>`;
+  const a = acc(s), cls = a >= 80 ? 'g' : a >= 60 ? 'y' : 'r';
+  return `<span class="sk ${cls}">L${s.level} · ${a}%</span>`;
+}
+function ago(t) {
+  if (!t) return '–'; const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; const h = Math.round(m / 60); if (h < 24) return h + ' h ago';
+  return new Date(t).toLocaleDateString();
+}
+function renderTeacher() {
+  const list = Object.values(store.profiles).sort((a, b) => a.name.localeCompare(b.name));
+  list.forEach(ensureProfile);
+  const body = $('#teacherBody');
+  const table = list.length ? `<div class="t-table-wrap"><table class="t-table">
+      <thead><tr><th>Student</th>${SKILL_IDS.map(k => `<th>${SKILLS[k].short}</th>`).join('')}<th>Correct</th><th>Last played</th></tr></thead>
+      <tbody>${list.map(p => `<tr class="row" data-id="${p.id}" tabindex="0"><td><b>${p.avatar} ${esc(p.name)}</b></td>
+        ${SKILL_IDS.map(k => `<td>${skillChip(p.skills[k])}</td>`).join('')}
+        <td>${fmt(SKILL_IDS.reduce((n, k) => n + p.skills[k].correct, 0))} / ${fmt(SKILL_IDS.reduce((n, k) => n + p.skills[k].total, 0))}</td><td>${ago(p.last)}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="legend"><span>L = level 1–5</span><span>% = last 20 answers</span><span class="sk g">80%+</span><span class="sk y">60–79%</span><span class="sk r">under 60%</span></div>`
+    : `<p class="note" style="padding:20px 0">No students have played on this device yet. When students make a player and start a game, they'll show up here.</p>`;
+  const sheetPanel = `<div class="t-sheet">
+      <div class="row-inline"><b>Class sheet:</b> <span id="shState">${sheetUrl() ? 'Linked' + (CLASS_SHEET_URL ? '' : ' on this tablet') : 'Not linked. Progress stays on each tablet.'}</span>
+        ${sheetUrl() ? '<button type="button" class="btn small plain" id="shTest">Test connection</button>' : ''}</div>
+      ${CLASS_SHEET_URL ? '<div class="note" style="text-align:left">Every student from every tablet shows up in your Google Sheet. This list only shows students on this tablet.</div>' : `
+      <div class="row-inline"><input id="shUrl" class="text-input" placeholder="Paste your Apps Script web app link" value="${esc(store.sheetUrl || '')}">
+        <button type="button" class="btn small" id="shSave">Save link</button></div>
+      <div class="note" style="text-align:left">Saving the link here only affects this tablet. To link every tablet at once, put it in the file (see the setup guide).</div>`}
+    </div>`;
+  body.innerHTML = sheetPanel + `
+    <div class="t-summary"><b>${list.length} student${list.length === 1 ? '' : 's'} on this device</b>
+      ${list.length ? `<button type="button" class="btn small" id="copyTable">📋 Copy for spreadsheet</button>` : ''}</div>
+    ${table}
+    <div id="tDetail"></div>
+    <div class="t-tools">
+      <div class="row-inline"><label for="newPin"><b>Change PIN:</b></label><input id="newPin" class="text-input" inputmode="numeric" maxlength="8" placeholder="New PIN"><button type="button" class="btn small plain" id="savePin">Save PIN</button></div>
+      <p class="note" style="text-align:left">${sheetUrl() ? 'Removing a student here only removes them from this tablet. Their progress stays in your Google Sheet.' : 'Progress is saved in this browser on this device. On shared tablets, check each one.'} Click a student to see details, adjust their level, or remove them.</p>
+    </div>`;
+  $$('.t-table tr.row').forEach(tr => {
+    const open = () => { teacherSel = tr.dataset.id; renderDetail(); };
+    tr.addEventListener('click', open); tr.addEventListener('keydown', e => { if (e.key === 'Enter') open(); });
+  });
+  if ($('#copyTable')) $('#copyTable').addEventListener('click', () => copyTable(list));
+  if ($('#shTest')) $('#shTest').addEventListener('click', async () => {
+    const st = $('#shState'); st.textContent = 'Checking…';
+    try { const r = await (await fetch(sheetUrl(), { redirect: 'follow' })).json(); st.innerHTML = r && r.ok && r.app === 'number-island' ? '<span class="ok-text">Connected ✓</span>' : '<span class="bad-text">That link answered, but it isn\'t the Number Island script.</span>'; }
+    catch (e) { st.innerHTML = '<span class="bad-text">Not reachable. Check the link and that the web app is shared with "Anyone".</span>'; }
+  });
+  if ($('#shSave')) $('#shSave').addEventListener('click', () => {
+    const v = $('#shUrl').value.trim();
+    if (v && !/^https:\/\/script\.google\.com\//.test(v)) { toast('That should be a script.google.com link ending in /exec.'); return; }
+    store.sheetUrl = v; save(); toast(v ? 'Link saved on this tablet.' : 'Link removed.', true); renderTeacher();
+  });
+  $('#savePin').addEventListener('click', () => {
+    const v = $('#newPin').value.trim();
+    if (!/^\d{4,8}$/.test(v)) { toast('Use 4 to 8 digits for the PIN.'); return; }
+    store.pin = v; save(); $('#newPin').value = ''; toast('PIN saved.', true);
+  });
+  if (teacherSel) renderDetail();
+}
+function renderDetail() {
+  const p = store.profiles[teacherSel]; const box = $('#tDetail');
+  if (!p) { box.innerHTML = ''; return; }
+  const li = levelInfo(p.xp);
+  box.innerHTML = `<div class="t-detail">
+    <div class="t-detail-head">${avatarHTML(p, 60)}<div><h3>${esc(p.name)}</h3><div class="note" style="text-align:left">Level ${li.L} ${li.rank} · 🪙 ${fmt(p.coins)} · ${p.badges.length} badges · best streak ${p.bestStreak}</div></div></div>
+    ${SKILL_IDS.map(k => { const s = p.skills[k], a = acc(s); return `<div class="t-skill">
+      <div><b>${SKILLS[k].name}</b> ${skillChip(s)}<small>Level ${s.level}: ${SKILLS[k].levels[s.level - 1]} · ${s.correct} of ${s.total} correct overall${a != null ? ` · ${a}% recently` : ''}</small></div>
+      <div class="lvl-ctl"><button type="button" class="btn small plain" data-lv="${k}" data-d="-1" aria-label="Lower level">−</button><b>L${s.level}</b><button type="button" class="btn small plain" data-lv="${k}" data-d="1" aria-label="Raise level">+</button></div></div>`; }).join('')}
+    <div class="foot-row" style="justify-content:flex-start">
+      <button type="button" class="btn small plain" id="closeDetail">Close</button>
+      <button type="button" class="btn small coral" id="delStudent">Remove student</button>
+    </div></div>`;
+  $$('[data-lv]', box).forEach(b => b.addEventListener('click', () => {
+    const s = p.skills[b.dataset.lv]; s.level = Math.max(1, Math.min(5, s.level + +b.dataset.d)); s.streak = 0; s.miss = 0;
+    p.updated = Date.now(); save(); if (p.sheetName) syncNow(p.id); renderTeacher();
+  }));
+  $('#closeDetail').addEventListener('click', () => { teacherSel = null; box.innerHTML = ''; });
+  let armed = false;
+  $('#delStudent').addEventListener('click', e => {
+    if (!armed) { armed = true; e.target.textContent = 'Tap again to remove ' + p.name; later(() => { armed = false; if (e.target.isConnected) e.target.textContent = 'Remove student'; }, 3000); return; }
+    delete store.profiles[p.id]; if (store.current === p.id) store.current = null; save(); teacherSel = null; toast(`${p.name} was removed.`); renderTeacher();
+  });
+  try { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+}
+function copyTable(list) {
+  const head = ['Student', ...SKILL_IDS.flatMap(k => [`${SKILLS[k].name} level`, `${SKILLS[k].name} recent %`, `${SKILLS[k].name} correct/total`]), 'Last played'];
+  const rows = list.map(p => [p.name, ...SKILL_IDS.flatMap(k => { const s = p.skills[k]; const a = acc(s); return [s.level, a == null ? '' : a, `${s.correct}/${s.total}`]; }), p.last ? new Date(p.last).toLocaleString() : '']);
+  const tsv = [head, ...rows].map(r => r.join('\t')).join('\n');
+  const done = () => toast('Copied! Paste it into Google Sheets or Excel.', true);
+  const fallback = () => {
+    const ta = document.createElement('textarea'); ta.value = tsv; ta.style.cssText = 'width:100%;height:120px;margin-top:10px';
+    $('#tDetail').prepend(ta); ta.focus(); ta.select();
+    toast('Select all of this text and copy it.');
+  };
+  try { navigator.clipboard.writeText(tsv).then(done, fallback); } catch (e) { fallback(); }
+}
+
+/* =========================================================
+   Boot
+   ========================================================= */
+load();
+if (store.current && store.profiles[store.current]) { ensureProfile(P()); openHub(); }
+else { store.current = null; renderWho(); }
+})();
+</script>
+</body>
+</html>

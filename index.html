@@ -423,6 +423,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .avatar.frame-ice { box-shadow: 0 0 0 3px #E8FBFF, 0 0 0 7px #7FD6F0, 0 0 14px 4px rgba(127,214,240,.9); }
 .avatar.frame-fire { box-shadow: 0 0 0 3px #FFE08A, 0 0 0 7px #FF6B57, 0 0 16px 6px rgba(255,107,87,.85); animation: flicker 1.2s infinite alternate; }
 .avatar.frame-rainbowf { box-shadow: 0 0 0 3px #FF6B57, 0 0 0 6px #FFC93C, 0 0 0 9px #23A866, 0 0 0 12px #2C8FD6, 0 0 0 15px #9B5DE5; }
+.avatar.frame-raccoontail { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #3A3D46, 0 0 0 9px #B5B8C1, 0 0 0 12px #3A3D46, 0 0 0 15px #B5B8C1, 0 0 0 18px #3A3D46; }
 .avatar.frame-diamond { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #B9F2FF, 0 0 0 9px #fff, 0 0 22px 8px rgba(185,242,255,1); animation: shine 1.6s infinite alternate; }
 @keyframes flicker { to { box-shadow: 0 0 0 3px #FFE08A, 0 0 0 7px #FF8A3D, 0 0 22px 9px rgba(255,138,61,.9); } }
 @keyframes shine { to { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #E0FAFF, 0 0 0 9px #fff, 0 0 30px 12px rgba(224,250,255,1); } }
@@ -597,6 +598,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .season-tab { background: var(--sun); }
 .season-tab[aria-selected="true"] { background: var(--ink); }
 .r-season { background: #FFB13C; } .r-boss { background: #E6DBFF; }
+.r-raccoon { background: #3A3D46; color: #fff; }
+.item.raccoon-item:not(.locked) { background: linear-gradient(180deg,#fff 60%,#EDEFF3); }
 .boss-shadow { filter: brightness(0) drop-shadow(0 0 10px rgba(255, 77, 77, .9)); }
 .boss-face.big { font-size: 130px; }
 .eyebrow-light { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--sun); }
@@ -872,8 +875,8 @@ const GAMES = [
 ];
 const GAME = Object.fromEntries(GAMES.map(g => [g.id, g]));
 
-const AVATARS = ['🦊', '🐼', '🐯', '🐸', '🐨', '🐙', '🦉', '🐢', '🐰', '🦁', '🐧', '🐬', '🐻', '🐵', '🐷', '🐮', '🐺', '🦒'];
-const ANIMAL_NAMES = ['Fox', 'Panda', 'Tiger', 'Frog', 'Koala', 'Octopus', 'Owl', 'Turtle', 'Bunny', 'Lion', 'Penguin', 'Dolphin', 'Bear', 'Monkey', 'Pig', 'Cow', 'Wolf', 'Giraffe'];
+const AVATARS = ['🦊', '🐼', '🐯', '🐸', '🐨', '🐙', '🦉', '🐢', '🐰', '🦁', '🐧', '🐬', '🐻', '🐵', '🐷', '🐮', '🐺', '🦒', '🦝'];
+const ANIMAL_NAMES = ['Fox', 'Panda', 'Tiger', 'Frog', 'Koala', 'Octopus', 'Owl', 'Turtle', 'Bunny', 'Lion', 'Penguin', 'Dolphin', 'Bear', 'Monkey', 'Pig', 'Cow', 'Wolf', 'Giraffe', 'Raccoon'];
 const SHOP = {
   hat: [
     { id: 'cap', icon: '🧢', name: 'Cap', price: 20 },
@@ -885,7 +888,8 @@ const SHOP = {
     { id: 'grad', icon: '🎓', name: 'Grad cap', price: 120 },
     { id: 'crown', icon: '👑', name: 'Crown', price: 400, minLevel: 5 },
     { id: 'star', icon: '🌟', name: 'Star', price: 750, minLevel: 7 },
-    { id: 'gem', icon: '💎', name: 'Diamond', price: 1500, minLevel: 9 }
+    { id: 'gem', icon: '💎', name: 'Diamond', price: 1500, minLevel: 9 },
+    { id: 'raccoonhat', icon: '🦝', name: 'Raccoon hat', price: 2000, minLevel: 9, raccoon: true }
   ],
   pet: [
     { id: 'chick', icon: '🐣', name: 'Chick', price: 30 },
@@ -900,7 +904,8 @@ const SHOP = {
     { id: 'unicorn', icon: '🦄', name: 'Unicorn', price: 350, minLevel: 4 },
     { id: 'trex', icon: '🦖', name: 'T. rex', price: 500, minLevel: 5 },
     { id: 'peacock', icon: '🦚', name: 'Peacock', price: 650, minLevel: 6 },
-    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 1200, minLevel: 8 }
+    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 1200, minLevel: 8 },
+    { id: 'raccoon', icon: '🦝', name: 'Raccoon', price: 2500, minLevel: 9, raccoon: true }
   ],
   bg: [
     { id: 'sky', name: 'Sky', price: 0, css: 'linear-gradient(160deg,#C9F1FF,#7FD3EE)' },
@@ -913,7 +918,8 @@ const SHOP = {
     { id: 'lava', name: 'Lava', price: 400, css: 'radial-gradient(circle at 50% 80%,#FFD23F,#FF5A1F 45%,#7A1408)', minLevel: 5 },
     { id: 'aurora', name: 'Aurora', price: 600, css: 'linear-gradient(160deg,#0B2545 10%,#2EC4B6 45%,#9B5DE5 80%)', minLevel: 6 },
     { id: 'rainbow', name: 'Rainbow', price: 900, css: 'conic-gradient(#FF6B57,#FFC93C,#23A866,#2C8FD6,#9B5DE5,#FF6B57)', minLevel: 7 },
-    { id: 'gold', name: 'Gold', price: 1500, css: 'linear-gradient(160deg,#FFF6B8,#F0B400)', minLevel: 8 }
+    { id: 'gold', name: 'Gold', price: 1500, css: 'linear-gradient(160deg,#FFF6B8,#F0B400)', minLevel: 8 },
+    { id: 'raccoonbg', name: 'Raccoon mask', price: 2000, css: 'linear-gradient(180deg,#E4E6EB 0 32%,#3A3D46 32% 56%,#E4E6EB 56% 100%)', minLevel: 9, raccoon: true }
   ],
   frame: [
     { id: 'wood', name: 'Wood', price: 80 },
@@ -921,7 +927,8 @@ const SHOP = {
     { id: 'ice', name: 'Ice', price: 300, minLevel: 3 },
     { id: 'fire', name: 'Fire', price: 500, minLevel: 4 },
     { id: 'rainbowf', name: 'Rainbow', price: 900, minLevel: 6 },
-    { id: 'diamond', name: 'Diamond', price: 2000, minLevel: 9 }
+    { id: 'diamond', name: 'Diamond', price: 2000, minLevel: 9 },
+    { id: 'raccoontail', name: 'Raccoon tail', price: 2500, minLevel: 10, raccoon: true }
   ],
   effect: [
     { id: 'stars', name: 'Stars', price: 0, fx: ['✨', '⭐', '🪙'] },
@@ -931,7 +938,8 @@ const SHOP = {
     { id: 'pizza', name: 'Pizza party', price: 200, fx: ['🍕', '🍩', '🧁'] },
     { id: 'dinos', name: 'Dinosaurs', price: 350, fx: ['🦖', '🦕', '🌿'], minLevel: 3 },
     { id: 'fireworks', name: 'Fireworks', price: 500, fx: ['🎆', '🎇', '💥'], minLevel: 4 },
-    { id: 'gems', name: 'Gems', price: 1000, fx: ['💎', '💠', '👑'], minLevel: 7 }
+    { id: 'gems', name: 'Gems', price: 1000, fx: ['💎', '💠', '👑'], minLevel: 7 },
+    { id: 'raccoonfx', name: 'Raccoon party', price: 1800, fx: ['🦝', '🌙', '✨'], minLevel: 8, raccoon: true }
   ],
   ride: [
     { id: 'car', icon: '🚗', name: 'Car', price: 0, rot: 90 },
@@ -942,7 +950,8 @@ const SHOP = {
     { id: 'firetruck', icon: '🚒', name: 'Fire truck', price: 300, rot: 90 },
     { id: 'racecar', icon: '🏎️', name: 'Race car', price: 500, rot: 90, minLevel: 3 },
     { id: 'ufo', icon: '🛸', name: 'UFO', price: 1000, rot: 0, minLevel: 6 },
-    { id: 'rocket', icon: '🚀', name: 'Rocket', price: 1800, rot: -45, minLevel: 8 }
+    { id: 'rocket', icon: '🚀', name: 'Rocket', price: 1800, rot: -45, minLevel: 8 },
+    { id: 'raccoonride', icon: '🦝', name: 'Racing raccoon', price: 2500, rot: 0, minLevel: 9, raccoon: true }
   ],
   title: [
     { id: 'puzzle', name: 'Puzzle Pro', price: 100 },
@@ -953,7 +962,8 @@ const SHOP = {
     { id: 'brain', name: 'Super Brain', price: 600, minLevel: 5 },
     { id: 'captain', name: 'Captain Calculator', price: 900, minLevel: 6 },
     { id: 'legend', name: 'Living Legend', price: 2000, minLevel: 9 },
-    { id: 'champion', name: `${TEACHER}'s Champion`, price: 3000, minLevel: 10 }
+    { id: 'champion', name: `${TEACHER}'s Champion`, price: 3000, minLevel: 10 },
+    { id: 'raccoonroyal', name: 'Raccoon Royalty', price: 3000, minLevel: 10, raccoon: true }
   ],
   island: [
     { id: 'shells', icon: '🐚', name: 'Shells', price: 40, x: 30, y: 26, z: 22 },
@@ -1008,7 +1018,10 @@ const SHOP = {
     { id: 'plane', icon: '✈️', name: 'Airplane', price: 1600, zone: 'sky', z: 38, minLevel: 7 },
     { id: 'rainbowsky', icon: '🌈', name: 'Rainbow', price: 2400, zone: 'sky', z: 70, minLevel: 8 },
     { id: 'ufo', icon: '🛸', name: 'Flying saucer', price: 5000, zone: 'sky', z: 44, minLevel: 11 },
-    { id: 'rocketpad', icon: '🚀', name: 'Rocket launch', price: 8000, zone: 'land', z: 60, minLevel: 13 }
+    { id: 'rocketpad', icon: '🚀', name: 'Rocket launch', price: 8000, zone: 'land', z: 60, minLevel: 13 },
+    // raccoons: the top island friends
+    { id: 'raccoonpal', icon: '🦝', name: 'Raccoon', price: 3000, zone: 'land', z: 40, minLevel: 8, raccoon: true },
+    { id: 'raccoonking', icon: '🦝', name: 'Giant raccoon', price: 7000, zone: 'land', z: 72, minLevel: 12, raccoon: true }
   ]
 };
 // Starting spots for island items without one. Students can drag everything wherever they like.
@@ -1165,6 +1178,7 @@ const BADGES = [
   { id: 'rich2',     icon: '🏦', name: 'Coin Tycoon',     desc: 'Earn 5,000 coins in total' },
   { id: 'builder',   icon: '🏝️', name: 'Island Builder',  desc: 'Put 7 things on your island' },
   { id: 'collector', icon: '🗃️', name: 'Collector',       desc: 'Own 30 things from the shop' },
+  { id: 'raccoonclub', icon: '🦝', name: 'Raccoon Club',    desc: 'Own 3 raccoon things from the shop' },
   { id: 'starstudent', icon: '🌟', name: `${TEACHER}'s Star Student`, desc: 'Earn 3 stars in 10 different games' },
   { id: 'bossbeater', icon: '⚔️', name: 'Boss Beater',     desc: 'Help your class beat a weekly boss' },
 ];
@@ -1266,6 +1280,7 @@ function checkBadges(extra = {}) {
   if (p.coinsEarned >= 5000) award('rich2');
   if (SHOP.island.filter(it => p.owned.includes(it.id)).length >= 7) award('builder');
   if (p.owned.length - 3 >= 30) award('collector');
+  if (Object.values(SHOP).flat().filter(it => it.raccoon && p.owned.includes(it.id)).length >= 3) award('raccoonclub');
   const levels = SKILL_IDS.map(k => p.skills[k].level);
   if (levels.some(l => l >= 3)) award('climb');
   if (levels.some(l => l >= 5)) award('master');
@@ -3453,8 +3468,8 @@ function openShop(tab) {
     const cnt = C.place ? islandCount(p, it.id) : 0;
     const label = C.place ? (has ? (cnt >= ISLAND_MAX_EACH ? `Own ${cnt} (max)` : `Own ${cnt} · +1 for 🪙 ${fmt(it.price)}`) : null) : using ? (C.one ? 'Using ✓' : 'Wearing ✓') : has ? (C.one ? 'Use' : 'Wear') : null;
     const price = label || (it.reward ? '🏆 Boss reward' : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
-    const rar = !has && (it.reward ? ['Boss reward', 'r-boss'] : it.season ? ['Seasonal', 'r-season'] : RARITY(it.price));
-    return `<button type="button" class="item ${using || (C.place && has) ? 'wearing' : ''} ${(locked || it.reward) && !has ? 'locked' : ''}" data-id="${it.id}" data-cat="${cat}">
+    const rar = !has && (it.reward ? ['Boss reward', 'r-boss'] : it.raccoon ? ['🦝 Raccoon', 'r-raccoon'] : it.season ? ['Seasonal', 'r-season'] : RARITY(it.price));
+    return `<button type="button" class="item ${using || (C.place && has) ? 'wearing' : ''} ${(locked || it.reward) && !has ? 'locked' : ''} ${it.raccoon ? 'raccoon-item' : ''}" data-id="${it.id}" data-cat="${cat}">
       ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(cat, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
   }).join('');
   $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id, b.dataset.cat)));

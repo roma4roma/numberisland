@@ -7,7 +7,8 @@
  * Tabs it creates:
  *   Roster          You type each student's name and an optional secret code.
  *                   Column C: type a number like 50 or -30 to add or take away coins.
- *                   It's applied the next time that student plays, then the cell clears.
+ *                   It's added the next time that student's game checks in, then the cell clears
+ *                   (only after the game confirms the coins arrived, so a gift is never lost or doubled).
  *   Class Progress  One row per student: level and recent accuracy for every skill.
  *   Activity        One row each time a student finishes a game.
  *   Games           Tick a box to unlock a game for every student. Untick to lock it.
@@ -102,9 +103,13 @@ function doPost(e) {
     var who = findStudent_(ss, req.name, req.code);
     if (who === 'bad_code') return out_({ ok: false, error: 'bad_code' });
     if (!who) return out_({ ok: false, error: 'not_on_roster' });
-    var coinAdjust = 0;
-    if (req.action === 'load' || req.action === 'boss' || (req.action === 'save' && !(req.profile && (Number(req.profile.dataVersion) || 1) < readSettings_(ss).version))) coinAdjust = takeCoinAdjust_(ss, who);
-    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, myReactions: reactionsFor_(ss, who) });
+    var coinAdjust = 0, coinId = '';
+    var staleSave = req.action === 'save' && req.profile && (Number(req.profile.dataVersion) || 1) < readSettings_(ss).version;
+    if (req.coinAck && !staleSave) ackCoinAdjust_(ss, who, String(req.coinAck)); // the game confirmed it added these coins
+    if (Number(req.coinV) >= 2 && !staleSave && (req.action === 'load' || req.action === 'boss' || req.action === 'save')) {
+      var ca = peekCoinAdjust_(ss, who); if (ca) { coinAdjust = ca.n; coinId = ca.id; }
+    }
+    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, myReactions: reactionsFor_(ss, who) });
     if (req.action === 'islands') {
       if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
       return out_({ ok: true, islands: allIslands_(ss, who) });
@@ -115,7 +120,7 @@ function doPost(e) {
     }
     if (req.action === 'boss') {
       if (req.week && req.hits > 0) addBossHits_(ss, req.week, who, req.hits);
-      return out_({ ok: true, boss: bossStatus_(ss, req.week, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust });
+      return out_({ ok: true, boss: bossStatus_(ss, req.week, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId });
     }
     if (req.action === 'save') {
       var st = readSettings_(ss);
@@ -126,7 +131,7 @@ function doPost(e) {
       if (req.profile) writeSave_(ss, who, req.profile);
       if (req.summary) { writeSummary_(ss, who, req.summary); buildNeedsHelp_(ss); }
       if (req.activity && req.activity.length) writeActivity_(ss, who, req.activity);
-      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who) });
+      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who) });
     }
     return out_({ ok: false, error: 'bad_action' });
   } catch (err) {
@@ -363,23 +368,41 @@ function rosterCoinColumn_(roster) {
     roster.getRange(1, 3).setValue('Add or remove coins').setFontWeight('bold');
     roster.setColumnWidth(3, 180);
   }
+  if (String(roster.getRange(1, 4).getValue()) !== 'Coin check (automatic)') {
+    roster.getRange(1, 4).setValue('Coin check (automatic)');
+    try { roster.hideColumns(4); } catch (e) {}
+  }
 }
-/** Reads and clears a student's coin adjustment. Returns the number (0 if none). */
-function takeCoinAdjust_(ss, who) {
+/** Reads (but does not clear) a student's coin adjustment: { n, id } or null.
+ *  A hidden column D remembers an id for the current amount, so the game can confirm it. */
+function peekCoinAdjust_(ss, who) {
   var sh = ss.getSheetByName(TABS.roster); rosterCoinColumn_(sh);
-  var last = sh.getLastRow(); if (last < 2) return 0;
-  var rows = sh.getRange(2, 1, last - 1, 3).getValues();
+  var last = sh.getLastRow(); if (last < 2) return null;
+  var rows = sh.getRange(2, 1, last - 1, 4).getValues();
   for (var i = 0; i < rows.length; i++) {
     if (normName_(rows[i][0]) !== normName_(who)) continue;
     var n = Math.round(Number(String(rows[i][2]).replace(/[^0-9.\-]/g, '')) || 0);
-    if (!n) return 0;
+    if (!n) { if (rows[i][3]) sh.getRange(i + 2, 4).setValue(''); return null; }
     n = Math.max(-100000, Math.min(100000, n));
-    sh.getRange(i + 2, 3).setValue('');
+    var tag = String(rows[i][3] || ''), parts = tag.split('|');
+    if (parts.length !== 2 || Number(parts[0]) !== n) { tag = n + '|' + Utilities.getUuid(); sh.getRange(i + 2, 4).setValue(tag); }
+    return { n: n, id: tag };
+  }
+  return null;
+}
+/** The game added the coins: clear the cell and note it on the Activity tab. */
+function ackCoinAdjust_(ss, who, id) {
+  var sh = ss.getSheetByName(TABS.roster);
+  var last = sh.getLastRow(); if (last < 2) return;
+  var rows = sh.getRange(2, 1, last - 1, 4).getValues();
+  for (var i = 0; i < rows.length; i++) {
+    if (normName_(rows[i][0]) !== normName_(who) || String(rows[i][3]) !== id) continue;
+    var n = Number(id.split('|')[0]) || 0;
+    sh.getRange(i + 2, 3, 1, 2).setValues([['', '']]);
     var act = ss.getSheetByName(TABS.activity);
     if (act) act.getRange(act.getLastRow() + 1, 1, 1, 7).setValues([[new Date(), who, 'Teacher', 'Coins ' + (n > 0 ? '+' : '') + n, '', '', '']]);
-    return n;
+    return;
   }
-  return 0;
 }
 
 /* ---------- Island visits: see classmates' islands and leave one reaction each ---------- */

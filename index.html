@@ -1264,8 +1264,13 @@ function bossDayIndex() {
 function bossDayName() { const i = bossDayIndex(); return i < 0 ? 'any day' : DAY_NAMES[i][0].toUpperCase() + DAY_NAMES[i].slice(1); }
 function isBossDay(d = today()) { const i = bossDayIndex(); return i < 0 || d.getDay() === i; }
 function daysToFriday(d = today()) { const i = bossDayIndex(); return i < 0 ? 0 : (i - d.getDay() + 7) % 7; }
-function applyCoinAdjust(p, n) {
+function applyCoinAdjust(p, n, id) {
   n = Math.round(Number(n) || 0); if (!p || !n) return;
+  if (id) { // each gift has an id: add it once, then tell the sheet it arrived so the cell can clear
+    p.coinIds = p.coinIds || []; p.coinAck = id;
+    if (p.coinIds.includes(id)) { scheduleSync(1500); return; }
+    p.coinIds.push(id); p.coinIds = p.coinIds.slice(-30);
+  }
   p.coins = Math.max(0, p.coins + n); p.updated = Date.now();
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (p.id === store.current) {
@@ -1528,14 +1533,14 @@ $('#newPlayer').addEventListener('submit', e => {
   const name = $('#newName').value.trim();
   if (!name) { $('#newName').classList.add('shake'); setTimeout(() => $('#newName').classList.remove('shake'), 400); $('#newName').focus(); return; }
   if (pendingSignIn) {
-    const { name: nm, code, offline, coinAdjust } = pendingSignIn;
+    const { name: nm, code, offline, coinAdjust, coinId } = pendingSignIn;
     const id = sheetKey(nm);
     newProfile(nm, chosenAvatar, id);
     Object.assign(store.profiles[id], { code, sheetName: nm, pending: [] });
     store.current = id; pendingSignIn = null; save();
     toast(`Welcome to ${TEACHER}'s Math Island, ${nm}!`, true);
     openHub();
-    if (coinAdjust) applyCoinAdjust(store.profiles[id], coinAdjust);
+    if (coinAdjust) applyCoinAdjust(store.profiles[id], coinAdjust, coinId);
     if (!offline) syncNow(id);
     return;
   }
@@ -1566,7 +1571,7 @@ $('#signIn').addEventListener('submit', async e => {
   if (!name) { $('#siErr').textContent = 'Type your name first.'; $('#siName').focus(); return; }
   signingIn = true; $('#siGo').disabled = true; $('#siGo').textContent = 'Checking…'; $('#siErr').textContent = ''; $('#siOffline').hidden = true;
   try {
-    const r = await api({ action: 'load', name, code, games: GAMES.map(g => ({ id: g.id, name: g.name, practices: g.practices })) });
+    const r = await api({ action: 'load', coinV: 2, name, code, games: GAMES.map(g => ({ id: g.id, name: g.name, practices: g.practices })) });
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
     if (!r.ok) {
@@ -1585,11 +1590,11 @@ $('#signIn').addEventListener('submit', async e => {
     if (store.profiles[key]) {
       Object.assign(store.profiles[key], { code, sheetName: r.name });
       store.current = key; ensureProfile(P()); save(); openHub();
-      if (coinAdjust) applyCoinAdjust(P(), coinAdjust);
+      if (coinAdjust) applyCoinAdjust(P(), coinAdjust, r.coinId);
       if (r.myReactions) applyMyReactions(P(), r.myReactions);
       syncNow(key);
     } else {
-      startAvatarStep(r.name, code, false, coinAdjust);
+      startAvatarStep(r.name, code, false, coinAdjust, r.coinId);
     }
   } catch (err) {
     const key = sheetKey(name), local = store.profiles[key];
@@ -1608,8 +1613,8 @@ $('#siOffline').addEventListener('click', () => {
   const name = $('#siName').value.trim(), code = $('#siCode').value.trim();
   if (name) startAvatarStep(name, code, true);
 });
-function startAvatarStep(name, code, offline, coinAdjust = 0) {
-  pendingSignIn = { name, code, offline, coinAdjust };
+function startAvatarStep(name, code, offline, coinAdjust = 0, coinId = '') {
+  pendingSignIn = { name, code, offline, coinAdjust, coinId };
   $('#signIn').hidden = true; $('#newPlayer').hidden = false; $('#cancelNew').hidden = false;
   $('#newTitle').textContent = `Hi, ${name}! Pick your animal`;
   $('#newNameLabel').hidden = true; $('#newName').hidden = true; $('#newName').value = name;
@@ -1640,7 +1645,8 @@ function summaryOf(p) {
 function syncBody(p, withActivity) {
   const copy = JSON.parse(JSON.stringify(p)); delete copy.code; delete copy.pending;
   const bp = p.bossPend && p.bossPend.hits ? { week: p.bossPend.week, hits: p.bossPend.hits } : { week: weekInfo().id, hits: 0 };
-  return { action: 'save', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [], boss: bp,
+  delete copy.coinAck;
+  return { action: 'save', coinV: 2, coinAck: p.coinAck || '', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [], boss: bp,
     games: GAMES.map(g => ({ id: g.id, name: g.name, practices: g.practices })) };
 }
 let syncTimer = null; const syncingIds = new Set();
@@ -1663,7 +1669,8 @@ async function syncNow(id) {
     const r = await api(body);
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
-    if (r.ok && r.coinAdjust && !r.stale) applyCoinAdjust(p, r.coinAdjust);
+    if (r.ok && !r.stale && body.coinAck && p.coinAck === body.coinAck) delete p.coinAck; // the sheet cleared it
+    if (r.ok && r.coinAdjust && !r.stale) applyCoinAdjust(p, r.coinAdjust, r.coinId);
     if (r.ok && r.myReactions && !r.stale) applyMyReactions(p, r.myReactions);
     if (r.ok && r.stale) { // the teacher started a new school year
       delete store.profiles[id];
@@ -2553,10 +2560,10 @@ async function bossFetch(extraHits = 0) {
   const p = P(), w = weekInfo().id;
   if (!sheetUrl() || !p || !p.sheetName) return bossCached();
   try {
-    const r = await api({ action: 'boss', name: p.sheetName, code: p.code || '', week: w, hits: extraHits });
+    const r = await api({ action: 'boss', coinV: 2, name: p.sheetName, code: p.code || '', week: w, hits: extraHits });
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
-    if (r.ok && r.coinAdjust) applyCoinAdjust(p, r.coinAdjust);
+    if (r.ok && r.coinAdjust) applyCoinAdjust(p, r.coinAdjust, r.coinId);
     if (r.ok && r.boss) { applyBossStatus(r.boss); return r.boss; }
   } catch (e) { /* offline: keep the last known status */ }
   return null;

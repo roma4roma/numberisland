@@ -516,6 +516,27 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
   .vrec .vn { font-size: 28px; } .vrec .vslot { min-width: 110px; }
 }
 
+/* ---------- Topic games ---------- */
+.problem.long { font-size: clamp(22px, 3.6vw, 30px); line-height: 1.25; max-width: 620px; margin: 0 auto; }
+.q-wrap { display: grid; gap: 8px; justify-items: center; text-align: center; }
+.q-visual { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 6px auto; max-width: 100%; overflow-x: auto; }
+.pic { max-width: 100%; height: auto; }
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 560px; margin: 8px auto; }
+.choice-grid.many { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.choice { font-size: 22px; min-height: 62px; }
+.choice.right { background: var(--leaf); color: #fff; }
+.choice.wrongc { background: var(--coral); color: #fff; }
+.fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; line-height: 1.05; font-size: .78em; margin: 0 .08em; }
+.fr > span:first-child { border-bottom: .09em solid currentColor; padding: 0 .12em; }
+.frac-in { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+.frac-stack { display: grid; gap: 4px; justify-items: center; }
+.frac-stack .slot { min-width: 90px; height: 54px; font-size: 30px; }
+.frac-line { width: 110px; height: 4px; background: var(--ink); border-radius: 2px; }
+.fixed-d { font-family: var(--display); font-size: 34px; }
+.key.go.wide { grid-column: 1 / -1; }
+.locked-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.locked-chip { display: inline-flex; align-items: center; gap: 6px; border: 2px dashed #9FB4C0; border-radius: 999px; padding: 4px 12px; font-weight: 700; color: var(--ink-soft); background: transparent; cursor: pointer; font-size: 14px; }
+
 /* ---------- Boss Battle ---------- */
 .game-card.boss-card { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; color: #fff;
   background: radial-gradient(circle at 15% 50%, #6D4BC2, #2A1F6B 70%); }
@@ -641,6 +662,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
       </div>
       <h2 class="section-label">Pick an adventure</h2>
       <div class="game-grid" id="gameGrid"></div>
+      <div id="lockedGames"></div>
       <div class="foot-row">
         <button type="button" class="link-btn" id="switchPlayer">Switch player</button>
         <button type="button" class="link-btn" id="soundToggle">Sound: on</button>
@@ -758,7 +780,25 @@ const SKILLS = {
   t4est:   { name: 'Estimating products', short: 'Estimate',
              levels: ['round smaller numbers', 'round any 2-digit number', 'rounding and reasonable answers', 'more reasonable answers', 'mixed estimating'] },
   t4word:  { name: 'Multi-step word problems', short: 'Word probs',
-             levels: ['two steps, smaller numbers', 'two steps', 'two steps, bigger numbers', 'three steps', 'three steps, bigger numbers'] }
+             levels: ['two steps, smaller numbers', 'two steps', 'two steps, bigger numbers', 'three steps', 'three steps, bigger numbers'] },
+  factors:  { name: 'Factors and multiples', short: 'Factors',
+             levels: ['multiples and factors', 'missing factors, counting factors', 'prime or composite', 'common multiples, factor pairs', 'all of it, up to 100'] },
+  fracEq:   { name: 'Equivalent and comparing fractions', short: 'Frac compare',
+             levels: ['naming fractions', 'equivalent fractions', 'comparing like fractions', 'comparing unlike fractions', 'ordering fractions'] },
+  fracOps:  { name: 'Adding, subtracting, multiplying fractions', short: 'Frac +−×',
+             levels: ['adding like fractions', 'adding and subtracting', 'mixed numbers', 'multiplying by a whole number', 'word problems'] },
+  lineplot: { name: 'Line plots', short: 'Line plots',
+             levels: ['reading one value', 'counting all values', 'most common, in eighths', 'difference between values', 'totals'] },
+  decimals: { name: 'Decimals', short: 'Decimals',
+             levels: ['tenths', 'hundredths', 'fractions and decimals', 'comparing decimals', 'adding tenths, hundredths and money'] },
+  measure:  { name: 'Measurement', short: 'Measure',
+             levels: ['metric length', 'mass, volume and time', 'bigger metric conversions, both ways', 'mixed units and perimeter', 'area and perimeter'] },
+  patterns: { name: 'Patterns', short: 'Patterns',
+             levels: ['add patterns', 'add, subtract, multiply', 'finding a later term', 'finding the rule', 'two-step rules'] },
+  angles:   { name: 'Angles', short: 'Angles',
+             levels: ['kinds of angles', 'angles as turns', 'using a protractor', 'missing angles', 'adding angles'] },
+  shapes:   { name: 'Lines and shapes', short: 'Shapes',
+             levels: ['lines, rays, segments', 'parallel and perpendicular', 'triangles by angles', 'triangles by sides, quadrilaterals', 'lines of symmetry'] }
 };
 const SKILL_IDS = Object.keys(SKILLS);
 
@@ -773,6 +813,15 @@ const GAMES = [
   { id: 'column',   name: 'Column Cliffs',      icon: '🧗', blurb: 'Big + and − in columns.', skill: 'addsub', bg: '#FFD5CC', practices: 'Multi-digit addition and subtraction' },
   { id: 'divide',   name: 'Treasure Split',     icon: '💰', blurb: 'Share coins fairly with division.', skill: 'longdiv', bg: '#FFF6C7', practices: 'Division with remainders' },
   { id: 'story',    name: 'Story Problems',     icon: '📜', blurb: 'Find the hidden question, then solve.', skill: 't4word', bg: '#DCEBFF', practices: 'Multi-step word problems' },
+  { id: 'factors',     name: 'Factor Forest',    icon: '🌲', blurb: 'Factors, multiples, prime and composite.', skill: 'factors', bg: '#D5F5E3', practices: 'Topic 7: factors, multiples, prime and composite', later: true },
+  { id: 'fracbakery',  name: 'Fraction Bakery',  icon: '🥧', blurb: 'Equivalent fractions and comparing.', skill: 'fracEq', bg: '#FFE6A6', practices: 'Topic 8: equivalent fractions, comparing and ordering', later: true },
+  { id: 'frackitchen', name: 'Fraction Kitchen', icon: '🍳', blurb: 'Add, subtract and multiply fractions.', skill: 'fracOps', bg: '#FFD5CC', practices: 'Topics 9–10: adding and subtracting fractions, mixed numbers, multiplying by a whole number', later: true },
+  { id: 'lineplot',    name: 'Line Plot Lab',    icon: '📏', blurb: 'Read line plots with fractions.', skill: 'lineplot', bg: '#DCEBFF', practices: 'Topic 11: line plots with fractions', later: true },
+  { id: 'decimals',    name: 'Decimal Docks',    icon: '⚓', blurb: 'Tenths, hundredths and money.', skill: 'decimals', bg: '#D7F7F2', practices: 'Topic 12: decimals, tenths and hundredths, money', later: true },
+  { id: 'measure',     name: 'Measure Mountain', icon: '⛰️', blurb: 'Convert units, area and perimeter.', skill: 'measure', bg: '#E6DBFF', practices: 'Topic 13: unit conversions, area and perimeter', later: true },
+  { id: 'patterns',    name: 'Pattern Path',     icon: '🧩', blurb: 'Find the rule and the next number.', skill: 'patterns', bg: '#FFF0B8', practices: 'Topic 14: number patterns and rules', later: true },
+  { id: 'angles',      name: 'Angle Arcade',     icon: '📐', blurb: 'Kinds of angles, protractors, missing angles.', skill: 'angles', bg: '#FFE1DB', practices: 'Topic 15: angles and angle measurement', later: true },
+  { id: 'shapes',      name: 'Shape Safari',     icon: '🔷', blurb: 'Lines, triangles, quadrilaterals, symmetry.', skill: 'shapes', bg: '#CBE8FF', practices: 'Topic 16: lines, angles and shapes', later: true },
   { id: 'boss',     name: 'Boss Battle',        icon: '⚔️', blurb: 'Team up with your class to beat this week\'s boss!', skill: null, bg: '#2A1F6B', wide: true, practices: 'Whole-class team-up on mixed facts (great for Fun Friday)' }
 ];
 const GAME = Object.fromEntries(GAMES.map(g => [g.id, g]));
@@ -1022,8 +1071,22 @@ function weekInfo(d = today()) { // ISO week, e.g. 2026-W43
   return { id: `${t.getUTCFullYear()}-W${String(n).padStart(2, '0')}`, n };
 }
 function currentBoss(d = today()) { return BOSSES[weekInfo(d).n % BOSSES.length]; }
-function isBossDay(d = today()) { return d.getDay() === 5; }
-function daysToFriday(d = today()) { return (5 - d.getDay() + 7) % 7; }
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+function bossDayIndex() {
+  const d = String((store.settings && store.settings.bossDay) || 'Friday').trim().toLowerCase();
+  if (d.startsWith('any')) return -1;
+  const i = DAY_NAMES.findIndex(n => n.startsWith(d.slice(0, 3)));
+  return i >= 0 ? i : 5;
+}
+function bossDayName() { const i = bossDayIndex(); return i < 0 ? 'any day' : DAY_NAMES[i][0].toUpperCase() + DAY_NAMES[i].slice(1); }
+function isBossDay(d = today()) { const i = bossDayIndex(); return i < 0 || d.getDay() === i; }
+function daysToFriday(d = today()) { const i = bossDayIndex(); return i < 0 ? 0 : (i - d.getDay() + 7) % 7; }
+function applySettings(st) {
+  if (!st || typeof st !== 'object') return;
+  const before = JSON.stringify(store.settings || {});
+  store.settings = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+  if (before !== JSON.stringify(st) && currentScreen === 'hub') renderGameGrid();
+}
 const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'] : price <= 250 ? ['Rare', 'r-rare'] : price <= 900 ? ['Epic', 'r-epic'] : ['Legendary', 'r-legend'];
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
@@ -1073,7 +1136,8 @@ function newProfile(name, avatar, forcedId) {
   const skills = {}; SKILL_IDS.forEach(k => skills[k] = newSkill());
   store.profiles[id] = {
     id, name, avatar, coins: 0, coinsEarned: 0, xp: 0, owned: ['sky', 'stars', 'car'], wear: { hat: null, pet: null, bg: 'sky', effect: 'stars', ride: 'car' },
-    skills, games: {}, badges: [], streak: 0, bestStreak: 0, totalCorrect: 0, created: Date.now(), last: Date.now()
+    skills, games: {}, badges: [], streak: 0, bestStreak: 0, totalCorrect: 0, created: Date.now(), last: Date.now(),
+    dataVersion: (store.settings && Number(store.settings.version)) || 1
   };
   return id;
 }
@@ -1094,6 +1158,7 @@ function levelInfo(xp) {
 }
 function reward(coins, xp) {
   const p = P(); const before = levelInfo(p.xp).L;
+  if (coins > 0) coins = Math.max(1, Math.round(coins * ((store.settings && Number(store.settings.coinRate)) || 1)));
   p.coins += coins; p.coinsEarned += coins; p.xp += xp;
   const after = levelInfo(p.xp);
   if (after.L > before) {
@@ -1302,12 +1367,15 @@ $('#signIn').addEventListener('submit', async e => {
   try {
     const r = await api({ action: 'load', name, code, games: GAMES.map(g => ({ id: g.id, name: g.name, practices: g.practices })) });
     if (r.ok && r.games) applyLocks(r.games);
+    if (r.ok && r.settings) applySettings(r.settings);
     if (!r.ok) {
       $('#siErr').textContent = r.error === 'bad_code' ? "That code doesn't match. Try again, or ask your teacher."
         : r.error === 'not_on_roster' ? `We couldn't find "${name}" on the class list. Check the spelling, or ask your teacher.`
         : 'Something went wrong with the class sheet. Ask your teacher.';
       return;
     }
+    const ver = (r.settings && Number(r.settings.version)) || 1;
+    if (store.profiles[sheetKey(r.name)] && (store.profiles[sheetKey(r.name)].dataVersion || 1) < ver) delete store.profiles[sheetKey(r.name)]; // a new school year started
     const key = sheetKey(r.name), local = store.profiles[key];
     if (r.profile && !(local && (local.updated || 0) > (r.profile.updated || 0))) {
       store.profiles[key] = Object.assign(r.profile, { id: key, pending: local ? local.pending || [] : [] });
@@ -1358,6 +1426,10 @@ function summaryOf(p) {
   SKILL_IDS.forEach(k => { const s = p.skills[k], a = acc(s); cols.push(`${SKILLS[k].short} level`, `${SKILLS[k].short} recent %`); vals.push(s.total ? s.level : '', a == null ? '' : a); });
   const c = SKILL_IDS.reduce((n, k) => n + p.skills[k].correct, 0), t = SKILL_IDS.reduce((n, k) => n + p.skills[k].total, 0);
   cols.push('Correct', 'Answered'); vals.push(c, t);
+  const w = weekInfo().id;
+  cols.push('Minutes this week', 'Minutes week', 'Tricky facts', 'Needs help with');
+  vals.push(Math.round((p.minutes || {})[w] || 0), w, (p.missed || []).slice(-8).map(m => m.text).join(', '),
+    SKILL_IDS.filter(k => { const sk = p.skills[k]; return sk.recent.length >= 8 && acc(sk) < 60; }).map(k => SKILLS[k].name).join(', '));
   return { cols, vals };
 }
 function syncBody(p, withActivity) {
@@ -1384,6 +1456,13 @@ async function syncNow(id) {
   try {
     const r = await api(body);
     if (r.ok && r.games) applyLocks(r.games);
+    if (r.ok && r.settings) applySettings(r.settings);
+    if (r.ok && r.stale) { // the teacher started a new school year
+      delete store.profiles[id];
+      if (store.current === id) { store.current = null; save(); renderWho(); toast('A new school year has started! Sign in to begin.', true); }
+      else save();
+      return;
+    }
     if (r.ok && sentHits && p.bossPend) { p.bossPend.hits = Math.max(0, p.bossPend.hits - sentHits); }
     if (r.ok && r.boss) applyBossStatus(r.boss);
     if (r.ok) { p.pending = (p.pending || []).slice(sent); p.syncedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} if (id === store.current) setSyncStatus('ok'); }
@@ -1391,7 +1470,14 @@ async function syncNow(id) {
   } catch (e) { if (id === store.current) setSyncStatus('offline'); }
   finally { syncingIds.delete(id); if (p.pending && p.pending.length && sent && p.syncedAt) {} }
 }
+function trackTime() {
+  const p = P(); if (!p || !session || !session.t0) return;
+  const mins = Math.min(30, (Date.now() - session.t0) / 60000), w = weekInfo().id; session.t0 = null;
+  p.minutes = p.minutes || {}; p.minutes[w] = Math.round(((p.minutes[w] || 0) + mins) * 10) / 10;
+  Object.keys(p.minutes).sort().slice(0, -6).forEach(k => delete p.minutes[k]); // keep the last few weeks
+}
 function logActivity(game, result, stars, skill) {
+  trackTime();
   const p = P(); if (!p || !p.sheetName) return;
   p.pending = p.pending || [];
   p.pending.push({ time: new Date().toISOString(), game, result, stars, skill: skill ? SKILLS[skill].name : '', level: skill ? p.skills[skill].level : '' });
@@ -1407,7 +1493,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && P()
 
 /* ---------- Hub ---------- */
 function openHub() {
-  stopArcade(); clearTimers();
+  trackTime(); stopArcade(); clearTimers();
   const p = P(); if (!p) return renderWho();
   ensureProfile(p);
   $('#hubAvatar').innerHTML = avatarHTML(p, 76);
@@ -1425,7 +1511,11 @@ function openHub() {
 }
 function renderGameGrid() {
   const p = P(); if (!p) return;
-  const ordered = isUnlocked('boss') ? [GAME.boss, ...GAMES.filter(g => g.id !== 'boss')] : GAMES;
+  const openList = GAMES.filter(g => g.id !== 'boss' && isUnlocked(g.id)), lockedList = GAMES.filter(g => g.id !== 'boss' && !isUnlocked(g.id));
+  const ordered = [...(isUnlocked('boss') ? [GAME.boss] : []), ...openList];
+  $('#lockedGames').innerHTML = lockedList.length || !isUnlocked('boss') ? `<h2 class="section-label" style="font-size:18px;margin-top:14px">Coming later</h2>
+    <div class="locked-row">${[...lockedList, ...(isUnlocked('boss') ? [] : [GAME.boss])].map(g => `<button type="button" class="locked-chip" data-lockedg="${g.id}">🔒 ${g.icon} ${g.name}</button>`).join('')}</div>` : '';
+  $$('[data-lockedg]').forEach(b => b.addEventListener('click', () => { toast(`${GAME[b.dataset.lockedg].name} is locked for now. Your teacher will open it soon!`); sfx('bad'); }));
   $('#gameGrid').innerHTML = ordered.map(g => {
     const st = p.games[g.id] || {}, open = isUnlocked(g.id);
     if (g.wide) {
@@ -1435,7 +1525,7 @@ function renderGameGrid() {
         const nb = weekend ? currentBoss(new Date(today().getTime() + (dd || 7) * 86400000)) : B;
         return `<button type="button" class="game-card boss-card preview" data-g="boss">
           <span class="gicon boss-shadow">${nb.face}</span>
-          <span class="gtext"><span class="eyebrow-light">${weekend && bs.total >= bs.max ? `Your class beat ${B.name}! 🎉 Next up:` : 'Coming Friday'}</span><span class="gname">${nb.name} arrives in ${dd} day${dd === 1 ? '' : 's'}!</span>
+          <span class="gtext"><span class="eyebrow-light">${weekend && bs.total >= bs.max ? `Your class beat ${B.name}! 🎉 Next up:` : `Coming ${bossDayName()}`}</span><span class="gname">${nb.name} arrives in ${dd} day${dd === 1 ? '' : 's'}!</span>
           <span class="gblurb">Practice your facts so you're ready. Beat it together to win the ${SHOP.pet.find(x => x.id === nb.reward).name} ${SHOP.pet.find(x => x.id === nb.reward).icon}</span></span>
           <span class="countdown"><b>${dd}</b>day${dd === 1 ? '' : 's'}</span></button>`;
       }
@@ -1459,7 +1549,7 @@ function renderGameGrid() {
     startGame(b.dataset.g);
   }));
 }
-function isUnlocked(id) { return !store.locks || store.locks[id] !== false; }
+function isUnlocked(id) { if (store.locks && id in store.locks) return store.locks[id] !== false; return !(GAME[id] && GAME[id].later); }
 function applyLocks(map) {
   if (!map || typeof map !== 'object') return;
   const before = JSON.stringify(store.locks || {});
@@ -1479,11 +1569,11 @@ $$('[data-back]').forEach(b => b.addEventListener('click', openHub));
    Number pad (shared by the round games)
    ========================================================= */
 const Pad = { fields: [], active: 0, onDone: null, locked: false, submitOnly: false, onChange: null };
-function padHTML() {
+function padHTML(dot = false) {
   return `<div class="pad" id="pad">${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(d => `<button type="button" class="key" data-k="${d}">${d}</button>`).join('')}
     <button type="button" class="key alt" data-k="back" aria-label="Delete">⌫</button>
     <button type="button" class="key" data-k="0">0</button>
-    <button type="button" class="key go" data-k="ok" id="padOk">Check ✓</button></div>`;
+    ${dot ? `<button type="button" class="key" data-k=".">.</button><button type="button" class="key go wide" data-k="ok" id="padOk">Check ✓</button>` : `<button type="button" class="key go" data-k="ok" id="padOk">Check ✓</button>`}</div>`;
 }
 function padBind(fields, onDone, opts = {}) {
   Pad.fields = fields; Pad.active = opts.start || 0; Pad.onDone = onDone; Pad.locked = false; Pad.submitOnly = !!opts.submitOnly; Pad.onChange = opts.onChange || null;
@@ -1516,6 +1606,9 @@ function padPress(k) {
   } else if (k === 'ok') {
     if (Pad.submitOnly || Pad.active >= lastMainIndex() || f.scratch) { if (Pad.onDone) Pad.onDone(); return; }
     Pad.active++;
+  } else if (k === '.') {
+    if (!f.dot || f.value.includes('.')) return;
+    f.value = (f.value || '0') + '.';
   } else {
     if (f.value === '0' && f.max > 1) f.value = '';
     if (f.value.length < f.max) f.value += k;
@@ -1535,6 +1628,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (/^[0-9]$/.test(e.key)) { e.preventDefault(); padPress(e.key); }
+  else if (e.key === '.') { e.preventDefault(); padPress('.'); }
   else if (e.key === 'Backspace') { e.preventDefault(); padPress('back'); }
   else if (e.key === 'Enter') { e.preventDefault(); if ($('#explainGo')) $('#explainGo').click(); else padPress('ok'); }
 });
@@ -1599,19 +1693,46 @@ function genMental(L, op) {
     if (L === 4 && !regroup) continue;
     if (L === 2 && add && a + b >= 100) continue;
     const ans = add ? a + b : a - b;
-    return { a, b, text: `${a} ${s} ${b}`, answer: ans, explain: () => {
-      const tens = Math.floor(b / 10) * 10, ones = b % 10;
-      let body;
-      if (tens && ones) {
-        const mid = add ? a + tens : a - tens;
-        body = `<p>Split ${b} into ${tens} and ${ones}.</p><p>${a} ${s} ${tens} = ${mid}<br>${mid} ${s} ${ones} = ${ans}</p>`;
-      } else if (tens) body = `<p>Only the tens change: ${Math.floor(a / 10)} tens ${s} ${tens / 10} tens = ${Math.floor(ans / 10)} tens. The ones stay ${a % 10}.</p>`;
-      else body = `<p>Count ${add ? 'on' : 'back'} ${b} from ${a}: you land on ${ans}.</p>`;
-      return `<p class="big-fact">${a} ${s} ${b} = <b>${ans}</b></p>${body}`;
-    } };
+    return { a, b, op: s, text: `${a} ${s} ${b}`, answer: ans, explain: () => mentalExplain(a, b, add) };
   }
   return genMental(1, op);
 }
+function mentalExplain(a, b, add) {
+  const s = add ? '+' : '−', ans = add ? a + b : a - b, tens = Math.floor(b / 10) * 10, ones = b % 10;
+  let body;
+  if (tens && ones) {
+    const mid = add ? a + tens : a - tens;
+    body = `<p>Split ${b} into ${tens} and ${ones}.</p><p>${a} ${s} ${tens} = ${mid}<br>${mid} ${s} ${ones} = ${ans}</p>`;
+  } else if (tens) body = `<p>Only the tens change: ${Math.floor(a / 10)} tens ${s} ${tens / 10} tens = ${Math.floor(ans / 10)} tens. The ones stay ${a % 10}.</p>`;
+  else body = `<p>Count ${add ? 'on' : 'back'} ${b} from ${a}: you land on ${ans}.</p>`;
+  return `<p class="big-fact">${a} ${s} ${b} = <b>${ans}</b></p>${body}`;
+}
+
+/* ---------- Mistake replay: missed facts come back until they're learned ---------- */
+function noteFact(q, skill, ok) {
+  const p = P(); if (!p || !q || !['mult', 'div', 'mental'].includes(skill)) return;
+  p.missed = p.missed || [];
+  const i = p.missed.findIndex(m => m.text === q.text);
+  if (!ok) {
+    const rec = { skill, text: q.text, answer: q.answer, a: q.a, b: q.b, op: q.op || null, need: 2 };
+    if (i >= 0) p.missed[i] = rec; else p.missed.push(rec);
+    if (p.missed.length > 30) p.missed.shift();
+  } else if (i >= 0 && q.replay) {
+    p.missed[i].need--;
+    if (p.missed[i].need <= 0) { p.missed.splice(i, 1); toast(`🔁 You've learned ${q.text} = ${fmt(q.answer)}!`, true); }
+  }
+}
+function replayFact(skill, op) {
+  const p = P(), list = ((p && p.missed) || []).filter(m => m.skill === skill && (!op || m.op === op));
+  if (!list.length || Math.random() > 0.35) return null;
+  const m = pick(list), q = { a: m.a, b: m.b, op: m.op, text: m.text, answer: m.answer, replay: true };
+  q.explain = skill === 'mult' ? () => explainMult(m.a, m.b)
+    : skill === 'div' ? () => `<p class="big-fact">${m.text} = <b>${fmt(m.answer)}</b></p><p>Think multiplication: ${m.a} × <b>${m.answer}</b> = ${fmt(m.a * m.answer)}.</p>`
+    : () => mentalExplain(m.a, m.b, m.op === '+');
+  return q;
+}
+const factQ = (skill, gen, op) => replayFact(skill, op) || gen();
+const qLabel = q => (q.replay ? '🔁 ' : '') + q.text + ' = ?';
 function distractors(ans, n, q) {
   const set = new Set(), c = [ans + 1, ans - 1, ans + 2, ans - 2, ans + 10, ans - 10];
   if (q && q.a != null) c.push(ans + q.a, ans - q.a, ans + q.b, ans - q.b);
@@ -1632,7 +1753,7 @@ function clearTimers() { timers.forEach(t => clearTimeout(t)); timers.clear(); }
 function startGame(id) {
   clearTimers(); stopArcade(); padClear(); round = null;
   const g = GAME[id];
-  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp };
+  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp, t0: Date.now() };
   $('#gameTitle').textContent = g.icon + ' ' + g.name;
   $('#progressDots').innerHTML = '';
   updateCoinChips();
@@ -1641,7 +1762,7 @@ function startGame(id) {
   if (id === 'runner') return runnerPicker();
   if (id === 'memory') return memoryStart();
   if (id === 'boss') return bossIntro();
-  const total = { column: 6, partial: 5, arrays: 8, divide: 6, tens: 8, estimate: 6, story: 4 }[id];
+  const total = { column: 6, partial: 5, arrays: 8, divide: 6, tens: 8, estimate: 6, story: 4 }[id] || 8;
   round = { id, skill: g.skill, total, index: 0, correct: 0, results: [], level0: lvl(g.skill) };
   nextQuestion();
 }
@@ -2213,6 +2334,7 @@ async function bossFetch(extraHits = 0) {
   try {
     const r = await api({ action: 'boss', name: p.sheetName, code: p.code || '', week: w, hits: extraHits });
     if (r.ok && r.games) applyLocks(r.games);
+    if (r.ok && r.settings) applySettings(r.settings);
     if (r.ok && r.boss) { applyBossStatus(r.boss); return r.boss; }
   } catch (e) { /* offline: keep the last known status */ }
   return null;
@@ -2235,12 +2357,12 @@ function bossPreview() {
   const pet = SHOP.pet.find(x => x.id === B.reward), last = bossCached(), lastBoss = currentBoss();
   const prep = ['runner', 'driver', 'memory', 'tens'].filter(id => isUnlocked(id)).map(id => GAME[id]);
   $('#gameBody').innerHTML = `<div class="boss-intro">
-    <div class="eyebrow-dark">⚡ Coming Friday ⚡</div>
+    <div class="eyebrow-dark">⚡ Coming ${bossDayName()} ⚡</div>
     <div class="boss-face idle boss-shadow big">${B.face}</div>
     <h3>${B.name}</h3>
     <div class="countdown big"><b>${dd}</b>day${dd === 1 ? '' : 's'} to go</div>
     ${weekend && last.total ? `<p class="story">${last.total >= last.max ? `Your class beat ${lastBoss.name} this week! 🎉` : `${lastBoss.name} got away this week with ${fmt(Math.max(0, last.max - last.total))} HP left.`}</p>` : ''}
-    <p class="story">On Friday, every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit!</p>
+    <p class="story">On ${bossDayName()}, every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit!</p>
     <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
     ${prep.length ? `<p class="note" style="margin:4px 0 0">Get ready! Faster facts mean more hits:</p>
     <div class="foot-row" style="margin-top:0">${prep.map(g => `<button type="button" class="btn small plain" data-prep="${g.id}">${g.icon} ${g.name}</button>`).join('')}</div>` : ''}
@@ -2272,9 +2394,9 @@ async function bossIntro() {
 function bossQuestion() {
   const kinds = [['mult', 4], ['div', 2], ['mental', 2], ['t4tens', isUnlocked('tens') ? 2 : 0]].filter(k => k[1] > 0);
   const bag = kinds.flatMap(([k, w]) => Array(w).fill(k)), k = pick(bag);
-  if (k === 'mult') return { skill: k, ...genMult(lvl('mult')) };
-  if (k === 'div') return { skill: k, ...genDiv(lvl('div')) };
-  if (k === 'mental') return { skill: k, ...genMental(lvl('mental'), Math.random() < 0.5 ? '+' : '−') };
+  if (k === 'mult') return { skill: k, ...factQ('mult', () => genMult(lvl('mult'))) };
+  if (k === 'div') return { skill: k, ...factQ('div', () => genDiv(lvl('div'))) };
+  if (k === 'mental') { const op = Math.random() < 0.5 ? '+' : '−'; return { skill: k, ...factQ('mental', () => genMental(lvl('mental'), op), op) }; }
   const L = lvl('t4tens');
   if (L <= 2 || Math.random() < 0.5) { const x = rnd(2, L <= 1 ? 5 : 9), y = rnd(2, 9); return { skill: k, text: `${x * 10} × ${y * 10}`, answer: x * y * 100 }; }
   const x = ones(11, L >= 4 ? 98 : 49), t = rnd(2, 9); return { skill: k, text: `${x} × ${t * 10}`, answer: x * t * 10 };
@@ -2284,7 +2406,7 @@ function bossRound() {
   const B = currentBoss();
   const base = bossCached();
   bossFight = { hits: 0, unsent: 0, correct: 0, wrong: 0, combo: 0, end: Date.now() + BOSS_ROUND_SECS * 1000, base, q: null, over: false };
-  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp };
+  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp, t0: Date.now() };
   $('#gameBody').innerHTML = `<div class="boss-arena" id="arena">
       <div class="boss-top"><span class="chip" id="bossTime">⏱ ${BOSS_ROUND_SECS}s</span><span class="chip" id="bossHits">⚔️ 0 hits</span><span class="chip" id="bossCombo" hidden></span></div>
       ${hpBarHTML(base, 'bossHp')}
@@ -2328,12 +2450,12 @@ function bossHpRender() {
 function bossNext() {
   const f = bossFight; if (!f || f.over) return;
   f.q = bossQuestion();
-  $('#bossQ').textContent = f.q.text + ' = ?';
+  $('#bossQ').textContent = qLabel(f.q);
   padBind([{ el: $('#bossAns'), max: 5, placeholder: '?' }], () => {
     const v = Pad.fields[0].value; if (!v || f.over) return;
     Pad.locked = true;
     const ok = +v === f.q.answer;
-    record(f.q.skill, ok);
+    record(f.q.skill, ok); noteFact(f.q, f.q.skill, ok);
     const face = $('#bossFace');
     if (ok) {
       f.combo++; f.correct++;
@@ -2379,6 +2501,489 @@ async function bossEnd(victory) {
   });
   bossFight = null;
 }
+
+/* =========================================================
+   Topic games for the rest of Grade 4 (Topics 7-16)
+   Each generator returns a question "spec" and ask() draws it.
+   ========================================================= */
+const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+const fr = (n, d) => `<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const mixed = (w, n, d) => n === 0 ? `${w}` : w ? `${w}${fr(n, d)}` : fr(n, d);
+const plain = html => String(html).replace(/<\/span><span>/g, '/').replace(/<[^>]+>/g, '').trim();
+const lvTag2 = k => `Level ${lvl(k)}: ${SKILLS[k].levels[lvl(k) - 1]}`;
+
+/* ---------- generic question renderer ---------- */
+function ask(spec) {
+  const body = $('#gameBody');
+  const head = `<div class="prompt">${spec.prompt}</div>${spec.problem ? `<div class="problem ${plain(spec.problem).length > 22 ? 'long' : ''}">${spec.problem}</div>` : ''}${spec.visual ? `<div class="q-visual">${spec.visual}</div>` : ''}`;
+  if (spec.kind === 'choice') {
+    body.innerHTML = `<div class="q-wrap">${head}
+      <div class="choice-grid ${spec.choices.length > 4 ? 'many' : ''}">${spec.choices.map((c, i) => `<button type="button" class="btn plain choice" data-i="${i}">${c}</button>`).join('')}</div>
+      <div class="level-tag">${spec.tag || ''}</div></div>`;
+    $$('.choice', body).forEach(b => b.addEventListener('click', () => {
+      $$('.choice', body).forEach(x => x.disabled = true);
+      const i = +b.dataset.i, ok = i === spec.correct;
+      b.classList.add(ok ? 'right' : 'wrongc');
+      if (!ok) { const r = body.querySelector(`.choice[data-i="${spec.correct}"]`); if (r) r.classList.add('right'); }
+      answered(ok, spec.explain(), plain(spec.choices[i]));
+    }));
+    return;
+  }
+  let input, fields;
+  if (spec.kind === 'frac') {
+    input = `<div class="frac-in">${spec.mixed ? '<div class="slot" id="fW" style="min-width:70px"></div>' : ''}
+      <div class="frac-stack"><div class="slot" id="fN"></div><div class="frac-line"></div>${spec.fixedD ? `<div class="fixed-d">${spec.fixedD}</div>` : '<div class="slot" id="fD"></div>'}</div></div>
+      ${spec.mixed ? '<div class="note">Whole number, then the fraction. Leave the whole number empty if there isn\'t one.</div>' : ''}`;
+  } else {
+    input = `<div class="answer-row">${spec.before || ''}<div class="slot" id="nA"></div>${spec.after || ''}</div>`;
+  }
+  body.innerHTML = `<div class="play with-pad"><div>${head}${input}<div class="level-tag">${spec.tag || ''}</div></div>${padHTML(spec.kind === 'dec')}</div>`;
+  if (spec.kind === 'frac') {
+    fields = [];
+    if (spec.mixed) fields.push({ el: $('#fW'), max: 3 });
+    fields.push({ el: $('#fN'), max: 3, placeholder: '?' });
+    if (!spec.fixedD) fields.push({ el: $('#fD'), max: 3, placeholder: '?' });
+    padBind(fields, () => {
+      const w = spec.mixed ? +(fields[0].value || 0) : 0, nf = fields[spec.mixed ? 1 : 0], df = spec.fixedD ? null : fields[fields.length - 1];
+      if (!nf.value || (df && !df.value)) { Pad.active = fields.indexOf(!nf.value ? nf : df); padRender(); return; }
+      const n = +nf.value, d = spec.fixedD || +df.value;
+      if (!d) { Pad.active = fields.length - 1; padRender(); return; }
+      answered(spec.check(w, n, d), spec.explain(), `${w ? w + ' ' : ''}${n}/${d}`);
+    }, { start: spec.mixed ? 0 : 0 });
+  } else {
+    fields = [{ el: $('#nA'), max: spec.max || 6, placeholder: '?', dot: spec.kind === 'dec' }];
+    padBind(fields, () => {
+      const v = fields[0].value; if (!v || v === '.') return;
+      const num = parseFloat(v);
+      const ok = spec.kind === 'dec' ? Math.abs(num - spec.answer) < 1e-9 : num === spec.answer;
+      answered(ok, spec.explain(), v);
+    }, { submitOnly: true });
+  }
+}
+function choicesFrom(correct, wrongs, n = 4) {
+  const opts = [correct, ...shuffle([...new Set(wrongs.filter(w => plain(w) !== plain(correct)))]).slice(0, n - 1)];
+  const order = shuffle(opts.map((_, i) => i));
+  return { choices: order.map(i => opts[i]), correct: order.indexOf(0) };
+}
+const YN = (yes, rest) => ({ kind: 'choice', choices: ['Yes', 'No'], correct: yes ? 0 : 1, ...rest });
+
+/* ---------- SVG pictures ---------- */
+function fracBarSVG(n, d, { w = 300, h = 44, color = '#FF8A3D', label = '' } = {}) {
+  const cw = (w - 4) / d;
+  return `<svg class="pic" viewBox="0 0 ${w} ${h + (label ? 22 : 0)}" width="${w}" role="img" aria-label="${n} of ${d} parts shaded">
+    ${Array.from({ length: d }, (_, i) => `<rect x="${2 + i * cw}" y="2" width="${cw}" height="${h - 4}" fill="${i < n ? color : '#FFFFFF'}" stroke="#1E2A33" stroke-width="2.5"/>`).join('')}
+    ${label ? `<text x="${w / 2}" y="${h + 17}" text-anchor="middle" font-size="16" font-weight="700" fill="#1E2A33">${label}</text>` : ''}</svg>`;
+}
+function fracCircleSVG(n, d, size = 130, color = '#FF6B57') {
+  const r = size / 2 - 4, c = size / 2;
+  const pt = a => [c + r * Math.sin(a), c - r * Math.cos(a)];
+  const slices = Array.from({ length: d }, (_, i) => {
+    const a0 = i / d * Math.PI * 2, a1 = (i + 1) / d * Math.PI * 2, [x0, y0] = pt(a0), [x1, y1] = pt(a1);
+    return d === 1 ? `<circle cx="${c}" cy="${c}" r="${r}" fill="${n ? color : '#FFFFFF'}" stroke="#1E2A33" stroke-width="2.5"/>` :
+      `<path d="M${c},${c} L${x0},${y0} A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1},${y1} Z" fill="${i < n ? color : '#FFFFFF'}" stroke="#1E2A33" stroke-width="2.5"/>`;
+  }).join('');
+  return `<svg class="pic" viewBox="0 0 ${size} ${size}" width="${size}" role="img" aria-label="circle with ${n} of ${d} parts shaded">${slices}</svg>`;
+}
+function gridSVG(shaded, size = 210) {
+  const s = (size - 4) / 10;
+  let cells = '';
+  for (let col = 0; col < 10; col++) for (let row = 0; row < 10; row++) {
+    const idx = col * 10 + row;
+    cells += `<rect x="${2 + col * s}" y="${2 + row * s}" width="${s}" height="${s}" fill="${idx < shaded ? '#2C8FD6' : '#FFFFFF'}" stroke="#55636D" stroke-width="1"/>`;
+  }
+  return `<svg class="pic" viewBox="0 0 ${size} ${size}" width="${size}" role="img" aria-label="${shaded} of 100 squares shaded">${cells}<rect x="2" y="2" width="${size - 4}" height="${size - 4}" fill="none" stroke="#1E2A33" stroke-width="2.5"/></svg>`;
+}
+function rectSVG(l, w, unit) {
+  const W = 260, H = Math.max(60, Math.min(170, Math.round(W * w / l)));
+  return `<svg class="pic" viewBox="0 0 ${W + 90} ${H + 50}" width="${W + 90}" role="img" aria-label="rectangle ${l} by ${w} ${unit}">
+    <rect x="20" y="10" width="${W}" height="${H}" fill="#CDEFD9" stroke="#1E2A33" stroke-width="3"/>
+    <text x="${20 + W / 2}" y="${H + 36}" text-anchor="middle" font-size="18" font-weight="800" fill="#1E2A33">${l} ${unit}</text>
+    <text x="${W + 28}" y="${10 + H / 2 + 6}" font-size="18" font-weight="800" fill="#1E2A33">${w} ${unit}</text></svg>`;
+}
+function angleSVG(deg, { protractor = false, size = 260 } = {}) {
+  const cx = size / 2, cy = size * 0.62, r = size * 0.4, rad = deg * Math.PI / 180;
+  const x1 = cx + r, y1 = cy, x2 = cx + r * Math.cos(rad), y2 = cy - r * Math.sin(rad);
+  const ar = r * 0.28, ax = cx + ar * Math.cos(rad), ay = cy - ar * Math.sin(rad);
+  let prot = '';
+  if (protractor) {
+    prot += `<path d="M${cx - r * 1.08},${cy} A${r * 1.08},${r * 1.08} 0 0 1 ${cx + r * 1.08},${cy} Z" fill="rgba(255,201,60,.25)" stroke="#E9A800" stroke-width="2"/>`;
+    for (let a = 0; a <= 180; a += 5) {
+      const t = a * Math.PI / 180, big = a % 10 === 0, r0 = r * 1.08, r1 = r0 - (big ? 12 : 6);
+      prot += `<line x1="${cx + r0 * Math.cos(t)}" y1="${cy - r0 * Math.sin(t)}" x2="${cx + r1 * Math.cos(t)}" y2="${cy - r1 * Math.sin(t)}" stroke="#7A5A00" stroke-width="${big ? 2 : 1}"/>`;
+      if (a % 30 === 0) prot += `<text x="${cx + (r0 - 24) * Math.cos(t)}" y="${cy - (r0 - 24) * Math.sin(t) + 5}" text-anchor="middle" font-size="12" font-weight="700" fill="#7A5A00">${a}</text>`;
+    }
+  }
+  const arc = deg === 90 ? `<path d="M${cx + 18},${cy} L${cx + 18},${cy - 18} L${cx},${cy - 18}" fill="none" stroke="#FF6B57" stroke-width="3"/>` :
+    `<path d="M${cx + ar},${cy} A${ar},${ar} 0 ${deg > 180 ? 1 : 0} 0 ${ax},${ay}" fill="none" stroke="#FF6B57" stroke-width="3"/>`;
+  return `<svg class="pic" viewBox="0 0 ${size} ${size * 0.72}" width="${size}" role="img" aria-label="an angle">${prot}
+    <line x1="${cx}" y1="${cy}" x2="${x1}" y2="${y1}" stroke="#1E2A33" stroke-width="4" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#1E2A33" stroke-width="4" stroke-linecap="round"/>${arc}
+    <circle cx="${cx}" cy="${cy}" r="5" fill="#1E2A33"/></svg>`;
+}
+function polySVG(pts, { ticks = [], rightAt = [], size = 240, fill = '#E6DBFF', lines = [] } = {}) {
+  const P2 = pts.map(([x, y]) => `${x},${y}`).join(' ');
+  const tickMarks = ticks.map(([i, n]) => { // n tick marks on side i -> i+1
+    const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length], mx = (ax + bx) / 2, my = (ay + by) / 2;
+    const len = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / len, uy = (by - ay) / len, nx = -uy, ny = ux;
+    return Array.from({ length: n }, (_, k) => { const off = (k - (n - 1) / 2) * 6; const cx = mx + ux * off, cy = my + uy * off;
+      return `<line x1="${cx - nx * 7}" y1="${cy - ny * 7}" x2="${cx + nx * 7}" y2="${cy + ny * 7}" stroke="#1E2A33" stroke-width="2.5"/>`; }).join('');
+  }).join('');
+  const boxes = rightAt.map(i => {
+    const [vx, vy] = pts[i], [px, py] = pts[(i - 1 + pts.length) % pts.length], [qx, qy] = pts[(i + 1) % pts.length];
+    const l1 = Math.hypot(px - vx, py - vy), l2 = Math.hypot(qx - vx, qy - vy), s = 14;
+    const a = [vx + (px - vx) / l1 * s, vy + (py - vy) / l1 * s], b = [vx + (qx - vx) / l2 * s, vy + (qy - vy) / l2 * s];
+    return `<path d="M${a[0]},${a[1]} L${a[0] + b[0] - vx},${a[1] + b[1] - vy} L${b[0]},${b[1]}" fill="none" stroke="#FF6B57" stroke-width="2.5"/>`;
+  }).join('');
+  const extra = lines.map(([x1, y1, x2, y2]) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2C8FD6" stroke-width="3" stroke-dasharray="8 6"/>`).join('');
+  return `<svg class="pic" viewBox="0 0 ${size} ${size * 0.8}" width="${size}" role="img" aria-label="a shape"><polygon points="${P2}" fill="${fill}" stroke="#1E2A33" stroke-width="3" stroke-linejoin="round"/>${tickMarks}${boxes}${extra}</svg>`;
+}
+function linesSVG(kind) {
+  const arrow = (x, y, dx, dy) => { const l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l; return `<path d="M${x},${y} L${x - ux * 14 - uy * 7},${y - uy * 14 + ux * 7} L${x - ux * 14 + uy * 7},${y - uy * 14 - ux * 7} Z" fill="#1E2A33"/>`; };
+  const L = (x1, y1, x2, y2, a1, a2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1E2A33" stroke-width="4"/>${a1 ? arrow(x1, y1, x1 - x2, y1 - y2) : `<circle cx="${x1}" cy="${y1}" r="6" fill="#1E2A33"/>`}${a2 ? arrow(x2, y2, x2 - x1, y2 - y1) : `<circle cx="${x2}" cy="${y2}" r="6" fill="#1E2A33"/>`}`;
+  let g = '';
+  if (kind === 'line') g = L(30, 90, 270, 70, true, true);
+  if (kind === 'ray') g = L(30, 90, 270, 70, false, true);
+  if (kind === 'segment') g = L(40, 90, 260, 70, false, false);
+  if (kind === 'parallel') g = L(30, 50, 270, 50, true, true) + L(30, 120, 270, 120, true, true);
+  if (kind === 'perpendicular') g = L(30, 90, 270, 90, true, true) + L(150, 15, 150, 165, true, true) + `<path d="M150,72 L168,72 L168,90" fill="none" stroke="#FF6B57" stroke-width="3"/>`;
+  if (kind === 'intersecting') g = L(30, 150, 270, 30, true, true) + L(40, 40, 260, 140, true, true);
+  return `<svg class="pic" viewBox="0 0 300 180" width="300" role="img" aria-label="lines">${g}</svg>`;
+}
+
+/* ---------- Topic 7: Factor Forest ---------- */
+const factorsOf = n => { const f = []; for (let i = 1; i <= n; i++) if (n % i === 0) f.push(i); return f; };
+const pairsOf = n => factorsOf(n).filter(f => f * f <= n).map(f => [f, n / f]);
+const isPrime = n => n > 1 && factorsOf(n).length === 2;
+function pairsText(n) { return pairsOf(n).map(([a, b]) => `${a} × ${b}`).join(', '); }
+const GEN = {};
+GEN.factors = L => {
+  const tag = lvTag2('factors');
+  const kinds = [['mult', 'factor'], ['mult', 'factor', 'missing', 'count'], ['missing', 'count', 'prime'], ['prime', 'common', 'notpair', 'count'], ['prime', 'count', 'common', 'notpair']][L - 1];
+  const k = pick(kinds);
+  if (k === 'mult') {
+    const f = rnd(2, 9), yes = Math.random() < 0.5, n = yes ? f * rnd(2, 12) : f * rnd(2, 11) + rnd(1, f - 1);
+    return YN(yes, { prompt: 'Multiples', problem: `Is ${n} a multiple of ${f}?`, tag, explain: () => `<p class="big-fact">${n} ${yes ? 'is' : 'is not'} a multiple of ${f}</p><p>${yes ? `${f} × ${n / f} = ${n}, so ${n} is in the ${f}s count: ${Array.from({ length: Math.min(n / f, 8) }, (_, i) => f * (i + 1)).join(', ')}${n / f > 8 ? ', …' : ''}.` : `${f} × ${Math.floor(n / f)} = ${f * Math.floor(n / f)} and ${f} × ${Math.floor(n / f) + 1} = ${f * (Math.floor(n / f) + 1)}. ${n} is in between, so it's not a multiple of ${f}.`}</p>` });
+  }
+  if (k === 'factor') {
+    const n = pick([12, 16, 18, 20, 24, 28, 30, 32, 36, 40, 42, 45, 48]), fs = factorsOf(n).filter(x => x > 1 && x < n), right = pick(fs);
+    const wrong = shuffle(Array.from({ length: 11 }, (_, i) => i + 2).filter(x => n % x !== 0));
+    const c = choicesFrom(String(right), wrong.map(String));
+    return { kind: 'choice', prompt: 'Factors', problem: `Which number is a factor of ${n}?`, ...c, tag, explain: () => `<p class="big-fact">${right} is a factor of ${n}</p><p>${right} × ${n / right} = ${n}. All the factor pairs of ${n}: ${pairsText(n)}.</p>` };
+  }
+  if (k === 'missing') {
+    const a = rnd(2, 12), b = rnd(2, 12), n = a * b;
+    return { kind: 'num', prompt: 'Find the missing factor.', problem: `${a} × ? = ${n}`, answer: b, max: 3, tag, explain: () => `<p class="big-fact">${a} × <b>${b}</b> = ${n}</p><p>Think division: ${n} ÷ ${a} = ${b}.</p>` };
+  }
+  if (k === 'count') {
+    const n = L >= 5 ? rnd(24, 100) : L >= 4 ? rnd(12, 60) : rnd(6, 30);
+    return { kind: 'num', prompt: 'Count every factor, including 1 and the number itself.', problem: `How many factors does ${n} have?`, answer: factorsOf(n).length, max: 2, tag,
+      explain: () => `<p class="big-fact">${n} has <b>${factorsOf(n).length}</b> factors</p><p>Factor pairs: ${pairsText(n)}.</p><p>Factors: ${factorsOf(n).join(', ')}.</p><p>Tip: find pairs, starting with 1 × ${n}, and stop when the pairs start repeating.</p>` };
+  }
+  if (k === 'prime') {
+    const max = L >= 5 ? 100 : 50; let n; do { n = rnd(2, max); } while (n % 2 === 0 && n > 2 && Math.random() < 0.6);
+    const pr = isPrime(n);
+    return { kind: 'choice', prompt: 'Prime or composite?', problem: `${n}`, choices: ['Prime', 'Composite'], correct: pr ? 0 : 1, tag,
+      explain: () => `<p class="big-fact">${n} is <b>${pr ? 'prime' : 'composite'}</b></p><p>${pr ? `Its only factors are 1 and ${n}.` : `It has more than two factors. For example, ${pairsOf(n).find(([a]) => a > 1).join(' × ')} = ${n}.`}</p><p>Prime: exactly 2 factors. Composite: more than 2.</p>` };
+  }
+  if (k === 'common') {
+    const [a, b] = pick([[2, 3], [3, 4], [4, 6], [2, 5], [3, 5], [4, 5], [6, 8], [3, 8]]), lcm = a * b / gcd(a, b), right = lcm * rnd(1, 3);
+    const wrong = [a * rnd(2, 9), b * rnd(2, 9), a * b + a, right + a, right + b].filter(x => x % lcm !== 0);
+    const c = choicesFrom(String(right), wrong.map(String));
+    return { kind: 'choice', prompt: 'Common multiples', problem: `Which is a multiple of both ${a} and ${b}?`, ...c, tag,
+      explain: () => `<p class="big-fact">${right}</p><p>${right} ÷ ${a} = ${right / a} and ${right} ÷ ${b} = ${right / b}.</p><p>Multiples of ${a}: ${Array.from({ length: 8 }, (_, i) => a * (i + 1)).join(', ')}…<br>Multiples of ${b}: ${Array.from({ length: 8 }, (_, i) => b * (i + 1)).join(', ')}…</p>` };
+  }
+  const n = pick([24, 36, 48, 60, 72, 30, 40]), pairs = pairsOf(n), bad = [rnd(2, 9), 0]; bad[1] = Math.round(n / bad[0]) + (n % bad[0] === 0 ? 1 : 0);
+  const opts = shuffle(pairs.filter(([a]) => a > 1)).slice(0, 3).map(([a, b]) => `${a} and ${b}`);
+  const c = choicesFrom(`${bad[0]} and ${bad[1]}`, opts);
+  return { kind: 'choice', prompt: 'Factor pairs', problem: `Which is NOT a factor pair of ${n}?`, ...c, tag,
+    explain: () => `<p class="big-fact">${bad[0]} × ${bad[1]} = ${bad[0] * bad[1]}, not ${n}</p><p>The factor pairs of ${n} are ${pairsText(n)}.</p>` };
+};
+
+/* ---------- Topic 8: Fraction Bakery (equivalence + comparing) ---------- */
+GEN.fracEq = L => {
+  const tag = lvTag2('fracEq');
+  const k = pick([['name'], ['name', 'equiv'], ['equiv', 'cmpSame'], ['cmp', 'equiv'], ['cmp', 'order', 'equiv']][L - 1]);
+  if (k === 'name') {
+    const d = pick([2, 3, 4, 5, 6, 8]), n = rnd(1, d - 1), circle = Math.random() < 0.5;
+    return { kind: 'frac', prompt: 'What fraction is shaded?', visual: circle ? fracCircleSVG(n, d) : fracBarSVG(n, d), tag, check: (w, a, b) => a * d === n * b,
+      explain: () => `<p class="big-fact">${fr(n, d)} is shaded</p><p>There are ${d} equal parts in all (the bottom number) and ${n} are shaded (the top number).</p>` };
+  }
+  if (k === 'equiv') {
+    const d = pick([2, 3, 4, 5, 6]), n = rnd(1, d - 1), m = pick(L >= 4 ? [2, 3, 4, 5, 10] : [2, 3, 4]), D = d * m, up = Math.random() < 0.6;
+    return { kind: 'num', prompt: 'Find the equivalent fraction.', problem: up ? `${fr(n, d)} = ${fr('?', D)}` : `${fr(n * m, D)} = ${fr('?', d)}`, answer: up ? n * m : n, max: 3, tag,
+      visual: `${fracBarSVG(n, d, { w: 260 })}<br>${fracBarSVG(n * m, D, { w: 260, color: '#23A866' })}`,
+      explain: () => `<p class="big-fact">${fr(n, d)} = ${fr(n * m, D)}</p><p>${up ? `Multiply the top and bottom by ${m}: ${n} × ${m} = ${n * m}, ${d} × ${m} = ${D}.` : `Divide the top and bottom by ${m}: ${n * m} ÷ ${m} = ${n}, ${D} ÷ ${m} = ${d}.`}</p><p>The bars show the same amount is shaded.</p>` };
+  }
+  const sym = (a, b) => a > b ? '>' : a < b ? '<' : '=';
+  const cmpSpec = (n1, d1, n2, d2, why) => ({ kind: 'choice', prompt: 'Compare the fractions.', problem: `${fr(n1, d1)} &nbsp;?&nbsp; ${fr(n2, d2)}`, choices: ['&lt;', '&gt;', '='], correct: ['<', '>', '='].indexOf(sym(n1 * d2, n2 * d1)), tag,
+    visual: `${fracBarSVG(n1, d1, { w: 260 })}<br>${fracBarSVG(n2, d2, { w: 260, color: '#2C8FD6' })}`,
+    explain: () => `<p class="big-fact">${fr(n1, d1)} ${sym(n1 * d2, n2 * d1).replace('<', '&lt;').replace('>', '&gt;')} ${fr(n2, d2)}</p>${why}` });
+  if (k === 'cmpSame') {
+    if (Math.random() < 0.5) { const d = pick([4, 5, 6, 8, 10, 12]); let a = rnd(1, d - 1), b = rnd(1, d - 1); if (Math.random() < 0.15) b = a;
+      return cmpSpec(a, d, b, d, `<p>Same size pieces (${d}ths), so compare how many: ${a} and ${b}.</p>`); }
+    const n = rnd(1, 4); const [d1, d2] = shuffle([2, 3, 4, 5, 6, 8].filter(x => x > n)).slice(0, 2);
+    return cmpSpec(n, d1, n, d2, `<p>Same number of pieces (${n}), so compare piece size. More pieces in the whole means smaller pieces: ${d1 > d2 ? `${fr(1, d1)} is smaller than ${fr(1, d2)}` : `${fr(1, d2)} is smaller than ${fr(1, d1)}`}.</p>`);
+  }
+  if (k === 'cmp') {
+    const ds = [2, 3, 4, 5, 6, 8, 10, 12]; let d1, d2, n1, n2;
+    do { [d1, d2] = [pick(ds), pick(ds)]; n1 = rnd(1, d1 - 1); n2 = rnd(1, d2 - 1); } while (d1 === d2);
+    const L2 = d1 * d2 / gcd(d1, d2);
+    return cmpSpec(n1, d1, n2, d2, `<p>Use a common denominator, ${L2}: ${fr(n1, d1)} = ${fr(n1 * L2 / d1, L2)} and ${fr(n2, d2)} = ${fr(n2 * L2 / d2, L2)}.</p><p>Or compare each one to ${fr(1, 2)}.</p>`);
+  }
+  // order: which is greatest
+  const ds = shuffle([3, 4, 5, 6, 8, 10, 12]).slice(0, 3), fs = ds.map(d => [rnd(1, d - 1), d]);
+  const vals = fs.map(([n, d]) => n / d); if (new Set(vals).size < 3) return GEN.fracEq(L);
+  const best = vals.indexOf(Math.max(...vals)), html = fs.map(([n, d]) => fr(n, d));
+  const order = shuffle([0, 1, 2]);
+  return { kind: 'choice', prompt: 'Which fraction is the greatest?', choices: order.map(i => html[i]), correct: order.indexOf(best), tag,
+    visual: fs.map(([n, d], i) => fracBarSVG(n, d, { w: 240, color: ['#FF8A3D', '#2C8FD6', '#23A866'][i] })).join('<br>'),
+    explain: () => `<p class="big-fact">${html[best]} is the greatest</p><p>${fs.map(([n, d]) => `${fr(n, d)} ≈ ${Math.round(n / d * 100)} hundredths`).join('<br>')}</p><p>Tip: compare each to ${fr(1, 2)} first, then use common denominators for close ones.</p>` };
+};
+
+/* ---------- Topics 9-10: Fraction Kitchen (+, −, × whole) ---------- */
+GEN.fracOps = L => {
+  const tag = lvTag2('fracOps');
+  const k = pick([['add'], ['add', 'sub'], ['mixAdd', 'mixSub', 'sub'], ['times', 'decomp', 'mixAdd'], ['word', 'times', 'mixSub']][L - 1]);
+  const eqv = (want) => (w, n, d) => Math.abs((w + n / d) - want) < 1e-9;
+  if (k === 'add' || k === 'sub') {
+    const d = pick([4, 5, 6, 8, 10, 12]); let a = rnd(1, d - 1), b = rnd(1, d - 1);
+    if (k === 'add' && a + b > d) b = d - a; if (k === 'sub' && b > a) [a, b] = [b, a]; if (k === 'sub' && a === b) a = Math.min(d - 1, a + 1);
+    const r = k === 'add' ? a + b : a - b, s = k === 'add' ? '+' : '−';
+    return { kind: 'frac', prompt: `${k === 'add' ? 'Add' : 'Subtract'} the fractions.`, problem: `${fr(a, d)} ${s} ${fr(b, d)} = ?`, fixedD: d, tag, check: (w, n) => n === r,
+      visual: fracBarSVG(k === 'add' ? a : a, d) + (k === 'add' ? `<br>${fracBarSVG(b, d, { color: '#2C8FD6' })}` : ''),
+      explain: () => `<p class="big-fact">${fr(a, d)} ${s} ${fr(b, d)} = <b>${fr(r, d)}</b></p><p>The pieces are the same size (${d}ths), so ${k === 'add' ? 'add' : 'subtract'} the tops: ${a} ${s} ${b} = ${r}. The bottom stays ${d}.</p>` };
+  }
+  if (k === 'mixAdd' || k === 'mixSub') {
+    const d = pick([3, 4, 5, 6, 8]); let w1 = rnd(1, 5), w2 = rnd(1, 4), n1 = rnd(1, d - 1), n2 = rnd(1, d - 1);
+    if (k === 'mixSub' && (w1 * d + n1) <= (w2 * d + n2)) { [w1, w2, n1, n2] = [w2 + 2, w1, n2, n1]; }
+    const A = w1 + n1 / d, B = w2 + n2 / d, R = k === 'mixAdd' ? A + B : A - B, s = k === 'mixAdd' ? '+' : '−';
+    const rw = Math.floor(R + 1e-9), rn = Math.round((R - rw) * d);
+    return { kind: 'frac', mixed: true, prompt: `${k === 'mixAdd' ? 'Add' : 'Subtract'} the mixed numbers.`, problem: `${mixed(w1, n1, d)} ${s} ${mixed(w2, n2, d)} = ?`, tag, check: eqv(R),
+      explain: () => `<p class="big-fact">${mixed(w1, n1, d)} ${s} ${mixed(w2, n2, d)} = <b>${mixed(rw, rn, d)}</b></p>
+        <p>Change to ${d}ths: ${fr(w1 * d + n1, d)} ${s} ${fr(w2 * d + n2, d)} = ${fr(w1 * d + n1 + (k === 'mixAdd' ? 1 : -1) * (w2 * d + n2), d)}.</p>
+        <p>${fr(rw * d + rn, d)} = ${mixed(rw, rn, d)}, because ${rw} whole${rw === 1 ? '' : 's'} = ${fr(rw * d, d)}.</p>` };
+  }
+  if (k === 'times') {
+    const d = pick([2, 3, 4, 5, 6, 8, 10]), n = rnd(1, d - 1), m = rnd(2, 6), top = n * m;
+    return { kind: 'frac', prompt: 'Multiply.', problem: `${m} × ${fr(n, d)} = ?`, fixedD: d, tag, check: (w, a) => a === top,
+      explain: () => `<p class="big-fact">${m} × ${fr(n, d)} = <b>${fr(top, d)}</b>${top >= d ? ` = ${mixed(Math.floor(top / d), top % d, d)}` : ''}</p><p>${m} groups of ${fr(n, d)}: ${Array(m).fill(fr(n, d)).join(' + ')} = ${fr(top, d)}.</p><p>Multiply the top by ${m}; the bottom stays ${d}.</p>` };
+  }
+  if (k === 'decomp') {
+    const d = pick([5, 6, 8, 10]), n = rnd(3, d - 1), a = rnd(1, n - 1);
+    return { kind: 'frac', prompt: 'Break the fraction apart.', problem: `${fr(n, d)} = ${fr(a, d)} + ?`, fixedD: d, tag, check: (w, x) => x === n - a,
+      visual: fracBarSVG(n, d),
+      explain: () => `<p class="big-fact">${fr(n, d)} = ${fr(a, d)} + <b>${fr(n - a, d)}</b></p><p>${a} + ${n - a} = ${n}, so the pieces add back up to ${fr(n, d)}.</p>` };
+  }
+  const items = [['liter of milk', 'liters of milk', 'batches of pancakes'], ['kilometer', 'kilometers', 'laps'], ['liter of juice', 'liters of juice', 'pitchers'], ['kilogram of clay', 'kilograms of clay', 'pots']];
+  const [one, many, groups] = pick(items), d = pick([3, 4, 5, 8]), n = rnd(1, d - 1), m = rnd(2, 6), top = n * m;
+  return { kind: 'frac', mixed: true, prompt: 'Word problem', problem: '', tag, check: eqv(top / d),
+    visual: `<div class="word-story">Each of the ${m} ${groups} needs ${fr(n, d)} ${n === 1 && d === 1 ? one : one}. <span class="wq">How many ${many} are needed in all?</span></div>`,
+    explain: () => `<p class="big-fact">${m} × ${fr(n, d)} = ${fr(top, d)}${top >= d ? ` = <b>${mixed(Math.floor(top / d), top % d, d)}</b>` : ''}</p><p>${m} groups of ${fr(n, d)}. Multiply the top: ${m} × ${n} = ${top}.</p>` };
+};
+
+/* ---------- Topic 11: Line Plot Lab ---------- */
+function linePlotData(L) {
+  const d = L >= 4 ? 8 : 4, lo = L >= 3 ? 1 : 0, ticks = [];
+  for (let i = 0; i <= d; i++) ticks.push(lo + i / d);
+  const counts = ticks.map(() => 0); const total = rnd(8, 14);
+  for (let i = 0; i < total; i++) counts[Math.min(d, Math.max(0, Math.round(d / 2 + (Math.random() + Math.random() - 1) * d * 0.7)))]++;
+  return { d, lo, ticks, counts, total };
+}
+function tickLabel(v, d) { const w = Math.floor(v + 1e-9), n = Math.round((v - w) * d), g = gcd(n, d); return n === 0 ? `${w}` : w ? `${w} ${n / g}/${d / g}` : `${n / g}/${d / g}`; }
+function tickHTML(v, d) { const w = Math.floor(v + 1e-9), n = Math.round((v - w) * d), g = gcd(n, d); return mixed(w, n / g || 0, d / g); }
+function linePlotSVG(P, unit) {
+  const W = 520, x0 = 30, x1 = W - 30, step = (x1 - x0) / (P.ticks.length - 1), maxC = Math.max(...P.counts), H = 70 + maxC * 22;
+  let s = `<line x1="${x0 - 10}" y1="${H - 40}" x2="${x1 + 10}" y2="${H - 40}" stroke="#1E2A33" stroke-width="3"/>`;
+  P.ticks.forEach((v, i) => {
+    const x = x0 + i * step;
+    s += `<line x1="${x}" y1="${H - 46}" x2="${x}" y2="${H - 34}" stroke="#1E2A33" stroke-width="2"/>
+      <text x="${x}" y="${H - 14}" text-anchor="middle" font-size="${P.d === 8 ? 12 : 15}" font-weight="700" fill="#1E2A33">${tickLabel(v, P.d)}</text>`;
+    for (let c = 0; c < P.counts[i]; c++) s += `<text x="${x}" y="${H - 50 - c * 22}" text-anchor="middle" font-size="22" font-weight="800" fill="#FF6B57">✕</text>`;
+  });
+  s += `<text x="${W / 2}" y="${H + 4}" text-anchor="middle" font-size="13" font-weight="700" fill="#55636D">${unit}</text>`;
+  return `<svg class="pic" viewBox="0 0 ${W} ${H + 8}" width="${W}" role="img" aria-label="line plot">${s}</svg>`;
+}
+GEN.lineplot = L => {
+  const tag = lvTag2('lineplot'), P = linePlotData(L), unit = pick(['Length of ribbons (meters)', 'Distance hopped by frogs (meters)', 'Rainfall (centimeters)', 'Mass of watermelons (kilograms)']);
+  const vis = linePlotSVG(P, unit), withX = P.ticks.map((v, i) => i).filter(i => P.counts[i] > 0);
+  const k = pick([['count'], ['count', 'total'], ['most', 'total', 'count'], ['range', 'most'], ['range', 'sum', 'most']][L - 1]);
+  if (k === 'count') { const i = pick(withX); return { kind: 'num', prompt: 'Read the line plot.', problem: `How many ✕ are at ${tickHTML(P.ticks[i], P.d)}?`, answer: P.counts[i], max: 2, visual: vis, tag, explain: () => `<p class="big-fact">${P.counts[i]}</p><p>Each ✕ is one measurement. Count the ✕ marks stacked above ${tickHTML(P.ticks[i], P.d)}.</p>` }; }
+  if (k === 'total') return { kind: 'num', prompt: 'Read the line plot.', problem: 'How many measurements are there in all?', answer: P.total, max: 2, visual: vis, tag, explain: () => `<p class="big-fact">${P.total} in all</p><p>Add the ✕ marks above each number: ${P.counts.filter(c => c).join(' + ')} = ${P.total}.</p>` };
+  if (k === 'most') {
+    const m = Math.max(...P.counts); if (P.counts.filter(c => c === m).length > 1) return GEN.lineplot(L);
+    const best = P.counts.indexOf(m), opts = shuffle(withX.filter(i => i !== best)).slice(0, 3);
+    const c = choicesFrom(tickHTML(P.ticks[best], P.d), opts.map(i => tickHTML(P.ticks[i], P.d)));
+    return { kind: 'choice', prompt: 'Read the line plot.', problem: 'Which measurement happened most often?', ...c, visual: vis, tag, explain: () => `<p class="big-fact">${tickHTML(P.ticks[best], P.d)}</p><p>It has the tallest stack: ${m} ✕ marks.</p>` };
+  }
+  const minI = withX[0], maxI = withX[withX.length - 1], diff = P.ticks[maxI] - P.ticks[minI];
+  if (k === 'range') return { kind: 'frac', mixed: true, prompt: 'Read the line plot.', problem: 'What is the difference between the longest and shortest measurement?', visual: vis, tag, check: (w, n, d) => Math.abs(w + n / d - diff) < 1e-9,
+    explain: () => `<p class="big-fact">${tickHTML(P.ticks[maxI], P.d)} − ${tickHTML(P.ticks[minI], P.d)} = <b>${tickHTML(diff, P.d)}</b></p><p>Longest: ${tickHTML(P.ticks[maxI], P.d)}. Shortest: ${tickHTML(P.ticks[minI], P.d)}. Count the jumps of ${fr(1, P.d)} between them: ${Math.round(diff * P.d)}.</p>` };
+  const i = pick(withX.filter(j => P.ticks[j] > 0)), tot = P.counts[i] * P.ticks[i];
+  return { kind: 'frac', mixed: true, prompt: 'Read the line plot.', problem: `What is the total of all the measurements at ${tickHTML(P.ticks[i], P.d)}?`, visual: vis, tag, check: (w, n, d) => Math.abs(w + n / d - tot) < 1e-9,
+    explain: () => `<p class="big-fact">${P.counts[i]} × ${tickHTML(P.ticks[i], P.d)} = <b>${tickHTML(tot, P.d)}</b></p><p>There are ${P.counts[i]} ✕ marks at ${tickHTML(P.ticks[i], P.d)}, so add ${tickHTML(P.ticks[i], P.d)} that many times.</p>` };
+};
+
+/* ---------- Topic 12: Decimal Docks ---------- */
+const dec2 = v => (Math.round(v * 100) / 100).toString();
+GEN.decimals = L => {
+  const tag = lvTag2('decimals');
+  const k = pick([['tenths'], ['tenths', 'hundredths'], ['toDec', 'toFrac', 'hundredths'], ['cmp', 'toDec'], ['add', 'money', 'cmp']][L - 1]);
+  if (k === 'tenths') { const t = rnd(1, 9); return { kind: 'dec', prompt: 'Write the shaded part as a decimal.', visual: gridSVG(t * 10), answer: t / 10, max: 4, tag, explain: () => `<p class="big-fact">${t} tenths = <b>0.${t}</b></p><p>Each column is one tenth (${fr(1, 10)}). ${t} columns are shaded.</p>` }; }
+  if (k === 'hundredths') { const h = rnd(1, 99); return { kind: 'dec', prompt: 'Write the shaded part as a decimal.', visual: gridSVG(h), answer: h / 100, max: 4, tag, explain: () => `<p class="big-fact">${h} hundredths = <b>${dec2(h / 100)}</b></p><p>Each small square is one hundredth (${fr(1, 100)}). ${Math.floor(h / 10)} full columns (tenths) and ${h % 10} more squares.</p>` }; }
+  if (k === 'toDec') { const d = pick([10, 100]), n = d === 10 ? rnd(1, 9) : rnd(1, 99); return { kind: 'dec', prompt: 'Write the fraction as a decimal.', problem: `${fr(n, d)} = ?`, answer: n / d, max: 4, tag, explain: () => `<p class="big-fact">${fr(n, d)} = <b>${dec2(n / d)}</b></p><p>${d === 10 ? 'Tenths use one place after the decimal point.' : 'Hundredths use two places after the decimal point.'}${d === 100 && n < 10 ? ` ${n} hundredths is 0.0${n}.` : ''}</p>` }; }
+  if (k === 'toFrac') { const h = rnd(1, 99); return { kind: 'num', prompt: 'Write the decimal as a fraction.', problem: `${dec2(h / 100)} = ${fr('?', 100)}`, answer: h, max: 3, tag, explain: () => `<p class="big-fact">${dec2(h / 100)} = <b>${fr(h, 100)}</b></p><p>Two digits after the point means hundredths.</p>` }; }
+  if (k === 'cmp') {
+    let a, b; const t = Math.random();
+    if (t < 0.25) { a = rnd(1, 9) / 10; b = a; }
+    else if (t < 0.6) { a = rnd(1, 9) / 10; b = Math.round(a * 100 + rnd(-9, 9)) / 100; if (b <= 0 || b === a) b = Math.round(a * 100 + 5) / 100; }
+    else { a = rnd(1, 99) / 100; b = rnd(1, 99) / 100; }
+    const as = dec2(a), bs = a === b ? a.toFixed(2) : dec2(b);
+    const sym = a > b ? '>' : a < b ? '<' : '=';
+    return { kind: 'choice', prompt: 'Compare the decimals.', problem: `${as} &nbsp;?&nbsp; ${bs}`, choices: ['&lt;', '&gt;', '='], correct: ['<', '>', '='].indexOf(sym), tag,
+      explain: () => `<p class="big-fact">${as} ${sym.replace('<', '&lt;').replace('>', '&gt;')} ${bs}</p><p>Write both as hundredths: ${Math.round(a * 100)} hundredths and ${Math.round(b * 100)} hundredths.</p>` };
+  }
+  if (k === 'add') { const t = rnd(1, 9), h = rnd(1, 99); return { kind: 'num', prompt: 'Add. Write the answer in hundredths.', problem: `${fr(t, 10)} + ${fr(h, 100)} = ${fr('?', 100)}`, answer: t * 10 + h, max: 3, tag, explain: () => `<p class="big-fact">${fr(t * 10, 100)} + ${fr(h, 100)} = <b>${fr(t * 10 + h, 100)}</b></p><p>First change tenths to hundredths: ${fr(t, 10)} = ${fr(t * 10, 100)}.</p>` }; }
+  const p1 = rnd(105, 495) / 100, p2 = rnd(55, 350) / 100, item1 = pick(['a sandwich', 'a book', 'a toy boat', 'a kite']), item2 = pick(['juice', 'a pencil', 'stickers', 'a snack']);
+  return { kind: 'dec', prompt: 'Money', problem: '', visual: `<div class="word-story">Mina buys ${item1} for $${p1.toFixed(2)} and ${item2} for $${p2.toFixed(2)}. <span class="wq">How much does she spend in all?</span></div>`, before: '$', answer: Math.round((p1 + p2) * 100) / 100, max: 6, tag,
+    explain: () => `<p class="big-fact">$${p1.toFixed(2)} + $${p2.toFixed(2)} = <b>$${(p1 + p2).toFixed(2)}</b></p><p>Line up the decimal points and add, just like whole numbers: ${Math.round(p1 * 100)} cents + ${Math.round(p2 * 100)} cents = ${Math.round((p1 + p2) * 100)} cents.</p>` };
+};
+
+/* ---------- Topic 13: Measure Mountain ---------- */
+const UNITS = {
+  1: [['m', 'cm', 100], ['km', 'm', 1000], ['cm', 'mm', 10]],
+  2: [['kg', 'g', 1000], ['L', 'mL', 1000], ['hours', 'minutes', 60], ['minutes', 'seconds', 60], ['days', 'hours', 24], ['weeks', 'days', 7]],
+  3: [['m', 'mm', 1000], ['km', 'm', 1000], ['kg', 'g', 1000], ['L', 'mL', 1000], ['m', 'cm', 100]]
+};
+GEN.measure = L => {
+  const tag = lvTag2('measure');
+  const k = pick([['conv1'], ['conv1', 'conv2'], ['conv3', 'conv2'], ['mixedU', 'conv3', 'perim'], ['area', 'perim', 'side', 'mixedU']][L - 1]);
+  if (k === 'conv3' && Math.random() < 0.5) {
+    const [big, small, f] = pick(UNITS[3]), n = rnd(2, 15);
+    return { kind: 'num', prompt: 'Convert the units.', problem: `${fmt(n * f)} ${small} = ? ${big}`, answer: n, max: 3, tag,
+      explain: () => `<p class="big-fact">${fmt(n * f)} ${small} = <b>${n}</b> ${big}</p><p>1 ${big} = ${fmt(f)} ${small}. A smaller unit to a bigger unit means divide: ${fmt(n * f)} ÷ ${fmt(f)} = ${n}.</p>` };
+  }
+  if (k.startsWith('conv')) {
+    const [big, small, f] = pick(UNITS[+k[4]]), n = rnd(2, f >= 100 ? 9 : 12);
+    return { kind: 'num', prompt: 'Convert the units.', problem: `${n} ${big} = ? ${small}`, answer: n * f, max: 6, tag,
+      explain: () => `<p class="big-fact">${n} ${big} = <b>${fmt(n * f)}</b> ${small}</p><p>1 ${big.replace(/s$/, '')} = ${f} ${small}. A bigger unit to a smaller unit means multiply: ${n} × ${f} = ${fmt(n * f)}.</p>` };
+  }
+  if (k === 'mixedU') {
+    const [big, small, f] = pick([['m', 'cm', 100], ['hours', 'minutes', 60], ['kg', 'g', 1000], ['km', 'm', 1000], ['L', 'mL', 1000], ['minutes', 'seconds', 60]]), a = rnd(2, 6), b = rnd(1, f - 1);
+    return { kind: 'num', prompt: 'Convert to the smaller unit.', problem: `${a} ${big} ${b} ${small} = ? ${small}`, answer: a * f + b, max: 5, tag,
+      explain: () => `<p class="big-fact">${a} ${big} ${b} ${small} = <b>${a * f + b}</b> ${small}</p><p>${a} × ${f} = ${a * f} ${small}, then add the extra ${b}: ${a * f} + ${b} = ${a * f + b}.</p>` };
+  }
+  const l = rnd(4, 15), w = rnd(2, Math.min(9, l)), unit = pick(['cm', 'm']);
+  if (k === 'perim') return { kind: 'num', prompt: 'Find the perimeter (distance around).', visual: rectSVG(l, w, unit), answer: 2 * (l + w), after: ` ${unit}`, max: 3, tag,
+    explain: () => `<p class="big-fact">Perimeter = <b>${2 * (l + w)} ${unit}</b></p><p>Add all four sides: ${l} + ${w} + ${l} + ${w} = ${2 * (l + w)}. Or (2 × ${l}) + (2 × ${w}).</p>` };
+  if (k === 'area') return { kind: 'num', prompt: 'Find the area.', visual: rectSVG(l, w, unit), answer: l * w, after: ` square ${unit}`, max: 3, tag,
+    explain: () => `<p class="big-fact">Area = ${l} × ${w} = <b>${l * w} square ${unit}</b></p><p>Area of a rectangle = length × width.</p>` };
+  return { kind: 'num', prompt: 'Find the missing side.', problem: `A rectangle has an area of ${l * w} square ${unit}. One side is ${l} ${unit}. How long is the other side?`, answer: w, after: ` ${unit}`, max: 3, tag,
+    explain: () => `<p class="big-fact">${l * w} ÷ ${l} = <b>${w} ${unit}</b></p><p>Area = length × width, so ${l} × ? = ${l * w}. Divide to find it.</p>` };
+};
+
+/* ---------- Topic 14: Pattern Path ---------- */
+GEN.patterns = L => {
+  const tag = lvTag2('patterns');
+  const k = pick([['add'], ['add', 'sub', 'mul'], ['nth', 'add', 'mul'], ['rule', 'nth'], ['two', 'rule', 'nth']][L - 1]);
+  const seq = (start, f, n) => { const a = [start]; while (a.length < n) a.push(f(a[a.length - 1])); return a; };
+  if (k === 'add' || k === 'sub' || k === 'mul') {
+    const st = k === 'mul' ? rnd(1, 5) : rnd(2, 60), r = k === 'mul' ? pick([2, 3]) : rnd(2, 12);
+    const f = k === 'add' ? x => x + r : k === 'sub' ? x => x - r : x => x * r, s = seq(k === 'sub' ? st + r * 6 : st, f, 6);
+    return { kind: 'num', prompt: `Find the next number. Rule: ${k === 'add' ? 'add' : k === 'sub' ? 'subtract' : 'multiply by'} ${r}.`, problem: s.slice(0, 5).join(', ') + ', ?', answer: s[5], max: 5, tag,
+      explain: () => `<p class="big-fact">${s.join(', ')}</p><p>${s[4]} ${k === 'add' ? '+' : k === 'sub' ? '−' : '×'} ${r} = ${s[5]}.</p>` };
+  }
+  if (k === 'nth') {
+    const st = rnd(1, 20), r = rnd(2, 9), n = rnd(6, 10), s = seq(st, x => x + r, n);
+    return { kind: 'num', prompt: `The rule is "add ${r}". The first number is ${st}.`, problem: `What is number ${n} in the pattern?`, answer: s[n - 1], max: 4, tag,
+      explain: () => `<p class="big-fact">${s.join(', ')}</p><p>Number ${n} is ${s[n - 1]}. Shortcut: ${st} + ${r} × ${n - 1} = ${s[n - 1]}.</p>` };
+  }
+  if (k === 'rule') {
+    const kind = pick(['add', 'sub', 'mul']), r = kind === 'mul' ? pick([2, 3, 4]) : rnd(3, 15), st = kind === 'mul' ? rnd(1, 4) : rnd(5, 40);
+    const s = seq(kind === 'sub' ? st + r * 5 : st, kind === 'add' ? x => x + r : kind === 'sub' ? x => x - r : x => x * r, 5);
+    const right = `${kind === 'add' ? 'Add' : kind === 'sub' ? 'Subtract' : 'Multiply by'} ${r}`;
+    const c = choicesFrom(right, [`Add ${r + 1}`, `Subtract ${r}`, `Add ${r}`, `Multiply by ${r + 1}`, `Add ${r * 2}`, `Multiply by ${r}`]);
+    return { kind: 'choice', prompt: 'What is the rule?', problem: s.join(', '), ...c, tag, explain: () => `<p class="big-fact">${right}</p><p>Check each step: ${s.slice(1).map((v, i) => `${s[i]} → ${v}`).join(', ')}.</p>` };
+  }
+  const m = pick([2, 3]), a = rnd(1, 5), st = rnd(1, 4), s = seq(st, x => x * m + a, 5);
+  return { kind: 'num', prompt: `Rule: multiply by ${m}, then add ${a}.`, problem: s.slice(0, 4).join(', ') + ', ?', answer: s[4], max: 5, tag,
+    explain: () => `<p class="big-fact">${s[3]} × ${m} + ${a} = <b>${s[4]}</b></p><p>Do both steps every time: ${s.slice(1).map((v, i) => `${s[i]} × ${m} + ${a} = ${v}`).join('<br>')}</p>` };
+};
+
+/* ---------- Topic 15: Angle Arcade ---------- */
+const angleName = d => d < 90 ? 'Acute' : d === 90 ? 'Right' : d < 180 ? 'Obtuse' : 'Straight';
+GEN.angles = L => {
+  const tag = lvTag2('angles');
+  const k = pick([['classify'], ['classify', 'turn'], ['measure', 'turn'], ['missing', 'measure'], ['missing', 'join', 'measure']][L - 1]);
+  if (k === 'classify') {
+    const deg = pick([rnd(20, 80), 90, rnd(100, 165), 180]);
+    return { kind: 'choice', prompt: 'What kind of angle is this?', visual: angleSVG(deg), choices: ['Acute', 'Right', 'Obtuse', 'Straight'], correct: ['Acute', 'Right', 'Obtuse', 'Straight'].indexOf(angleName(deg)), tag,
+      explain: () => `<p class="big-fact">${angleName(deg)} angle</p><p>Acute: less than 90°. Right: exactly 90° (a square corner). Obtuse: between 90° and 180°. Straight: 180°.</p>` };
+  }
+  if (k === 'turn') {
+    const [n, d] = pick([[1, 4], [1, 2], [3, 4], [1, 3], [1, 6], [1, 8], [2, 3], [1, 12], [5, 12], [1, 36]]), deg = 360 * n / d;
+    return { kind: 'num', prompt: 'A full turn is 360°.', problem: `How many degrees is ${fr(n, d)} of a full turn?`, visual: deg <= 180 ? angleSVG(deg) : '', answer: deg, after: '°', max: 3, tag,
+      explain: () => `<p class="big-fact">${fr(n, d)} × 360° = <b>${deg}°</b></p><p>360 ÷ ${d} = ${360 / d}, then × ${n} = ${deg}.</p>` };
+  }
+  if (k === 'measure') {
+    const deg = rnd(2, 34) * 5;
+    return { kind: 'num', prompt: 'Read the protractor. The bottom ray is on 0°.', visual: angleSVG(deg, { protractor: true, size: 320 }), answer: deg, after: '°', max: 3, tag,
+      explain: () => `<p class="big-fact"><b>${deg}°</b></p><p>Start at 0° on the bottom ray and count up the scale to where the other ray crosses. Big marks are every 10°, small marks every 5°.</p>` };
+  }
+  if (k === 'missing') {
+    const total = pick([90, 180, 180, 120, 150]), a = rnd(2, total / 5 - 2) * 5;
+    return { kind: 'num', prompt: `Two angles join to make ${total}°${total === 90 ? ' (a right angle)' : total === 180 ? ' (a straight line)' : ''}.`, problem: `One angle is ${a}°. What is the other?`, answer: total - a, after: '°', max: 3, tag,
+      explain: () => `<p class="big-fact">${total}° − ${a}° = <b>${total - a}°</b></p><p>The two parts add up to the whole: ${a}° + ${total - a}° = ${total}°.</p>` };
+  }
+  const a = rnd(3, 15) * 5, b = rnd(3, 15) * 5, c = Math.random() < 0.5 ? rnd(2, 8) * 5 : 0;
+  return { kind: 'num', prompt: 'Angles add.', problem: `Angles of ${a}°, ${b}°${c ? ` and ${c}°` : ''} join with no gaps. What is the total angle?`, answer: a + b + c, after: '°', max: 3, tag,
+    explain: () => `<p class="big-fact">${a}° + ${b}°${c ? ` + ${c}°` : ''} = <b>${a + b + c}°</b></p><p>When angles share a side with no gaps or overlaps, add their measures.</p>` };
+};
+
+/* ---------- Topic 16: Shape Safari ---------- */
+const TRI = {
+  acute: { pts: [[30, 165], [120, 20], [215, 165]], right: [] },
+  right: { pts: [[40, 20], [40, 170], [215, 170]], right: [1] },
+  obtuse: { pts: [[15, 160], [225, 160], [70, 85]], right: [] }
+};
+const QUADS = {
+  Square: { pts: [[60, 25], [190, 25], [190, 155], [60, 155]], right: [0, 1, 2, 3], ticks: [[0, 1], [1, 1], [2, 1], [3, 1]] },
+  Rectangle: { pts: [[25, 45], [215, 45], [215, 150], [25, 150]], right: [0, 1, 2, 3], ticks: [[0, 1], [1, 2], [2, 1], [3, 2]] },
+  Rhombus: { pts: [[120, 15], [205, 95], [120, 175], [35, 95]], right: [], ticks: [[0, 1], [1, 1], [2, 1], [3, 1]] },
+  Parallelogram: { pts: [[70, 40], [225, 40], [175, 150], [20, 150]], right: [], ticks: [[0, 1], [1, 2], [2, 1], [3, 2]] },
+  Trapezoid: { pts: [[80, 40], [170, 40], [225, 150], [20, 150]], right: [], ticks: [] }
+};
+const SYM = [
+  ['square', 4, [[60, 25], [190, 25], [190, 155], [60, 155]]], ['rectangle', 2, [[25, 45], [215, 45], [215, 150], [25, 150]]],
+  ['equilateral triangle', 3, [[30, 165], [120, 10], [210, 165]]], ['isosceles triangle', 1, [[50, 165], [120, 15], [190, 165]]],
+  ['regular hexagon', 6, [[75, 20], [165, 20], [210, 95], [165, 170], [75, 170], [30, 95]]], ['parallelogram', 0, [[70, 40], [225, 40], [175, 150], [20, 150]]],
+  ['right triangle with three different sides', 0, [[40, 20], [40, 170], [215, 170]]], ['kite', 1, [[120, 10], [190, 70], [120, 175], [50, 70]]]
+];
+GEN.shapes = L => {
+  const tag = lvTag2('shapes');
+  const k = pick([['lrs'], ['lines', 'lrs'], ['triAngle', 'lines'], ['triSide', 'quad', 'triAngle'], ['sym', 'quad', 'triSide']][L - 1]);
+  if (k === 'lrs') { const t = pick(['line', 'ray', 'segment']); return { kind: 'choice', prompt: 'What is this called?', visual: linesSVG(t), choices: ['Line', 'Ray', 'Line segment'], correct: ['line', 'ray', 'segment'].indexOf(t), tag,
+    explain: () => `<p class="big-fact">${t === 'segment' ? 'Line segment' : t[0].toUpperCase() + t.slice(1)}</p><p>A line goes on forever both ways (two arrows). A ray has one endpoint and one arrow. A line segment has two endpoints.</p>` }; }
+  if (k === 'lines') { const t = pick(['parallel', 'perpendicular', 'intersecting']); return { kind: 'choice', prompt: 'How are these lines related?', visual: linesSVG(t), choices: ['Parallel', 'Perpendicular', 'Intersecting (not perpendicular)'], correct: ['parallel', 'perpendicular', 'intersecting'].indexOf(t), tag,
+    explain: () => `<p class="big-fact">${t[0].toUpperCase() + t.slice(1)}</p><p>Parallel lines never cross. Perpendicular lines cross at a right angle (square corner). Other crossing lines are intersecting.</p>` }; }
+  if (k === 'triAngle') { const t = pick(['acute', 'right', 'obtuse']); return { kind: 'choice', prompt: 'Classify the triangle by its angles.', visual: polySVG(TRI[t].pts, { rightAt: TRI[t].right }), choices: ['Acute triangle', 'Right triangle', 'Obtuse triangle'], correct: ['acute', 'right', 'obtuse'].indexOf(t), tag,
+    explain: () => `<p class="big-fact">${t[0].toUpperCase() + t.slice(1)} triangle</p><p>Right: one right angle. Obtuse: one angle bigger than a right angle. Acute: all three angles smaller than a right angle.</p>` }; }
+  if (k === 'triSide') {
+    const t = pick(['Equilateral', 'Isosceles', 'Scalene']);
+    const pts = t === 'Equilateral' ? [[30, 165], [120, 10], [210, 165]] : t === 'Isosceles' ? [[50, 165], [120, 15], [190, 165]] : [[20, 165], [160, 30], [225, 165]];
+    const ticks = t === 'Equilateral' ? [[0, 1], [1, 1], [2, 1]] : t === 'Isosceles' ? [[0, 1], [1, 1]] : [[0, 1], [1, 2], [2, 3]];
+    return { kind: 'choice', prompt: 'Classify the triangle by its sides. Matching tick marks mean equal sides.', visual: polySVG(pts, { ticks }), choices: ['Equilateral', 'Isosceles', 'Scalene'], correct: ['Equilateral', 'Isosceles', 'Scalene'].indexOf(t), tag,
+      explain: () => `<p class="big-fact">${t}</p><p>Equilateral: all 3 sides equal. Isosceles: at least 2 sides equal. Scalene: no sides equal.</p>` };
+  }
+  if (k === 'quad') { const names = Object.keys(QUADS), t = pick(names), q = QUADS[t]; return { kind: 'choice', prompt: 'What is the best name for this shape? Matching tick marks mean equal sides.', visual: polySVG(q.pts, { rightAt: q.right, ticks: q.ticks }), choices: names, correct: names.indexOf(t), tag,
+    explain: () => `<p class="big-fact">${t}</p><p>Square: 4 equal sides and 4 right angles. Rectangle: 4 right angles. Rhombus: 4 equal sides. Parallelogram: 2 pairs of parallel sides. Trapezoid: exactly 1 pair of parallel sides.</p>` }; }
+  const [name, n, pts] = pick(SYM);
+  return { kind: 'num', prompt: 'How many lines of symmetry?', problem: `This ${name}`, visual: polySVG(pts, { fill: '#CBE8FF' }), answer: n, max: 1, tag,
+    explain: () => `<p class="big-fact">${n} line${n === 1 ? '' : 's'} of symmetry</p><p>A line of symmetry folds the shape so both halves match exactly.${n === 0 ? ' This shape has no fold that makes the halves match.' : ''}</p>` };
+};
+Object.keys(GEN).forEach(k => {
+  const gid = { factors: 'factors', fracEq: 'fracbakery', fracOps: 'frackitchen', lineplot: 'lineplot', decimals: 'decimals', measure: 'measure', patterns: 'patterns', angles: 'angles', shapes: 'shapes' }[k];
+  ROUND_GAMES[gid] = () => ask(GEN[k](lvl(k)));
+});
 
 /* =========================================================
    Memory Reef
@@ -2498,12 +3103,12 @@ function setLane(l) { if (!arcade) return; arcade.lane = l; $('#car').style.left
 function steer(d) { if (!arcade) return; setLane(Math.max(0, Math.min(2, arcade.lane + d))); }
 function driverQ() {
   const m = arcade.mode, L = lvl(m.skill);
-  return m.op === '×' ? genMult(L) : m.op === '÷' ? genDiv(L) : genMental(L, m.op);
+  return m.op === '×' ? factQ('mult', () => genMult(L)) : m.op === '÷' ? factQ('div', () => genDiv(L)) : factQ('mental', () => genMental(L, m.op), m.op);
 }
 function driverRow() {
   if (!arcade || !arcade.running) return;
   const q = driverQ(); arcade.q = q;
-  $('#aQ').textContent = q.text + ' = ?';
+  $('#aQ').textContent = qLabel(q);
   const vals = shuffle([q.answer, ...distractors(q.answer, 2, q)]);
   const el = document.createElement('div'); el.className = 'arow';
   el.innerHTML = vals.map((v, i) => `<div class="abox" style="left:${LANES[i]}%">${fmt(v)}</div>`).join('');
@@ -2530,7 +3135,7 @@ function driverHit(row) {
   const a = arcade; row.done = true;
   const v = row.vals[a.lane], ok = v === a.q.answer;
   const boxes = $$('.abox', row.el);
-  record(a.skill, ok);
+  record(a.skill, ok); noteFact(a.q, a.skill, ok);
   if (ok) {
     a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.11, a.speed * 1.04);
     boxes[a.lane].classList.add('good'); sfx('ok'); arcadeHud();
@@ -2582,8 +3187,8 @@ function hop() {
 function runnerSet() {
   const a = arcade; if (!a || !a.running) return;
   a.blocks.forEach(b => b.el.remove()); a.blocks = [];
-  const q = a.repeat && a.q ? a.q : genMult(lvl('mult')); a.q = q; a.repeat = false;
-  $('#aQ').textContent = q.text + ' = ?';
+  const q = a.repeat && a.q ? a.q : factQ('mult', () => genMult(lvl('mult'))); a.q = q; a.repeat = false;
+  $('#aQ').textContent = qLabel(q);
   const vals = shuffle([q.answer, ...distractors(q.answer, rnd(1, 3), q)]);
   const track = $('#track'), w = track.clientWidth;
   const gap = Math.max(200, a.speed * 820 + 120);
@@ -2624,12 +3229,12 @@ function runnerResolve(b) { // returns true when this set is finished
     return false;
   }
   if (correct) {
-    record('mult', true); a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.34, a.speed * 1.05);
+    record('mult', true); noteFact(a.q, 'mult', true); a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.34, a.speed * 1.05);
     sfx('ok'); arcadeHud(); b.el.style.background = 'var(--leaf)';
     later(runnerSet, 250); a.blocks.forEach(x => x.done = true);
     return true;
   }
-  record('mult', false); a.combo = 0; a.hearts--; sfx('bad'); arcadeHud();
+  record('mult', false); noteFact(a.q, 'mult', false); a.combo = 0; a.hearts--; sfx('bad'); arcadeHud();
   b.el.style.background = 'var(--coral)';
   return runnerPause(`${a.q.text} = ${fmt(a.q.answer)}<small>${a.hearts > 0 ? 'Oops! Remember this one.' : 'Last heart gone'}</small>`, a.hearts <= 0);
 }

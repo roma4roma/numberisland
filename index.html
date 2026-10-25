@@ -77,6 +77,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .btn.leaf { background: var(--leaf); color: #fff; }
 .btn.coral { background: var(--coral); color: #fff; }
 .btn.plain { background: #fff; }
+.btn.sea { background: var(--sea); color: #fff; }
 .topbar > div { min-width: 0; }
 .btn.small { white-space: nowrap; font-size: 15px; padding: 5px 12px; min-height: 38px; border-width: 2px; box-shadow: 0 3px 0 var(--ink); }
 .btn[disabled] { opacity: .5; cursor: not-allowed; }
@@ -421,6 +422,24 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .isle.editing .isle-item { cursor: grab; }
 .isle-item.lifted { transform: translateX(-50%) scale(1.25); filter: drop-shadow(0 8px 4px rgba(0,0,0,.3)); cursor: grabbing; }
 .isle-edit { position: absolute; right: 10px; top: 8px; z-index: 200; }
+.isle-social { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; max-width: 820px; margin: 10px auto 0; }
+.rx-line-wrap { font-size: 15px; }
+.rx-pill { display: inline-block; background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 0 9px; margin: 2px 3px; font-weight: 800; }
+.visit-panel { background: var(--sand); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 14px 16px 18px; width: 100%; max-width: 860px; max-height: calc(100vh - 32px); overflow: auto; }
+.visit-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.visit-head h3 { text-align: center; flex: 1; }
+.visit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.visit-card { position: relative; display: grid; justify-items: center; gap: 2px; padding: 10px 6px; background: #fff; border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 4px 0 var(--ink); cursor: pointer; font: inherit; }
+.visit-card:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.vc-face { font-size: 40px; line-height: 1.1; }
+.visit-card small { color: var(--ink-soft); font-weight: 600; }
+.vc-mine { position: absolute; top: 4px; right: 6px; font-size: 18px; }
+.rx-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.rx-btn { display: grid; justify-items: center; min-width: 64px; padding: 6px 10px; background: #fff; border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 4px 0 var(--ink); cursor: pointer; font: inherit; }
+.rx-btn span { font-size: 32px; line-height: 1.1; }
+.rx-btn small { font-weight: 800; }
+.rx-btn[aria-pressed="true"] { background: var(--sun); }
+.rx-btn:disabled { opacity: .6; }
 .isle-trash { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 820px; margin: 10px auto 0; padding: 8px; font-size: 30px; line-height: 1; background: #fff; border: 3px dashed var(--coral); border-radius: 16px; }
 .isle-trash span { font-size: 15px; font-weight: 800; color: var(--coral); }
 .isle-trash.hot { background: var(--coral-soft); transform: scale(1.12); }
@@ -624,7 +643,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 @media (max-width: 640px) { .game-card.boss-card .gicon { font-size: 44px; } .game-card.boss-card .gname { font-size: 20px; } .boss-face { font-size: 84px; } }
 
 /* ---------- Toasts ---------- */
-#toasts { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 50%; transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; width: max-content; max-width: calc(100vw - 32px); pointer-events: none; }
+#toasts { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 50%; transform: translateX(-50%); z-index: 400; display: grid; gap: 8px; width: max-content; max-width: calc(100vw - 32px); pointer-events: none; }
 .toast { background: var(--ink); color: #fff; border-radius: 14px; padding: 8px 16px; font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: toastIn .3s; text-align: center; }
 .toast.gold { background: var(--sun); color: var(--ink); border: 3px solid var(--ink); }
 @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } }
@@ -1260,6 +1279,8 @@ function applySettings(st) {
   const before = JSON.stringify(store.settings || {});
   store.settings = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (before !== JSON.stringify(st) && currentScreen === 'hub') renderGameGrid();
+  const was = JSON.parse(before || '{}').islandVisits;
+  if (was !== st.islandVisits && currentScreen === 'shop' && shopTab === 'island' && !islandEdit) openShop('island');
 }
 const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'] : price <= 250 ? ['Rare', 'r-rare'] : price <= 900 ? ['Epic', 'r-epic'] : ['Legendary', 'r-legend'];
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
@@ -1565,6 +1586,7 @@ $('#signIn').addEventListener('submit', async e => {
       Object.assign(store.profiles[key], { code, sheetName: r.name });
       store.current = key; ensureProfile(P()); save(); openHub();
       if (coinAdjust) applyCoinAdjust(P(), coinAdjust);
+      if (r.myReactions) applyMyReactions(P(), r.myReactions);
       syncNow(key);
     } else {
       startAvatarStep(r.name, code, false, coinAdjust);
@@ -1642,6 +1664,7 @@ async function syncNow(id) {
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
     if (r.ok && r.coinAdjust && !r.stale) applyCoinAdjust(p, r.coinAdjust);
+    if (r.ok && r.myReactions && !r.stale) applyMyReactions(p, r.myReactions);
     if (r.ok && r.stale) { // the teacher started a new school year
       delete store.profiles[id];
       if (store.current === id) { store.current = null; save(); renderWho(); toast('A new school year has started! Sign in to begin.', true); }
@@ -1674,7 +1697,14 @@ window.addEventListener('pagehide', () => {
   if ((p.syncedAt || 0) >= (p.updated || 0)) return;
   try { navigator.sendBeacon(url, new Blob([JSON.stringify(syncBody(p, false))], { type: 'text/plain' })); } catch (e) {}
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden && P()) syncNow(store.current); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && P()) syncNow(store.current); else refreshFromSheet(); });
+/* Check in with the class sheet (new locks, settings, coin gifts, island reactions) at most every 30 seconds. */
+let lastRefresh = 0;
+function refreshFromSheet(force) {
+  const p = P(); if (!sheetUrl() || !p || !p.sheetName) return;
+  if (!force && Date.now() - lastRefresh < 30000) return;
+  lastRefresh = Date.now(); syncNow(p.id);
+}
 
 /* ---------- Hub ---------- */
 function openHub() {
@@ -3466,13 +3496,14 @@ function islandCopies(p) { // one entry per copy placed on the island
   });
   return out;
 }
-function islandHTML(p, big) {
+function islandHTML(p, big, visit = false) {
   const copies = islandCopies(p);
+  if (visit) big = false;
   const kinds = SHOP.island.filter(it => p.owned.includes(it.id)).length, total = SHOP.island.filter(it => inShop(it, p)).length;
-  return `<div class="isle ${big ? 'big' : ''} ${islandEdit && big ? 'editing' : ''}" id="${big ? 'isleMain' : ''}" aria-label="${esc(p.name)}'s island">
+  return `<div class="isle ${big || visit ? 'big' : ''} ${islandEdit && big ? 'editing' : ''}" id="${big ? 'isleMain' : ''}" aria-label="${esc(p.name)}'s island">
     <div class="isle-sun"></div><div class="isle-land"></div>
-    ${copies.map(({ it, key, q }) => `<span class="isle-item" data-isle="${key}" data-id="${it.id}" style="left:${q.x}%;bottom:${q.y}%;font-size:${big ? it.z * 1.15 : it.z * .9}px;z-index:${100 - Math.round(q.y)}">${it.icon}</span>`).join('')}
-    ${copies.length ? '' : `<div class="isle-empty">Your island is empty. Buy something to put on it!</div>`}
+    ${copies.map(({ it, key, q }) => `<span class="isle-item" data-isle="${key}" data-id="${it.id}" style="left:${q.x}%;bottom:${q.y}%;font-size:${big || visit ? it.z * 1.15 : it.z * .9}px;z-index:${100 - Math.round(q.y)}">${it.icon}</span>`).join('')}
+    ${copies.length ? '' : `<div class="isle-empty">${visit ? `${esc(p.name)}'s island is empty for now.` : 'Your island is empty. Buy something to put on it!'}</div>`}
     <div class="isle-count" title="Different things you own">${kinds} / ${total} kinds · ${copies.length} in all</div>
     ${big && copies.length ? `<button type="button" class="btn small ${islandEdit ? 'leaf' : 'plain'} isle-edit" id="isleEdit">${islandEdit ? '✓ Done' : '✋ Move things'}</button>` : ''}
     ${islandEdit && big ? '<div class="isle-tip">Drag to move · drop on 🗑️ to sell</div>' : ''}</div>
@@ -3511,6 +3542,84 @@ function sellIslandCopy(key) {
   const back = Math.floor(it.price / 2);
   p.coins += back; sfx('coin'); toast(`Sold a ${it.name} for 🪙 ${fmt(back)}`);
   save(); scheduleSync(2000); openShop('island');
+}
+/* ---------- Island visits: look at classmates' islands and leave one reaction ---------- */
+const REACTIONS = ['⭐', '❤️', '🦝', '🔥', '🤩'];
+function canVisit(p) { return !!(sheetUrl() && p && p.sheetName && !(store.settings && store.settings.islandVisits === false)); }
+function reactLine(m) { return REACTIONS.filter(e => m && m[e]).map(e => `<span class="rx-pill">${e} ${m[e]}</span>`).join(''); }
+function applyMyReactions(p, m) {
+  if (!p || !m || typeof m !== 'object') return;
+  const total = Object.values(m).reduce((a, b) => a + (Number(b) || 0), 0), before = p.reactsTotal || 0;
+  p.reacts = m; p.reactsTotal = total;
+  if (total > before && p === P()) toast(`🏝️ Classmates reacted to your island! ${REACTIONS.filter(e => m[e]).map(e => e + ' ' + m[e]).join('  ')}`, true);
+  if (shopTab === 'island' && !$('#scr-shop').hidden && $('#isleSocial')) $('#isleSocial .rx-line').innerHTML = reactLine(m) || 'No reactions yet.';
+}
+function islandSocialHTML(p) {
+  if (!canVisit(p)) return '';
+  return `<div class="isle-social" id="isleSocial">
+    <div class="rx-line-wrap"><b>Your island's reactions:</b> <span class="rx-line">${reactLine(p.reacts) || 'No reactions yet. Classmates can visit and react!'}</span></div>
+    <button type="button" class="btn sea" id="visitIslands">🧭 Visit classmates' islands</button></div>`;
+}
+let visitState = null;
+async function openVisits() {
+  const p = P(); if (!canVisit(p)) return;
+  document.querySelectorAll('.visit-back').forEach(x => x.remove());
+  const m = document.createElement('div'); m.className = 'modal-back visit-back';
+  m.innerHTML = `<div class="visit-panel" role="dialog" aria-modal="true" aria-label="Visit classmates' islands"><div id="visitBody"><p class="note">⛵ Sailing to your classmates' islands…</p></div></div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) closeVisits(); });
+  visitState = { list: null, at: null };
+  try {
+    const r = await api({ action: 'islands', name: p.sheetName, code: p.code || '' });
+    if (!document.body.contains(m)) return;
+    if (r.ok && r.off) { $('#visitBody').innerHTML = visitHead('Island visits') + `<p class="note">Island visits are turned off right now.</p>`; bindVisitHead(); return; }
+    if (!r.ok) throw new Error(r.error || 'error');
+    visitState.list = (r.islands || []).filter(x => !x.me);
+    renderVisitList();
+  } catch (e) {
+    if (!document.body.contains(m)) return;
+    $('#visitBody').innerHTML = visitHead('Island visits') + `<p class="note">Can't reach your class right now. Try again in a minute.</p>`; bindVisitHead();
+  }
+}
+function closeVisits() { document.querySelectorAll('.visit-back').forEach(x => x.remove()); visitState = null; }
+function visitHead(title, back) {
+  return `<div class="visit-head">${back ? '<button type="button" class="btn small plain" id="visitBackBtn">⬅ All islands</button>' : '<span></span>'}<h3>${title}</h3><button type="button" class="btn small plain" id="visitClose" aria-label="Close">✕</button></div>`;
+}
+function bindVisitHead() {
+  const c = $('#visitClose'); if (c) c.addEventListener('click', closeVisits);
+  const b = $('#visitBackBtn'); if (b) b.addEventListener('click', renderVisitList);
+}
+function renderVisitList() {
+  const V = visitState; if (!V || !V.list) return; V.at = null;
+  const list = V.list;
+  $('#visitBody').innerHTML = visitHead("Classmates' islands") + (list.length ? `<div class="visit-grid">${list.map((x, i) => {
+    const n = Object.values(x.reacts || {}).reduce((a, b) => a + b, 0), things = islandCopies(x).length;
+    return `<button type="button" class="visit-card" data-i="${i}"><span class="vc-face">${esc(x.avatar)}</span><b>${esc(x.name)}</b><small>${things} thing${things === 1 ? '' : 's'}${n ? ` · ${n} reaction${n === 1 ? '' : 's'}` : ''}</small>${x.mine ? `<span class="vc-mine">${x.mine}</span>` : ''}</button>`;
+  }).join('')}</div>` : `<p class="note">No classmates have saved an island yet. Check back soon!</p>`);
+  bindVisitHead();
+  $$('.visit-card').forEach(b => b.addEventListener('click', () => renderVisit(+b.dataset.i)));
+}
+function renderVisit(i) {
+  const V = visitState; if (!V || !V.list || !V.list[i]) return; V.at = i;
+  const x = V.list[i];
+  x.owned = Array.isArray(x.owned) ? x.owned : []; x.islandCount = x.islandCount || {}; x.islandPos = x.islandPos || {};
+  $('#visitBody').innerHTML = visitHead(`${esc(x.avatar)} ${esc(x.name)}'s island`, true) + islandHTML(x, false, true) + `
+    <p class="note" style="margin:10px 0 6px">Leave a reaction! Tap it again to take it back.</p>
+    <div class="rx-row">${REACTIONS.map(e => `<button type="button" class="rx-btn" data-rx="${e}" aria-pressed="${x.mine === e}"><span>${e}</span><small>${(x.reacts || {})[e] || 0}</small></button>`).join('')}</div>`;
+  bindVisitHead();
+  $$('.rx-btn').forEach(b => b.addEventListener('click', () => sendReaction(i, b.dataset.rx)));
+}
+async function sendReaction(i, e) {
+  const V = visitState, p = P(); if (!V || !V.list[i] || V.busy) return;
+  V.busy = true; $$('.rx-btn').forEach(b => b.disabled = true); sfx('tap');
+  try {
+    const r = await api({ action: 'react', name: p.sheetName, code: p.code || '', target: V.list[i].name, reaction: e });
+    if (r.ok && !r.off) { V.list[i].reacts = r.reacts || {}; V.list[i].mine = r.mine || null; if (r.mine) { sfx('coin'); toast(`You gave ${V.list[i].name}'s island a ${r.mine}`); } }
+    else if (r.off) toast('Island visits are turned off right now.');
+    else toast("That didn't work. Try again.");
+  } catch (err) { toast("Can't reach your class right now."); }
+  V.busy = false;
+  if (visitState === V && V.at === i) renderVisit(i);
 }
 function bindIsland() {
   const box = $('#isleMain'); if (!box) return;
@@ -3571,7 +3680,7 @@ function openShop(tab) {
   const owned = entries.filter(e => p.owned.includes(e.it.id)).length;
   const help = T.season ? `Only here for ${seasonDaysLeft(T.season)} more day${seasonDaysLeft(T.season) === 1 ? '' : 's'}! Anything you buy is yours to keep.` :
     T.free ? "Change your animal any time. It's free! Your hats, pets and everything else stay on." : T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
-  $('#shopTop').innerHTML = shopTab === 'island' ? islandHTML(p, true) :
+  $('#shopTop').innerHTML = shopTab === 'island' ? islandHTML(p, true) + islandSocialHTML(p) :
     `${avatarHTML(p, 110)}<div class="shop-side"><b>${esc(p.name)}</b>${titleOf(p) ? `<span class="title-pill">${esc(titleOf(p))}</span>` : ''}
      <div class="note" style="text-align:left">${help}</div>${T.free ? '' : `<div class="note" style="text-align:left">You own ${owned} of ${entries.length}${T.season ? ' seasonal items' : ' ' + T.label.toLowerCase()}.</div>`}</div>`;
   const L = levelInfo(p.xp).L;
@@ -3587,7 +3696,7 @@ function openShop(tab) {
       ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(cat, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
   }).join('');
   $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id, b.dataset.cat)));
-  if (shopTab === 'island') bindIsland(); else islandEdit = false;
+  if (shopTab === 'island') { bindIsland(); const vb = $('#visitIslands'); if (vb) vb.addEventListener('click', openVisits); if (!islandEdit) refreshFromSheet(); } else islandEdit = false;
   show('shop');
 }
 function shopClick(id, cat) {
@@ -3803,7 +3912,7 @@ $('#whoTeacher').innerHTML = teacherSVG('wave', 120);
 function showTeacherLinks() { const on = location.hash === '#teacher'; $('#teacherLink1').hidden = !on; $('#teacherLink2').hidden = !on; }
 showTeacherLinks(); window.addEventListener('hashchange', showTeacherLinks);
 load();
-if (store.current && store.profiles[store.current]) { ensureProfile(P()); openHub(); }
+if (store.current && store.profiles[store.current]) { ensureProfile(P()); openHub(); setTimeout(() => refreshFromSheet(true), 800); }
 else { store.current = null; renderWho(); }
 })();
 </script>

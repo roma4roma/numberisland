@@ -13,13 +13,15 @@
  *   Games           Tick a box to unlock a game for every student. Untick to lock it.
  *   Boss Battles    How many hits each student landed on each week's boss.
  *   Needs Help      Who's struggling, which facts they keep missing, and minutes practiced this week.
- *   Settings        Boss Battle day, boss health, coin rate.
+ *   Settings        Boss Battle day, boss health, coin rate, island visits on/off.
+ *   Island Reactions  Who left which reaction on whose island (one per visitor per island).
  *
  * The "Number Island" menu at the top of the sheet has "Start a new school year…".
  *   Save Data       The game's save files. Hidden. Please don't edit it.
  */
 
-var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data' };
+var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions' };
+var REACTIONS = ['⭐', '❤️', '🦝', '🔥', '🤩'];
 var BOSS_HP_PER_STUDENT = 100; // starting value; change it any time on the Settings tab
 
 // The games in Number Island. Games the app adds later are added to the Games tab automatically, locked.
@@ -102,7 +104,15 @@ function doPost(e) {
     if (!who) return out_({ ok: false, error: 'not_on_roster' });
     var coinAdjust = 0;
     if (req.action === 'load' || req.action === 'boss' || (req.action === 'save' && !(req.profile && (Number(req.profile.dataVersion) || 1) < readSettings_(ss).version))) coinAdjust = takeCoinAdjust_(ss, who);
-    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust });
+    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, myReactions: reactionsFor_(ss, who) });
+    if (req.action === 'islands') {
+      if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
+      return out_({ ok: true, islands: allIslands_(ss, who) });
+    }
+    if (req.action === 'react') {
+      if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
+      return out_(react_(ss, who, req.target, req.reaction));
+    }
     if (req.action === 'boss') {
       if (req.week && req.hits > 0) addBossHits_(ss, req.week, who, req.hits);
       return out_({ ok: true, boss: bossStatus_(ss, req.week, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust });
@@ -116,7 +126,7 @@ function doPost(e) {
       if (req.profile) writeSave_(ss, who, req.profile);
       if (req.summary) { writeSummary_(ss, who, req.summary); buildNeedsHelp_(ss); }
       if (req.activity && req.activity.length) writeActivity_(ss, who, req.activity);
-      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null });
+      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who) });
     }
     return out_({ ok: false, error: 'bad_action' });
   } catch (err) {
@@ -267,9 +277,13 @@ function bossStatus_(ss, week, who) {
 }
 
 /* ---------- Settings tab ---------- */
+var ISLAND_ROW = ['Island visits', 'On', 'On = students can visit classmates\' islands and leave a reaction (⭐ ❤️ 🦝 🔥 🤩). Off = turn it off.'];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
-  if (sh) return sh;
+  if (sh) {
+    if (String(sh.getRange(6, 1).getValue()) !== ISLAND_ROW[0]) sh.getRange(6, 1, 1, 3).setValues([ISLAND_ROW]); // added in a later version
+    return sh;
+  }
   var hp = BOSS_HP_PER_STUDENT, boss = ss.getSheetByName(TABS.boss);
   if (boss) { var old = Number(boss.getRange(1, 6).getValue()); if (old > 0) hp = old; } // keep a value set in the older version
   sh = ss.insertSheet(TABS.settings);
@@ -280,14 +294,16 @@ function settingsTab_(ss) {
     ['Coin rate', 1, '1 = normal coins. 2 = double coins. 0.5 = half coins.'],
     ['Data version (do not change)', 1, 'Goes up by itself when you start a new school year.']
   ]);
+  sh.getRange(6, 1, 1, 3).setValues([ISLAND_ROW]);
   sh.getRange(1, 1, 1, 3).setFontWeight('bold'); sh.setFrozenRows(1);
   sh.setColumnWidth(1, 230); sh.setColumnWidth(2, 120); sh.setColumnWidth(3, 520);
   return sh;
 }
 function readSettings_(ss) {
-  var v = settingsTab_(ss).getRange(2, 2, 4, 1).getValues().map(function (r) { return r[0]; });
+  var v = settingsTab_(ss).getRange(2, 2, 5, 1).getValues().map(function (r) { return r[0]; });
   return { bossDay: String(v[0] || 'Friday'), bossHp: Number(v[1]) > 0 ? Number(v[1]) : BOSS_HP_PER_STUDENT,
-           coinRate: Number(v[2]) > 0 ? Number(v[2]) : 1, version: Number(v[3]) > 0 ? Number(v[3]) : 1 };
+           coinRate: Number(v[2]) > 0 ? Number(v[2]) : 1, version: Number(v[3]) > 0 ? Number(v[3]) : 1,
+           islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()) };
 }
 
 /* ---------- Needs Help tab, rebuilt from Class Progress after every save ---------- */
@@ -332,7 +348,7 @@ function newSchoolYear() {
   if (answer !== ui.Button.YES) return;
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var copy = ss.copy(ss.getName() + ' (archive ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') + ')');
-  [TABS.progress, TABS.help, TABS.activity, TABS.boss, TABS.data].forEach(function (name) {
+  [TABS.progress, TABS.help, TABS.activity, TABS.boss, TABS.data, TABS.reacts].forEach(function (name) {
     var sh = ss.getSheetByName(name);
     if (sh && sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, Math.max(1, sh.getLastColumn())).clearContent();
   });
@@ -364,4 +380,58 @@ function takeCoinAdjust_(ss, who) {
     return n;
   }
   return 0;
+}
+
+/* ---------- Island visits: see classmates' islands and leave one reaction each ---------- */
+function reactTab_(ss) { return tab_(ss, TABS.reacts, ['Visitor', 'Island owner', 'Reaction', 'Time']); }
+function reactRows_(ss) {
+  var sh = ss.getSheetByName(TABS.reacts);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues();
+}
+/** { '⭐': 3, '❤️': 1 } for one student's island. */
+function reactionsFor_(ss, who) {
+  var out = {};
+  reactRows_(ss).forEach(function (r) { if (normName_(r[1]) === normName_(who) && REACTIONS.indexOf(String(r[2])) >= 0) out[r[2]] = (out[r[2]] || 0) + 1; });
+  return out;
+}
+/** Every saved island: just the animal and the island things (no coins, levels or codes). */
+function allIslands_(ss, who) {
+  var sh = ss.getSheetByName(TABS.data);
+  if (!sh || sh.getLastRow() < 2) return [];
+  var rows = reactRows_(ss), list = [];
+  sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues().forEach(function (r) {
+    if (!r[0]) return;
+    var p; try { p = JSON.parse(r[2]); } catch (e) { return; }
+    if (!p) return;
+    var reacts = {}, mine = null, owner = normName_(r[0]);
+    rows.forEach(function (x) {
+      if (normName_(x[1]) !== owner) return;
+      reacts[x[2]] = (reacts[x[2]] || 0) + 1;
+      if (normName_(x[0]) === normName_(who)) mine = String(x[2]);
+    });
+    list.push({ name: String(r[0]), me: owner === normName_(who), avatar: p.avatar || '🙂',
+                owned: p.owned || [], islandCount: p.islandCount || {}, islandPos: p.islandPos || {}, reacts: reacts, mine: mine });
+  });
+  list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+  return list;
+}
+/** One reaction per visitor per island. Sending the same one again takes it back. */
+function react_(ss, who, target, reaction) {
+  reaction = String(reaction || '');
+  if (REACTIONS.indexOf(reaction) < 0) return { ok: false, error: 'bad_reaction' };
+  var data = ss.getSheetByName(TABS.data), owner = null;
+  if (data && data.getLastRow() >= 2) data.getRange(2, 1, data.getLastRow() - 1, 1).getValues().forEach(function (r) { if (normName_(r[0]) === normName_(target)) owner = String(r[0]); });
+  if (!owner) return { ok: false, error: 'no_island' };
+  if (normName_(owner) === normName_(who)) return { ok: false, error: 'own_island' };
+  var sh = reactTab_(ss), rows = reactRows_(ss), mine = reaction;
+  for (var i = 0; i < rows.length; i++) {
+    if (normName_(rows[i][0]) === normName_(who) && normName_(rows[i][1]) === normName_(owner)) {
+      if (String(rows[i][2]) === reaction) { sh.deleteRow(i + 2); mine = null; }
+      else sh.getRange(i + 2, 3, 1, 2).setValues([[reaction, new Date()]]);
+      return { ok: true, reacts: reactionsFor_(ss, owner), mine: mine };
+    }
+  }
+  sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setValues([[who, owner, reaction, new Date()]]);
+  return { ok: true, reacts: reactionsFor_(ss, owner), mine: mine };
 }

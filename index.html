@@ -516,6 +516,32 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
   .vrec .vn { font-size: 28px; } .vrec .vslot { min-width: 110px; }
 }
 
+/* ---------- My Progress ---------- */
+.prog-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 14px 4px; }
+.prog-head h3 { font-size: 26px; }
+.prog-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.prog-stats div { background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 88px; }
+.prog-stats b { display: block; font-family: var(--display); font-weight: 400; font-size: 24px; }
+.prog-stats span { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.prog-goal { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--sun); border: 3px solid var(--ink); border-radius: 14px; padding: 8px 14px; font-size: 17px; margin-bottom: 10px; }
+.prog-goal span { flex: 1 1 240px; }
+.prog-list { display: grid; gap: 6px; }
+.prog-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 64px 52px; gap: 10px; align-items: center; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; }
+.prog-row.done { background: var(--leaf-soft); border-color: var(--leaf); }
+.prog-name small { display: block; color: var(--ink-soft); font-weight: 600; font-size: 13px; }
+.prog-level { display: flex; gap: 4px; }
+.prog-level i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; }
+.prog-level i.on { background: var(--sun); }
+.prog-acc { text-align: center; }
+.fact-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fact-chip { background: #fff; border: 2px solid var(--coral); border-radius: 999px; padding: 2px 12px; font-family: var(--display); font-size: 18px; }
+@media (max-width: 640px) { .prog-row { grid-template-columns: minmax(0, 1fr) auto; } .prog-acc, .prog-row > button, .prog-row > span:last-child { display: none; } .prog-stats { margin-left: 0; } }
+.modal-back { position: fixed; inset: 0; z-index: 300; background: rgba(30, 42, 51, .55); display: grid; place-items: center; padding: 16px; }
+.modal { background: var(--sand); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 18px 20px; max-width: 380px; width: 100%; text-align: center; display: grid; gap: 10px; }
+.modal .micon { font-size: 60px; line-height: 1; }
+.modal h3 { font-size: 24px; }
+.modal .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
 /* ---------- Topic games ---------- */
 .problem.long { font-size: clamp(22px, 3.6vw, 30px); line-height: 1.25; max-width: 620px; margin: 0 auto; }
 .q-wrap { display: grid; gap: 8px; justify-items: center; text-align: center; }
@@ -656,6 +682,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
         <div class="hub-actions">
           <span class="chip coins" id="hubCoins">🪙 0</span>
           <button type="button" class="btn small" id="openShop">🛍️ Shop</button>
+          <button type="button" class="btn small plain" id="openProgress">📈 My Progress</button>
           <button type="button" class="btn small plain" id="openIsland">🏝️ My Island</button>
           <button type="button" class="btn small plain" id="openBadges">🏅 Badges</button>
         </div>
@@ -701,6 +728,16 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
       <div class="shop-top" id="shopTop"></div>
       <div class="tabs" role="tablist" id="shopTabs"></div>
       <div class="item-grid" id="shopGrid"></div>
+    </section>
+
+    <!-- My Progress -->
+    <section id="scr-progress" hidden>
+      <div class="topbar">
+        <button type="button" class="btn small plain" data-back>⬅ Map</button>
+        <h2>My Progress</h2>
+        <span class="chip coins" id="progCoins">🪙 0</span>
+      </div>
+      <div id="progressBody"></div>
     </section>
 
     <!-- Badges -->
@@ -1081,6 +1118,16 @@ function bossDayIndex() {
 function bossDayName() { const i = bossDayIndex(); return i < 0 ? 'any day' : DAY_NAMES[i][0].toUpperCase() + DAY_NAMES[i].slice(1); }
 function isBossDay(d = today()) { const i = bossDayIndex(); return i < 0 || d.getDay() === i; }
 function daysToFriday(d = today()) { const i = bossDayIndex(); return i < 0 ? 0 : (i - d.getDay() + 7) % 7; }
+function applyCoinAdjust(p, n) {
+  n = Math.round(Number(n) || 0); if (!p || !n) return;
+  p.coins = Math.max(0, p.coins + n); p.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+  if (p.id === store.current) {
+    toast(n > 0 ? `🎁 Your teacher gave you ${fmt(n)} coins!` : `Your teacher changed your coins by ${fmt(n)}.`, true);
+    updateCoinChips(); if (currentScreen === 'hub') openHub();
+  }
+  scheduleSync(1500);
+}
 function applySettings(st) {
   if (!st || typeof st !== 'object') return;
   const before = JSON.stringify(store.settings || {});
@@ -1264,7 +1311,7 @@ function cheer(text, host) {
 /* =========================================================
    Screens
    ========================================================= */
-const SCREENS = ['who', 'hub', 'game', 'results', 'shop', 'badges', 'teacher'];
+const SCREENS = ['who', 'hub', 'game', 'results', 'shop', 'badges', 'teacher', 'progress'];
 let currentScreen = 'who';
 function show(name) {
   SCREENS.forEach(s => { $('#scr-' + s).hidden = s !== name; });
@@ -1328,13 +1375,14 @@ $('#newPlayer').addEventListener('submit', e => {
   const name = $('#newName').value.trim();
   if (!name) { $('#newName').classList.add('shake'); setTimeout(() => $('#newName').classList.remove('shake'), 400); $('#newName').focus(); return; }
   if (pendingSignIn) {
-    const { name: nm, code, offline } = pendingSignIn;
+    const { name: nm, code, offline, coinAdjust } = pendingSignIn;
     const id = sheetKey(nm);
     newProfile(nm, chosenAvatar, id);
     Object.assign(store.profiles[id], { code, sheetName: nm, pending: [] });
     store.current = id; pendingSignIn = null; save();
     toast(`Welcome to Number Island, ${nm}!`, true);
     openHub();
+    if (coinAdjust) applyCoinAdjust(store.profiles[id], coinAdjust);
     if (!offline) syncNow(id);
     return;
   }
@@ -1377,14 +1425,17 @@ $('#signIn').addEventListener('submit', async e => {
     const ver = (r.settings && Number(r.settings.version)) || 1;
     if (store.profiles[sheetKey(r.name)] && (store.profiles[sheetKey(r.name)].dataVersion || 1) < ver) delete store.profiles[sheetKey(r.name)]; // a new school year started
     const key = sheetKey(r.name), local = store.profiles[key];
+    const coinAdjust = r.coinAdjust || 0;
     if (r.profile && !(local && (local.updated || 0) > (r.profile.updated || 0))) {
       store.profiles[key] = Object.assign(r.profile, { id: key, pending: local ? local.pending || [] : [] });
     }
     if (store.profiles[key]) {
       Object.assign(store.profiles[key], { code, sheetName: r.name });
-      store.current = key; ensureProfile(P()); save(); openHub(); syncNow(key);
+      store.current = key; ensureProfile(P()); save(); openHub();
+      if (coinAdjust) applyCoinAdjust(P(), coinAdjust);
+      syncNow(key);
     } else {
-      startAvatarStep(r.name, code, false);
+      startAvatarStep(r.name, code, false, coinAdjust);
     }
   } catch (err) {
     const key = sheetKey(name), local = store.profiles[key];
@@ -1403,8 +1454,8 @@ $('#siOffline').addEventListener('click', () => {
   const name = $('#siName').value.trim(), code = $('#siCode').value.trim();
   if (name) startAvatarStep(name, code, true);
 });
-function startAvatarStep(name, code, offline) {
-  pendingSignIn = { name, code, offline };
+function startAvatarStep(name, code, offline, coinAdjust = 0) {
+  pendingSignIn = { name, code, offline, coinAdjust };
   $('#signIn').hidden = true; $('#newPlayer').hidden = false; $('#cancelNew').hidden = false;
   $('#newTitle').textContent = `Hi, ${name}! Pick your animal`;
   $('#newNameLabel').hidden = true; $('#newName').hidden = true; $('#newName').value = name;
@@ -1458,6 +1509,7 @@ async function syncNow(id) {
     const r = await api(body);
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
+    if (r.ok && r.coinAdjust && !r.stale) applyCoinAdjust(p, r.coinAdjust);
     if (r.ok && r.stale) { // the teacher started a new school year
       delete store.profiles[id];
       if (store.current === id) { store.current = null; save(); renderWho(); toast('A new school year has started! Sign in to begin.', true); }
@@ -1564,6 +1616,7 @@ $('#openShop').addEventListener('click', () => openShop('hat'));
 $('#openBadges').addEventListener('click', openBadges);
 $('#hubAvatar').addEventListener('click', () => openShop('animal'));
 $('#openIsland').addEventListener('click', () => openShop('island'));
+$('#openProgress').addEventListener('click', openProgress);
 $$('[data-back]').forEach(b => b.addEventListener('click', openHub));
 
 /* =========================================================
@@ -2340,6 +2393,7 @@ async function bossFetch(extraHits = 0) {
     const r = await api({ action: 'boss', name: p.sheetName, code: p.code || '', week: w, hits: extraHits });
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
+    if (r.ok && r.coinAdjust) applyCoinAdjust(p, r.coinAdjust);
     if (r.ok && r.boss) { applyBossStatus(r.boss); return r.boss; }
   } catch (e) { /* offline: keep the last known status */ }
   return null;
@@ -3281,7 +3335,25 @@ function islandHTML(p, big) {
     <div class="isle-count" title="Different things you own">${kinds} / ${total} kinds · ${copies.length} in all</div>
     ${big && copies.length ? `<button type="button" class="btn small ${islandEdit ? 'leaf' : 'plain'} isle-edit" id="isleEdit">${islandEdit ? '✓ Done' : '✋ Move things'}</button>` : ''}
     ${islandEdit && big ? '<div class="isle-tip">Drag to move · drop on 🗑️ to sell</div>' : ''}</div>
-    ${islandEdit && big ? '<div class="isle-trash" id="isleTrash">🗑️ <span>Drop here to sell for half price</span></div>' : ''}`;
+    ${islandEdit && big ? '<div class="isle-trash" id="isleTrash">🗑️ <span>Drop something here to sell it. You only get back half of what you paid.</span></div>' : ''}`;
+}
+function confirmSell(key, prev) {
+  const p = P(), it = SHOP.island.find(x => x.id === key.split('#')[0]); if (!it) return;
+  const back = Math.floor(it.price / 2);
+  const m = document.createElement('div'); m.className = 'modal-back';
+  m.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Sell ${esc(it.name)}?">
+    <div class="micon">${it.icon}</div><h3>Sell your ${esc(it.name)}?</h3>
+    <p>You paid <b>🪙 ${fmt(it.price)}</b>. You'll only get <b>🪙 ${fmt(back)}</b> back.</p>
+    <div class="row"><button type="button" class="btn leaf" id="keepIt">Keep it</button><button type="button" class="btn coral" id="sellIt">Sell for 🪙 ${fmt(back)}</button></div></div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  $('#keepIt', m).addEventListener('click', () => {
+    p.islandPos = p.islandPos || {};
+    if (prev) p.islandPos[key] = prev; else delete p.islandPos[key];
+    close(); save(); openShop('island');
+  });
+  $('#sellIt', m).addEventListener('click', () => { close(); sellIslandCopy(key); });
+  setTimeout(() => { try { $('#keepIt', m).focus(); } catch (x) {} }, 50);
 }
 function sellIslandCopy(key) {
   const p = P(), id = key.split('#')[0], it = SHOP.island.find(x => x.id === id), n = islandCount(p, id);
@@ -3310,6 +3382,7 @@ function bindIsland() {
   box.addEventListener('pointerdown', e => {
     const el = e.target.closest('.isle-item'); if (!el) return;
     e.preventDefault(); drag = el; el.classList.add('lifted'); try { box.setPointerCapture(e.pointerId); } catch (x) {}
+    const p0 = P(); drag._prev = p0.islandPos && p0.islandPos[el.dataset.isle] ? { ...p0.islandPos[el.dataset.isle] } : null;
   });
   box.addEventListener('pointermove', e => {
     if (!drag) return;
@@ -3322,8 +3395,9 @@ function bindIsland() {
   });
   const end = e => {
     if (!drag) return;
-    const key = drag.dataset.isle; drag.classList.remove('lifted'); drag = null;
-    if (e && e.type === 'pointerup' && overTrash(e)) return sellIslandCopy(key);
+    const key = drag.dataset.isle, prev = drag._prev; drag.classList.remove('lifted'); drag = null;
+    if (trash) trash.classList.remove('hot');
+    if (e && e.type === 'pointerup' && overTrash(e)) return confirmSell(key, prev);
     save();
   };
   box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
@@ -3397,6 +3471,45 @@ function shopClick(id, cat) {
   }
   save(); scheduleSync(2000); openShop(shopTab);
   if (cat === 'effect') cheer('', $('#shopTop'));
+}
+/* ---------- My Progress ---------- */
+function gameForSkill(k) { if (k === 'div' || k === 'mental') return GAME.driver; return GAMES.find(g => g.skill === k) || null; }
+function openProgress() {
+  const p = P(), li = levelInfo(p.xp), w = weekInfo().id;
+  const rows = SKILL_IDS.map(k => ({ k, s: p.skills[k], g: gameForSkill(k) }))
+    .filter(r => r.s.total > 0 || (r.g && isUnlocked(r.g.id)));
+  const goal = rows.filter(r => r.g && isUnlocked(r.g.id) && r.s.level < 5).sort((a, b) => a.s.level - b.s.level || (acc(a.s) ?? 0) - (acc(b.s) ?? 0))[0];
+  const totalCorrect = SKILL_IDS.reduce((n, k) => n + p.skills[k].correct, 0);
+  const mastered = rows.filter(r => r.s.level === 5 && (acc(r.s) ?? 0) >= 80).length;
+  $('#progCoins').textContent = '🪙 ' + fmt(p.coins);
+  $('#progressBody').innerHTML = `
+    <div class="prog-head">${avatarHTML(p, 80)}
+      <div><h3>${esc(p.name)}</h3><div class="rank">Level ${li.L} · ${li.rank}</div></div>
+      <div class="prog-stats">
+        <div><b>${fmt(totalCorrect)}</b><span>right answers</span></div>
+        <div><b>${p.bestStreak || 0}</b><span>best streak</span></div>
+        <div><b>${Math.round((p.minutes || {})[w] || 0)}</b><span>minutes this week</span></div>
+        <div><b>${mastered}</b><span>skills mastered</span></div>
+      </div>
+    </div>
+    ${goal ? `<div class="prog-goal">🎯 <span><b>Your next goal:</b> get <b>${SKILLS[goal.k].name}</b> to level ${goal.s.level + 1}.</span>
+      <button type="button" class="btn small leaf" data-play="${goal.g.id}">Play ${goal.g.icon} ${goal.g.name}</button></div>` : ''}
+    <h2 class="section-label" style="font-size:20px">My skills</h2>
+    <div class="prog-list">${rows.map(({ k, s, g }) => {
+      const a = acc(s), done = s.level === 5 && (a ?? 0) >= 80;
+      return `<div class="prog-row ${done ? 'done' : ''}">
+        <div class="prog-name"><b>${done ? '🏆 ' : ''}${SKILLS[k].name}</b><small>${s.total ? `Now practicing: ${SKILLS[k].levels[s.level - 1]}` : 'Not started yet'}</small></div>
+        <div class="prog-level" aria-label="Level ${s.level} of 5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= s.level ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="prog-acc">${a == null ? '<span class="sk none">–</span>' : `<span class="sk ${a >= 80 ? 'g' : a >= 60 ? 'y' : 'r'}">${a}%</span>`}</div>
+        ${g && isUnlocked(g.id) ? `<button type="button" class="btn small plain" data-play="${g.id}" aria-label="Play ${g.name}">${g.icon}</button>` : '<span></span>'}
+      </div>`;
+    }).join('')}</div>
+    <p class="note" style="text-align:left">Dots show your level (1 to 5). The % is how many of your last 20 answers were right. 🏆 means level 5 with 80% or more.</p>
+    ${(p.missed || []).length ? `<h2 class="section-label" style="font-size:20px">🔁 Facts I'm still learning</h2>
+      <div class="fact-chips">${p.missed.map(m => `<span class="fact-chip">${m.text}</span>`).join('')}</div>
+      <p class="note" style="text-align:left">These come back in your games until you get each one right twice.</p>` : ''}`;
+  $$('[data-play]').forEach(b => b.addEventListener('click', () => startGame(b.dataset.play)));
+  show('progress');
 }
 function openBadges() {
   const p = P();

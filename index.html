@@ -388,6 +388,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .item.wearing { background: var(--leaf-soft); border-color: var(--leaf); }
 .item.locked { opacity: .55; }
 .shop-top { min-height: 140px; position: relative; }
+#shopTop:has(.isle) { display: block; }
 .avatar-btn { background: none; border: 0; padding: 0; cursor: pointer; position: relative; border-radius: 50%; }
 .avatar-btn::after { content: "✏️"; position: absolute; left: -6px; bottom: -4px; font-size: 18px; background: #fff; border: 2px solid var(--ink); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; }
 .shop-side { display: grid; gap: 4px; max-width: 280px; }
@@ -403,6 +404,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .isle.editing .isle-item { cursor: grab; }
 .isle-item.lifted { transform: translateX(-50%) scale(1.25); filter: drop-shadow(0 8px 4px rgba(0,0,0,.3)); cursor: grabbing; }
 .isle-edit { position: absolute; right: 10px; top: 8px; z-index: 200; }
+.isle-trash { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 820px; margin: 10px auto 0; padding: 8px; font-size: 30px; line-height: 1; background: #fff; border: 3px dashed var(--coral); border-radius: 16px; }
+.isle-trash span { font-size: 15px; font-weight: 800; color: var(--coral); }
+.isle-trash.hot { background: var(--coral-soft); transform: scale(1.12); }
 .isle-tip { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); z-index: 200; background: var(--plum); color: #fff; font-weight: 800; font-size: 13px; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
 .isle-sun { position: absolute; right: 7%; top: 9%; width: 38px; height: 38px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 8px rgba(255,201,60,.35); }
 .isle-land { position: absolute; left: 7%; right: 7%; bottom: 11%; height: 50%; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, #FBE3A4, #EBC46E 70%); border: 3px solid #D9A94A; }
@@ -2644,24 +2648,55 @@ function runnerPause(html, over) {
    ========================================================= */
 let shopTab = 'hat';
 let islandEdit = false;
-function islandPos(p, it) { const q = p.islandPos && p.islandPos[it.id]; return q ? q : { x: it.x, y: it.y }; }
+const ISLAND_MAX_EACH = 10;
+function islandCount(p, id) { return p.owned.includes(id) ? Math.max(1, (p.islandCount && p.islandCount[id]) || 1) : 0; }
+function islandCopies(p) { // one entry per copy placed on the island
+  const out = [];
+  SHOP.island.forEach(it => {
+    for (let i = 0; i < islandCount(p, it.id); i++) {
+      const key = i ? `${it.id}#${i}` : it.id, q = p.islandPos && p.islandPos[key];
+      const def = { x: Math.max(4, Math.min(96, it.x + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 7)), y: Math.max(1, it.y + (i % 3 === 2 ? 5 : 0)) };
+      out.push({ it, key, q: q || def });
+    }
+  });
+  return out;
+}
 function islandHTML(p, big) {
-  const items = SHOP.island.filter(it => p.owned.includes(it.id));
-  const total = SHOP.island.filter(it => inShop(it, p)).length;
+  const copies = islandCopies(p);
+  const kinds = SHOP.island.filter(it => p.owned.includes(it.id)).length, total = SHOP.island.filter(it => inShop(it, p)).length;
   return `<div class="isle ${big ? 'big' : ''} ${islandEdit && big ? 'editing' : ''}" id="${big ? 'isleMain' : ''}" aria-label="${esc(p.name)}'s island">
     <div class="isle-sun"></div><div class="isle-land"></div>
-    ${items.map(it => { const q = islandPos(p, it); return `<span class="isle-item" data-isle="${it.id}" style="left:${q.x}%;bottom:${q.y}%;font-size:${big ? it.z * 1.15 : it.z * .9}px;z-index:${100 - Math.round(q.y)}">${it.icon}</span>`; }).join('')}
-    ${items.length ? '' : `<div class="isle-empty">Your island is empty. Buy something to put on it!</div>`}
-    <div class="isle-count">${items.length} / ${total}</div>
-    ${big && items.length ? `<button type="button" class="btn small ${islandEdit ? 'leaf' : 'plain'} isle-edit" id="isleEdit">${islandEdit ? '✓ Done' : '✋ Move things'}</button>` : ''}
-    ${islandEdit && big ? '<div class="isle-tip">Drag anything to move it</div>' : ''}</div>`;
+    ${copies.map(({ it, key, q }) => `<span class="isle-item" data-isle="${key}" data-id="${it.id}" style="left:${q.x}%;bottom:${q.y}%;font-size:${big ? it.z * 1.15 : it.z * .9}px;z-index:${100 - Math.round(q.y)}">${it.icon}</span>`).join('')}
+    ${copies.length ? '' : `<div class="isle-empty">Your island is empty. Buy something to put on it!</div>`}
+    <div class="isle-count" title="Different things you own">${kinds} / ${total} kinds · ${copies.length} in all</div>
+    ${big && copies.length ? `<button type="button" class="btn small ${islandEdit ? 'leaf' : 'plain'} isle-edit" id="isleEdit">${islandEdit ? '✓ Done' : '✋ Move things'}</button>` : ''}
+    ${islandEdit && big ? '<div class="isle-tip">Drag to move · drop on 🗑️ to sell</div>' : ''}</div>
+    ${islandEdit && big ? '<div class="isle-trash" id="isleTrash">🗑️ <span>Drop here to sell for half price</span></div>' : ''}`;
+}
+function sellIslandCopy(key) {
+  const p = P(), id = key.split('#')[0], it = SHOP.island.find(x => x.id === id), n = islandCount(p, id);
+  if (!it || !n) return;
+  p.islandPos = p.islandPos || {}; p.islandCount = p.islandCount || {};
+  // shift later copies down so keys stay 0..n-2
+  const idx = key.includes('#') ? +key.split('#')[1] : 0;
+  for (let i = idx; i < n - 1; i++) {
+    const to = i ? `${id}#${i}` : id, from = `${id}#${i + 1}`;
+    if (p.islandPos[from]) p.islandPos[to] = p.islandPos[from]; else delete p.islandPos[to];
+  }
+  delete p.islandPos[n - 1 ? `${id}#${n - 1}` : id];
+  if (n <= 1) { p.owned = p.owned.filter(x => x !== id); delete p.islandCount[id]; } else p.islandCount[id] = n - 1;
+  const back = Math.floor(it.price / 2);
+  p.coins += back; sfx('coin'); toast(`Sold a ${it.name} for 🪙 ${fmt(back)}`);
+  save(); scheduleSync(2000); openShop('island');
 }
 function bindIsland() {
   const box = $('#isleMain'); if (!box) return;
   const btn = $('#isleEdit');
   if (btn) btn.addEventListener('click', () => { islandEdit = !islandEdit; if (!islandEdit) { save(); scheduleSync(1500); } openShop('island'); });
   if (!islandEdit) return;
+  const trash = $('#isleTrash');
   let drag = null;
+  const overTrash = e => { if (!trash) return false; const t = trash.getBoundingClientRect(); return e.clientX >= t.left && e.clientX <= t.right && e.clientY >= t.top && e.clientY <= t.bottom; };
   box.addEventListener('pointerdown', e => {
     const el = e.target.closest('.isle-item'); if (!el) return;
     e.preventDefault(); drag = el; el.classList.add('lifted'); try { box.setPointerCapture(e.pointerId); } catch (x) {}
@@ -2672,9 +2707,15 @@ function bindIsland() {
     const x = Math.max(3, Math.min(97, (e.clientX - r.left) / r.width * 100));
     const y = Math.max(1, Math.min(88, (r.bottom - e.clientY) / r.height * 100 - 4));
     drag.style.left = x + '%'; drag.style.bottom = y + '%'; drag.style.zIndex = 100 - Math.round(y);
+    if (trash) trash.classList.toggle('hot', overTrash(e));
     const p = P(); p.islandPos = p.islandPos || {}; p.islandPos[drag.dataset.isle] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
   });
-  const end = () => { if (drag) { drag.classList.remove('lifted'); drag = null; save(); } };
+  const end = e => {
+    if (!drag) return;
+    const key = drag.dataset.isle; drag.classList.remove('lifted'); drag = null;
+    if (e && e.type === 'pointerup' && overTrash(e)) return sellIslandCopy(key);
+    save();
+  };
   box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
 }
 function itemVisual(tab, it, p) {
@@ -2713,7 +2754,8 @@ function openShop(tab) {
     const C = SHOP_TABS.find(t => t.id === cat);
     if (C.free) { const using = p.avatar === it.icon; return `<button type="button" class="item ${using ? 'wearing' : ''}" data-id="${it.id}" data-cat="${cat}"><span class="iicon">${it.icon}</span><span>${it.name}</span><span class="price">${using ? 'You ✓' : 'Free'}</span></button>`; }
     const has = p.owned.includes(it.id), using = !C.place && p.wear[cat] === it.id, locked = it.minLevel && L < it.minLevel;
-    const label = C.place ? (has ? 'On your island ✓' : null) : using ? (C.one ? 'Using ✓' : 'Wearing ✓') : has ? (C.one ? 'Use' : 'Wear') : null;
+    const cnt = C.place ? islandCount(p, it.id) : 0;
+    const label = C.place ? (has ? (cnt >= ISLAND_MAX_EACH ? `Own ${cnt} (max)` : `Own ${cnt} · +1 for 🪙 ${fmt(it.price)}`) : null) : using ? (C.one ? 'Using ✓' : 'Wearing ✓') : has ? (C.one ? 'Use' : 'Wear') : null;
     const price = label || (it.reward ? '🏆 Boss reward' : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
     const rar = !has && (it.reward ? ['Boss reward', 'r-boss'] : it.season ? ['Seasonal', 'r-season'] : RARITY(it.price));
     return `<button type="button" class="item ${using || (C.place && has) ? 'wearing' : ''} ${(locked || it.reward) && !has ? 'locked' : ''}" data-id="${it.id}" data-cat="${cat}">
@@ -2727,8 +2769,13 @@ function shopClick(id, cat) {
   const p = P(), it = SHOP[cat].find(x => x.id === id), L = levelInfo(p.xp).L, C = SHOP_TABS.find(t => t.id === cat);
   if (C.free) {
     if (p.avatar !== it.icon) { p.avatar = it.icon; sfx('coin'); toast(`You're a ${it.name.toLowerCase()} now!`, true); }
+  } else if (p.owned.includes(id) && C.place) {
+    const n = islandCount(p, id);
+    if (n >= ISLAND_MAX_EACH) { toast(`You already have ${ISLAND_MAX_EACH} of these. That's the most you can have!`); return; }
+    if (p.coins < it.price) { toast(`You need ${fmt(it.price - p.coins)} more coins for another ${it.name}.`); return; }
+    p.coins -= it.price; p.islandCount = p.islandCount || {}; p.islandCount[id] = n + 1;
+    sfx('coin'); toast(`Another ${it.name}! You have ${n + 1} now. Tap ✋ Move things to place it.`, true);
   } else if (p.owned.includes(id)) {
-    if (C.place) return;
     if (C.one) p.wear[cat] = id; else p.wear[cat] = p.wear[cat] === id ? null : id;
     sfx('tap');
   } else if (it.reward) { toast('Beat a weekly Boss Battle with your class to win this one!'); return; }

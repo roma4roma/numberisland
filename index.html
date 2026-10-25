@@ -111,6 +111,15 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .brand { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
 .logo { font-size: clamp(36px, 7vw, 56px); color: var(--sea); line-height: .95; text-align: center; }
 .logo span { color: var(--coral); }
+.brand-pic { flex: none; }
+.teacher { display: block; flex: none; }
+.bubble { position: relative; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 6px 14px; font-weight: 700; font-size: 16px; text-align: left; }
+.bubble small { display: block; font-weight: 600; font-size: 13px; color: var(--sea); }
+.bubble::before { content: ""; position: absolute; left: -11px; top: 50%; transform: translateY(-50%); border: 8px solid transparent; border-right-color: var(--ink); border-left: 0; }
+.res-teacher { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 4px 0; }
+.ex-head { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.toast.from-teacher { display: flex; align-items: center; gap: 8px; }
+.credit { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .logo small { display: block; font-size: .42em; color: var(--plum); letter-spacing: 1px; }
 .logo em { display: block; font-style: normal; font-size: .5em; color: var(--sun-deep); letter-spacing: 3px; text-transform: uppercase; }
 .credit { text-align: center; font-family: var(--display); color: var(--sea); font-size: 15px; letter-spacing: .5px; margin: 6px 0 0; }
@@ -643,6 +652,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
     <section id="scr-who">
       <div class="title-row">
         <div class="brand">
+          <div id="whoTeacher" class="brand-pic"></div>
           <h1 class="logo"><small>Mr. Romanek's</small>Math <span>Island</span><em>Adventure</em></h1>
         </div>
       </div>
@@ -794,6 +804,96 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 
 
+/* Cartoon Mr. Romanek (drawn in code) */
+const teacherSVG = (() => {
+const INK = '#1E2A33', SKIN = '#F5C6A0', SKIN_D = '#E3A97F', STUB = '#B9805A';
+const SHIRT = '#4F86D9', SHIRT_D = '#3B6FC0', SHIRT_L = '#A9C9F5';
+
+function defs(id) {
+  return `<defs>
+    <pattern id="sp${id}" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect width="16" height="16" fill="${SHIRT}"/>
+      <g fill="${SHIRT_L}" opacity=".85"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="12" r="1.6"/>
+      <path d="M12 2.5 l1 1.5 -1 1.5 -1 -1.5z"/><path d="M4 10.5 l1 1.5 -1 1.5 -1 -1.5z"/></g>
+    </pattern>
+    <pattern id="tp${id}" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="14" height="14" fill="#3A3F48"/><rect y="0" width="14" height="4" fill="#7C838E"/><rect y="7" width="14" height="2" fill="#20242B"/>
+    </pattern>
+  </defs>`;
+}
+
+/* head centred on (120,100) */
+function head({ smile = 'big', wink = false } = {}) {
+  const mouth = smile === 'big'
+    ? `<path d="M94 140 Q120 170 146 140 Z" fill="#7A2E2E" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+       <path d="M98 141 L142 141 Q140 149 120 150 Q100 149 98 141 Z" fill="#fff"/>`
+    : `<path d="M98 142 Q120 160 142 142" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+  const eye = (x) => wink && x > 120
+    ? `<path d="M${x - 9} 103 Q${x} 95 ${x + 9} 103" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`
+    : `<ellipse cx="${x}" cy="102" rx="7" ry="8" fill="#fff"/><circle cx="${x}" cy="103" r="5" fill="#4C8ED6"/><circle cx="${x}" cy="103" r="2.6" fill="${INK}"/><circle cx="${x + 2}" cy="100.5" r="1.4" fill="#fff"/>`;
+  return `
+  <g stroke="${INK}" stroke-width="5" stroke-linejoin="round">
+    <ellipse cx="58" cy="108" rx="12" ry="17" fill="${SKIN}"/><ellipse cx="182" cy="108" rx="12" ry="17" fill="${SKIN}"/>
+    <path d="M120 30 C160 30 184 58 184 100 C184 146 158 178 120 178 C82 178 56 146 56 100 C56 58 80 30 120 30 Z" fill="${SKIN}"/>
+  </g>
+  <path d="M60 112 C64 150 88 176 120 176 C152 176 176 150 180 112 C172 140 160 128 146 132 C136 126 104 126 94 132 C80 128 68 140 60 112 Z" fill="${STUB}" opacity=".45"/>
+  <path d="M96 134 C104 126 136 126 144 134 C136 131 104 131 96 134 Z" fill="${STUB}" opacity=".7"/>
+  <ellipse cx="96" cy="50" rx="20" ry="9" fill="#fff" opacity=".55" transform="rotate(-20 96 50)"/>
+  <ellipse cx="58" cy="108" rx="5" ry="8" fill="${SKIN_D}"/><ellipse cx="182" cy="108" rx="5" ry="8" fill="${SKIN_D}"/>
+  <path d="M78 82 Q92 74 106 80" fill="none" stroke="#B88A62" stroke-width="5" stroke-linecap="round"/>
+  <path d="M134 80 Q148 74 162 82" fill="none" stroke="#B88A62" stroke-width="5" stroke-linecap="round"/>
+  ${eye(92)}${eye(148)}
+  <g fill="#ffffff" fill-opacity=".18" stroke="${INK}" stroke-width="6" stroke-linejoin="round">
+    <rect x="70" y="88" width="44" height="30" rx="8"/><rect x="126" y="88" width="44" height="30" rx="8"/>
+  </g>
+  <path d="M114 98 Q120 94 126 98 M70 96 L60 100 M170 96 L180 100" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>
+  <path d="M120 112 Q114 124 120 127 Q126 124 120 112" fill="${SKIN_D}"/>
+  <circle cx="80" cy="128" r="8" fill="#FF8F80" opacity=".35"/><circle cx="160" cy="128" r="8" fill="#FF8F80" opacity=".35"/>
+  ${mouth}`;
+}
+
+/* shirt, collar and tie under the head */
+function body(id) {
+  return `
+  <g stroke="${INK}" stroke-width="5" stroke-linejoin="round">
+    <path d="M104 166 L104 186 L136 186 L136 166 Z" fill="${SKIN_D}"/>
+    <path d="M28 262 C28 214 56 190 100 182 L140 182 C184 190 212 214 212 262 Z" fill="url(#sp${id})"/>
+    <path d="M100 180 L120 204 L94 214 L86 188 Z" fill="url(#sp${id})"/>
+    <path d="M140 180 L120 204 L146 214 L154 188 Z" fill="url(#sp${id})"/>
+    <path d="M112 200 L128 200 L131 212 L120 218 L109 212 Z" fill="url(#tp${id})"/>
+    <path d="M109 212 L131 212 L138 262 L102 262 Z" fill="url(#tp${id})"/>
+  </g>`;
+}
+
+function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(2, 7)) {
+  let extra = '', h = head(), b = body(id), vb = '0 0 240 262', headT = '';
+  if (pose === 'wave') {
+    extra = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M196 214 C214 200 222 176 220 150 L200 148 C200 170 194 186 180 198 Z" fill="url(#sp${id})"/>
+      <path d="M196 120 C192 108 196 100 202 104 L204 116 L206 98 C206 90 214 90 215 98 L215 116 L218 96 C219 88 227 89 227 97 L226 118 L231 104 C233 98 240 100 238 108 L232 132 C230 146 222 152 210 152 C200 152 196 142 196 132 Z" fill="${SKIN}"/>
+    </g>
+    <path d="M232 84 q8 -6 4 -16 M240 96 q10 -4 10 -14" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
+    vb = '0 0 256 262';
+  } else if (pose === 'thumbs') {
+    extra = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M160 262 C164 246 170 236 180 230 L204 242 C198 248 194 254 194 262 Z" fill="url(#sp${id})"/>
+      <path d="M170 196 L170 168 C170 158 184 158 184 168 L184 196 Z" fill="${SKIN}"/>
+      <rect x="164" y="194" width="42" height="44" rx="12" fill="${SKIN}"/>
+      <path d="M184 205 L206 205 M184 216 L206 216 M184 227 L205 227" fill="none" stroke-width="3"/>
+    </g>
+    <g fill="#FFC93C" stroke="${INK}" stroke-width="3"><path d="M212 160 l4 9 10 1 -7 7 2 10 -9 -5 -9 5 2 -10 -7 -7 10 -1z"/></g>`;
+  } else if (pose === 'wink') {
+    h = head({ wink: true });
+  } else if (pose === 'chibi') {
+    headT = 'transform="translate(120 104) scale(1.18) translate(-120 -100)"';
+    b = `<g transform="translate(120 196) scale(.78) translate(-120 -182)">${body(id)}</g>`;
+    vb = '0 0 240 262';
+  }
+  return `<svg class="teacher" viewBox="${vb}" width="${size}" height="${size}" role="img" aria-label="Cartoon Mr. Romanek">${defs(id)}
+    ${b}${extra}<g ${headT}>${h}</g></svg>`;
+}
+  return draw;
+})();
 /* =========================================================
    Helpers
    ========================================================= */
@@ -1146,7 +1246,7 @@ function applyCoinAdjust(p, n) {
   p.coins = Math.max(0, p.coins + n); p.updated = Date.now();
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (p.id === store.current) {
-    toast(n > 0 ? `🎁 ${TEACHER} gave you ${fmt(n)} coins!` : `${TEACHER} changed your coins by ${fmt(n)}.`, true);
+    toast(n > 0 ? `🎁 ${TEACHER} gave you ${fmt(n)} coins!` : `${TEACHER} changed your coins by ${fmt(n)}.`, true, true);
     updateCoinChips(); if (currentScreen === 'hub') openHub();
   }
   scheduleSync(1500);
@@ -1313,8 +1413,9 @@ function sfx(kind) {
     });
   } catch (e) { /* no audio */ }
 }
-function toast(msg, gold = false) {
-  const t = document.createElement('div'); t.className = 'toast' + (gold ? ' gold' : ''); t.textContent = msg;
+function toast(msg, gold = false, fromTeacher = false) {
+  const t = document.createElement('div'); t.className = 'toast' + (gold ? ' gold' : '') + (fromTeacher ? ' from-teacher' : '');
+  if (fromTeacher) { t.innerHTML = teacherSVG('chibi', 40); t.append(msg); } else t.textContent = msg;
   const box = $('#toasts'); box.appendChild(t); setTimeout(() => t.remove(), 2600);
   while (box.children.length > 3) box.firstElementChild.remove();
 }
@@ -1595,7 +1696,7 @@ function renderGameGrid() {
   const ordered = [...(isUnlocked('boss') ? [GAME.boss] : []), ...openList];
   $('#lockedGames').innerHTML = lockedList.length || !isUnlocked('boss') ? `<h2 class="section-label" style="font-size:18px;margin-top:14px">Coming later</h2>
     <div class="locked-row">${[...lockedList, ...(isUnlocked('boss') ? [] : [GAME.boss])].map(g => `<button type="button" class="locked-chip" data-lockedg="${g.id}">🔒 ${g.icon} ${g.name}</button>`).join('')}</div>` : '';
-  $$('[data-lockedg]').forEach(b => b.addEventListener('click', () => { toast(`${GAME[b.dataset.lockedg].name} is locked for now. ${TEACHER} will open it soon!`); sfx('bad'); }));
+  $$('[data-lockedg]').forEach(b => b.addEventListener('click', () => { toast(`${GAME[b.dataset.lockedg].name} is locked for now. ${TEACHER} will open it soon!`, false, true); sfx('bad'); }));
   $('#gameGrid').innerHTML = ordered.map(g => {
     const st = p.games[g.id] || {}, open = isUnlocked(g.id);
     if (g.wide) {
@@ -1625,7 +1726,7 @@ function renderGameGrid() {
         <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
   }).join('');
   $$('.game-card').forEach(b => b.addEventListener('click', () => {
-    if (!isUnlocked(b.dataset.g)) { toast(`${GAME[b.dataset.g].name} is locked for now. ${TEACHER} will open it soon!`); sfx('bad'); return; }
+    if (!isUnlocked(b.dataset.g)) { toast(`${GAME[b.dataset.g].name} is locked for now. ${TEACHER} will open it soon!`, false, true); sfx('bad'); return; }
     startGame(b.dataset.g);
   }));
 }
@@ -1873,7 +1974,7 @@ function answered(ok, explainHtml, youSaid) {
 function showExplain(html, youSaid) {
   const ex = document.createElement('div');
   ex.className = 'explain';
-  ex.innerHTML = `<h3>Not quite. Here's how!</h3>${youSaid ? `<div class="you">You said ${esc(youSaid)}</div>` : ''}
+  ex.innerHTML = `<div class="ex-head">${teacherSVG('chibi', 56)}<h3>Not quite. Here's how!</h3></div>${youSaid ? `<div class="you">You said ${esc(youSaid)}</div>` : ''}
     <div class="card">${html}</div>
     <button type="button" class="btn leaf" id="explainGo">Got it ➜</button>`;
   $('#gameWrap').appendChild(ex);
@@ -1909,6 +2010,7 @@ function showResults({ stars, title, lines, again, next, back }) {
   $('#resultsBody').innerHTML = `
     ${avatarHTML(p, 86)}
     <h2>${title}</h2>
+    <div class="res-teacher">${teacherSVG(stars === 3 ? 'thumbs' : 'chibi', 84)}<div class="bubble">${pick(stars === 3 ? ['Awesome job! 3 stars!', "That's how it's done!", 'I knew you could do it!'] : stars === 2 ? ['Great effort! Go for 3 stars!', "You're getting there!", 'Nice work. Keep it up!'] : ["Mistakes help us learn. Try again!", "Don't give up. You've got this!", 'Practice makes progress!'])}<small>– ${TEACHER}</small></div></div>
     <div class="big-stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? '' : 'off'}">⭐</span>`).join('')}</div>
     <div class="result-lines">
       ${lines.map(([a, b]) => `<div class="result-line"><span>${a}</span><span>${b}</span></div>`).join('')}
@@ -3683,7 +3785,8 @@ function copyTable(list) {
    Boot
    ========================================================= */
 $('#siCode').placeholder = `The code from ${TEACHER}`;
-$('#hubCredit').innerHTML = `🏝️ ${TEACHER}'s Math Island Adventure`;
+$('#hubCredit').innerHTML = `${teacherSVG('smile', 44)}<span>${TEACHER}'s Math Island Adventure</span>`;
+$('#whoTeacher').innerHTML = teacherSVG('wave', 120);
 // The Teacher screen is hidden on student tablets. Add #teacher to the end of the address to show it.
 function showTeacherLinks() { const on = location.hash === '#teacher'; $('#teacherLink1').hidden = !on; $('#teacherLink2').hidden = !on; }
 showTeacherLinks(); window.addEventListener('hashchange', showTeacherLinks);

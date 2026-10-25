@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Number Island</title>
+<title>Mr. Romanek's Math Island Adventure</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,8 +108,21 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 
 /* ---------- Who's playing ---------- */
 .title-row { text-align: center; padding: 6px 0 14px; }
-.logo { font-size: clamp(38px, 8vw, 60px); color: var(--sea); line-height: 1; }
+.brand { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.brand-mascot { flex: none; }
+.logo { font-size: clamp(36px, 7vw, 56px); color: var(--sea); line-height: .95; text-align: left; }
 .logo span { color: var(--coral); }
+.logo small { display: block; font-size: .42em; color: var(--plum); letter-spacing: 1px; }
+.logo em { display: block; font-style: normal; font-size: .5em; color: var(--sun-deep); letter-spacing: 3px; text-transform: uppercase; }
+.bubble { position: relative; display: inline-block; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 6px 14px; font-weight: 700; margin-top: 10px; }
+.bubble::before { content: ""; position: absolute; left: 30px; top: -11px; border: 8px solid transparent; border-bottom-color: var(--ink); border-top: 0; }
+.bubble.small { margin-top: 0; font-size: 15px; }
+.bubble.small::before { left: -11px; top: 50%; transform: translateY(-50%); border: 8px solid transparent; border-right-color: var(--ink); border-left: 0; }
+.res-mascot { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0; }
+.ex-head { display: flex; align-items: center; gap: 10px; text-align: left; }
+.credit { text-align: center; font-family: var(--display); color: var(--sea); font-size: 15px; letter-spacing: .5px; margin: 6px 0 0; }
+.mascot { display: block; }
+.pet .mascot { display: inline-block; vertical-align: bottom; }
 .tagline { color: var(--ink-soft); font-weight: 700; margin-top: 4px; }
 .profile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 .profile-card {
@@ -634,8 +647,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
     <!-- Who's playing -->
     <section id="scr-who">
       <div class="title-row">
-        <h1 class="logo">Number <span>Island</span></h1>
-        <div class="tagline">Grade 4 math adventures</div>
+        <div class="brand">
+          <div id="whoMascot" class="brand-mascot"></div>
+          <h1 class="logo"><small>Mr. Romanek's</small>Math <span>Island</span><em>Adventure</em></h1>
+        </div>
+        <div class="bubble">Hi! I'm <b>Ramen Raccoon</b>. Let's slurp up some math! 🍜</div>
       </div>
       <div id="whoList">
         <h2 class="section-label">Who's playing?</h2>
@@ -696,6 +712,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
         <button type="button" class="link-btn" id="teacherLink2" hidden>Teacher</button>
       </div>
       <p class="note" id="syncStatus" aria-live="polite"></p>
+      <p class="credit" id="hubCredit"></p>
     </section>
 
     <!-- Game -->
@@ -780,7 +797,46 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
    Paste your Google Apps Script web app link between the quotes below.
    Leave it empty to save progress on each device only.
    ========================================================= */
+const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
+
+/* Ramen Raccoon: an original mascot drawn for Number Island */
+function mascotSVG(size = 120, label = 'Ramen Raccoon') {
+  return `<svg class="mascot" viewBox="0 0 200 200" width="${size}" height="${size}" role="img" aria-label="${label}">
+  <g stroke="#1E2A33" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M48 62 L40 18 L84 40 Z" fill="#8E929C"/><path d="M152 62 L160 18 L116 40 Z" fill="#8E929C"/>
+    <path d="M53 52 L49 31 L72 42 Z" fill="#FFB3A6" stroke-width="3"/><path d="M147 52 L151 31 L128 42 Z" fill="#FFB3A6" stroke-width="3"/>
+    <ellipse cx="100" cy="88" rx="66" ry="56" fill="#B5B8C1"/>
+    <path d="M44 82 C58 60 84 66 100 78 C116 66 142 60 156 82 C150 102 124 104 100 92 C76 104 50 102 44 82 Z" fill="#3A3D46"/>
+    <ellipse cx="100" cy="112" rx="36" ry="26" fill="#FFFFFF"/>
+  </g>
+  <circle cx="74" cy="84" r="11" fill="#FFFFFF"/><circle cx="126" cy="84" r="11" fill="#FFFFFF"/>
+  <circle cx="76" cy="86" r="6" fill="#1E2A33"/><circle cx="124" cy="86" r="6" fill="#1E2A33"/>
+  <circle cx="78" cy="83" r="2.2" fill="#FFFFFF"/><circle cx="126" cy="83" r="2.2" fill="#FFFFFF"/>
+  <ellipse cx="100" cy="102" rx="8" ry="6" fill="#1E2A33"/>
+  <path d="M88 114 Q100 124 112 114" fill="none" stroke="#1E2A33" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="66" cy="112" r="7" fill="#FF8F80" opacity=".7"/><circle cx="134" cy="112" r="7" fill="#FF8F80" opacity=".7"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".9">
+    <path d="M150 128 q-8 -10 0 -20 q8 -10 0 -20"/><path d="M166 132 q-8 -10 0 -20 q8 -10 0 -20"/>
+  </g>
+  <g stroke="#1E2A33" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <line x1="132" y1="150" x2="176" y2="104" stroke="#B5763A" stroke-width="7"/><line x1="140" y1="152" x2="186" y2="114" stroke="#B5763A" stroke-width="7"/>
+    <path d="M30 140 L170 140 C168 178 136 194 100 194 C64 194 32 178 30 140 Z" fill="#FF6B57"/>
+    <path d="M44 166 C76 174 124 174 156 166" fill="none" stroke="#FFC93C" stroke-width="6"/>
+    <ellipse cx="100" cy="140" rx="70" ry="13" fill="#F7D36B"/>
+  </g>
+  <g fill="none" stroke="#E9A800" stroke-width="3.5" stroke-linecap="round">
+    <path d="M44 140 q8 -8 16 0 t16 0 t16 0"/><path d="M96 142 q8 -8 16 0 t16 0 t16 0"/><path d="M60 136 q8 -7 16 0 t16 0"/>
+  </g>
+  <g stroke="#1E2A33" stroke-width="3">
+    <ellipse cx="78" cy="136" rx="14" ry="9" fill="#FFFFFF"/><circle cx="80" cy="136" r="5" fill="#FFB020" stroke-width="2"/>
+    <circle cx="120" cy="135" r="10" fill="#FFFFFF"/>
+  </g>
+  <path d="M120 131 a4 4 0 1 1 -4 4" fill="none" stroke="#FF5C8A" stroke-width="2.5" stroke-linecap="round"/>
+  <g fill="#3FAE5A"><circle cx="100" cy="132" r="2.5"/><circle cx="140" cy="138" r="2.5"/><circle cx="58" cy="139" r="2.5"/></g>
+  <g stroke="#1E2A33" stroke-width="5" stroke-linejoin="round"><ellipse cx="48" cy="138" rx="13" ry="10" fill="#B5B8C1"/><ellipse cx="152" cy="138" rx="13" ry="10" fill="#B5B8C1"/></g>
+</svg>`;
+}
 
 /* =========================================================
    Helpers
@@ -891,7 +947,8 @@ const SHOP = {
     { id: 'unicorn', icon: '🦄', name: 'Unicorn', price: 350, minLevel: 4 },
     { id: 'trex', icon: '🦖', name: 'T. rex', price: 500, minLevel: 5 },
     { id: 'peacock', icon: '🦚', name: 'Peacock', price: 650, minLevel: 6 },
-    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 1200, minLevel: 8 }
+    { id: 'dragon', icon: '🐉', name: 'Dragon', price: 1200, minLevel: 8 },
+    { id: 'ramenraccoon', icon: '🦝', svg: true, name: 'Ramen Raccoon', price: 3000, minLevel: 8 }
   ],
   bg: [
     { id: 'sky', name: 'Sky', price: 0, css: 'linear-gradient(160deg,#C9F1FF,#7FD3EE)' },
@@ -943,7 +1000,8 @@ const SHOP = {
     { id: 'wizard', name: 'Math Wizard', price: 400, minLevel: 4 },
     { id: 'brain', name: 'Super Brain', price: 600, minLevel: 5 },
     { id: 'captain', name: 'Captain Calculator', price: 900, minLevel: 6 },
-    { id: 'legend', name: 'Living Legend', price: 2000, minLevel: 9 }
+    { id: 'legend', name: 'Living Legend', price: 2000, minLevel: 9 },
+    { id: 'champion', name: `${TEACHER}'s Champion`, price: 3000, minLevel: 10 }
   ],
   island: [
     { id: 'shells', icon: '🐚', name: 'Shells', price: 40, x: 30, y: 26, z: 22 },
@@ -1123,7 +1181,7 @@ function applyCoinAdjust(p, n) {
   p.coins = Math.max(0, p.coins + n); p.updated = Date.now();
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (p.id === store.current) {
-    toast(n > 0 ? `🎁 Your teacher gave you ${fmt(n)} coins!` : `Your teacher changed your coins by ${fmt(n)}.`, true);
+    toast(n > 0 ? `🎁 ${TEACHER} gave you ${fmt(n)} coins!` : `${TEACHER} changed your coins by ${fmt(n)}.`, true);
     updateCoinChips(); if (currentScreen === 'hub') openHub();
   }
   scheduleSync(1500);
@@ -1155,6 +1213,7 @@ const BADGES = [
   { id: 'rich2',     icon: '🏦', name: 'Coin Tycoon',     desc: 'Earn 5,000 coins in total' },
   { id: 'builder',   icon: '🏝️', name: 'Island Builder',  desc: 'Put 7 things on your island' },
   { id: 'collector', icon: '🗃️', name: 'Collector',       desc: 'Own 30 things from the shop' },
+  { id: 'starstudent', icon: '🌟', name: `${TEACHER}'s Star Student`, desc: 'Earn 3 stars in 10 different games' },
   { id: 'bossbeater', icon: '⚔️', name: 'Boss Beater',     desc: 'Help your class beat a weekly boss' },
 ];
 const PRAISE = ['Nice!', 'You got it!', 'Brilliant!', 'Super!', 'Yes!', 'Awesome!', 'Spot on!', 'Great thinking!'];
@@ -1251,6 +1310,7 @@ function checkBadges(extra = {}) {
   if (p.bestStreak >= 25) award('streak25');
   if (p.totalCorrect >= 100) award('century');
   if (p.coinsEarned >= 500) award('rich');
+  if (Object.values(p.games || {}).filter(g => (g.stars || 0) >= 3).length >= 10) award('starstudent');
   if (p.coinsEarned >= 5000) award('rich2');
   if (SHOP.island.filter(it => p.owned.includes(it.id)).length >= 7) award('builder');
   if (p.owned.length - 3 >= 30) award('collector');
@@ -1326,7 +1386,7 @@ function avatarHTML(p, size = 64) {
   const L = levelInfo(p.xp || 0).L;
   const ring = p.wear && p.wear.frame ? 'frame-' + p.wear.frame : L >= 9 ? 'ring-3' : L >= 6 ? 'ring-2' : L >= 3 ? 'ring-1' : '';
   return `<div class="avatar ${ring}" style="--s:${size}px;background:${bg.css}" aria-hidden="true">
-    <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? `<span class="pet">${pet.icon}</span>` : ''}</div>`;
+    <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? `<span class="pet">${pet.svg ? mascotSVG(Math.round(size * 0.48)) : pet.icon}</span>` : ''}</div>`;
 }
 function titleOf(p) { const t = p.wear && p.wear.title && SHOP.title.find(x => x.id === p.wear.title); return t ? t.name : ''; }
 function starsHTML(n) { return `<span class="stars" aria-label="${n} of 3 stars">${[1, 2, 3].map(i => i <= n ? '★' : '<span class="off">★</span>').join('')}</span>`; }
@@ -1380,14 +1440,14 @@ $('#newPlayer').addEventListener('submit', e => {
     newProfile(nm, chosenAvatar, id);
     Object.assign(store.profiles[id], { code, sheetName: nm, pending: [] });
     store.current = id; pendingSignIn = null; save();
-    toast(`Welcome to Number Island, ${nm}!`, true);
+    toast(`Welcome to ${TEACHER}'s Math Island, ${nm}!`, true);
     openHub();
     if (coinAdjust) applyCoinAdjust(store.profiles[id], coinAdjust);
     if (!offline) syncNow(id);
     return;
   }
   store.current = newProfile(name.slice(0, 14), chosenAvatar); save();
-  toast(`Welcome to Number Island, ${name}!`, true);
+  toast(`Welcome to ${TEACHER}'s Math Island, ${name}!`, true);
   openHub();
 });
 $('#cancelNew').addEventListener('click', () => { if (pendingSignIn) return renderWho(); $('#whoList').hidden = false; $('#newPlayer').hidden = true; });
@@ -1417,9 +1477,9 @@ $('#signIn').addEventListener('submit', async e => {
     if (r.ok && r.games) applyLocks(r.games);
     if (r.ok && r.settings) applySettings(r.settings);
     if (!r.ok) {
-      $('#siErr').textContent = r.error === 'bad_code' ? "That code doesn't match. Try again, or ask your teacher."
-        : r.error === 'not_on_roster' ? `We couldn't find "${name}" on the class list. Check the spelling, or ask your teacher.`
-        : 'Something went wrong with the class sheet. Ask your teacher.';
+      $('#siErr').textContent = r.error === 'bad_code' ? `That code doesn't match. Try again, or ask ${TEACHER}.`
+        : r.error === 'not_on_roster' ? `We couldn't find "${name}" on the class list. Check the spelling, or ask ${TEACHER}.`
+        : `Something went wrong with the class sheet. Ask ${TEACHER}.`;
       return;
     }
     const ver = (r.settings && Number(r.settings.version)) || 1;
@@ -1494,7 +1554,7 @@ function setSyncStatus(state) {
   const el = $('#syncStatus'); if (!el) return;
   el.textContent = !sheetUrl() || !P() || !P().sheetName ? '' :
     state === 'saving' ? '☁️ Saving to your class…' : state === 'ok' ? '☁️ Saved to your class' :
-    state === 'offline' ? "☁️ Can't reach your class right now. Progress will save later." : state === 'error' ? '☁️ The class sheet had a problem saving. Tell your teacher.' : '';
+    state === 'offline' ? "☁️ Can't reach your class right now. Progress will save later." : state === 'error' ? `☁️ The class sheet had a problem saving. Tell ${TEACHER}.` : '';
 }
 function scheduleSync(ms = 6000) {
   const p = P(); if (!sheetUrl() || !p || !p.sheetName) return;
@@ -1568,7 +1628,7 @@ function renderGameGrid() {
   const ordered = [...(isUnlocked('boss') ? [GAME.boss] : []), ...openList];
   $('#lockedGames').innerHTML = lockedList.length || !isUnlocked('boss') ? `<h2 class="section-label" style="font-size:18px;margin-top:14px">Coming later</h2>
     <div class="locked-row">${[...lockedList, ...(isUnlocked('boss') ? [] : [GAME.boss])].map(g => `<button type="button" class="locked-chip" data-lockedg="${g.id}">🔒 ${g.icon} ${g.name}</button>`).join('')}</div>` : '';
-  $$('[data-lockedg]').forEach(b => b.addEventListener('click', () => { toast(`${GAME[b.dataset.lockedg].name} is locked for now. Your teacher will open it soon!`); sfx('bad'); }));
+  $$('[data-lockedg]').forEach(b => b.addEventListener('click', () => { toast(`${GAME[b.dataset.lockedg].name} is locked for now. ${TEACHER} will open it soon!`); sfx('bad'); }));
   $('#gameGrid').innerHTML = ordered.map(g => {
     const st = p.games[g.id] || {}, open = isUnlocked(g.id);
     if (g.wide) {
@@ -1585,7 +1645,7 @@ function renderGameGrid() {
       return `<button type="button" class="game-card boss-card ${open ? '' : 'locked'}" data-g="boss"${open ? '' : ' aria-label="Boss Battle, locked"'}>
         <span class="gicon">${open ? B.face : '🔒'}</span>
         <span class="gtext"><span class="gname">Boss Battle: ${B.name}</span>
-        <span class="gblurb">${open ? (left ? `Your class has knocked off ${fmt(bs.total)} of ${fmt(bs.max)} HP. Every right answer hits it!` : 'Defeated this week! 🎉 A new boss comes next week.') : 'Opens when your teacher starts the battle.'}</span>
+        <span class="gblurb">${open ? (left ? `${TEACHER}'s class has knocked off ${fmt(bs.total)} of ${fmt(bs.max)} HP. Every right answer hits it!` : 'Defeated this week! 🎉 A new boss comes next week.') : `Opens when ${TEACHER} starts the battle.`}</span>
         <span class="hpbar small"><i style="width:${Math.round(left / bs.max * 100)}%"></i></span></span></button>`;
     }
     const lv = !open ? `<span class="lvl">🔒 Locked</span>` : g.skill ? `<span class="lvl">Lv ${p.skills[g.skill].level}</span>` : `<span class="lvl">Best ${fmt(st.best || 0)}</span>`;
@@ -1598,7 +1658,7 @@ function renderGameGrid() {
         <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
   }).join('');
   $$('.game-card').forEach(b => b.addEventListener('click', () => {
-    if (!isUnlocked(b.dataset.g)) { toast(`${GAME[b.dataset.g].name} is locked for now. Your teacher will open it soon!`); sfx('bad'); return; }
+    if (!isUnlocked(b.dataset.g)) { toast(`${GAME[b.dataset.g].name} is locked for now. ${TEACHER} will open it soon!`); sfx('bad'); return; }
     startGame(b.dataset.g);
   }));
 }
@@ -1846,7 +1906,7 @@ function answered(ok, explainHtml, youSaid) {
 function showExplain(html, youSaid) {
   const ex = document.createElement('div');
   ex.className = 'explain';
-  ex.innerHTML = `<h3>Not quite. Here's how!</h3>${youSaid ? `<div class="you">You said ${esc(youSaid)}</div>` : ''}
+  ex.innerHTML = `<div class="ex-head">${mascotSVG(64)}<h3>Not quite! Ramen Raccoon will show you how.</h3></div>${youSaid ? `<div class="you">You said ${esc(youSaid)}</div>` : ''}
     <div class="card">${html}</div>
     <button type="button" class="btn leaf" id="explainGo">Got it ➜</button>`;
   $('#gameWrap').appendChild(ex);
@@ -1882,6 +1942,7 @@ function showResults({ stars, title, lines, again, next, back }) {
   $('#resultsBody').innerHTML = `
     ${avatarHTML(p, 86)}
     <h2>${title}</h2>
+    <div class="res-mascot">${mascotSVG(70)}<div class="bubble small">${pick(stars === 3 ? ['Oodles of great work!', 'That was souper!', `${TEACHER} would be proud!`] : stars === 2 ? ['Nice slurping! Keep going!', "You're on a roll... a noodle roll!", 'So close to 3 stars!'] : ['Every noodle counts. Try again!', 'Practice makes ramen... I mean, perfect!', "Let's go one more round!"])}</div></div>
     <div class="big-stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? '' : 'off'}">⭐</span>`).join('')}</div>
     <div class="result-lines">
       ${lines.map(([a, b]) => `<div class="result-line"><span>${a}</span><span>${b}</span></div>`).join('')}
@@ -3407,7 +3468,7 @@ function itemVisual(tab, it, p) {
   if (tab === 'frame') return `<span class="avatar frame-${it.id}" style="--s:42px;background:#fff"><span class="face">${p.avatar}</span></span>`;
   if (tab === 'effect') return `<span class="iicon" style="font-size:26px">${it.fx.join('')}</span>`;
   if (tab === 'title') return `<span class="title-pill big">${esc(it.name)}</span>`;
-  return `<span class="iicon">${it.icon}</span>`;
+  return it.svg ? `<span class="iicon">${mascotSVG(44)}</span>` : `<span class="iicon">${it.icon}</span>`;
 }
 function shopTabs() {
   const S = activeSeason(), tabs = [...SHOP_TABS];
@@ -3655,6 +3716,9 @@ function copyTable(list) {
 /* =========================================================
    Boot
    ========================================================= */
+$('#whoMascot').innerHTML = mascotSVG(110);
+$('#siCode').placeholder = `The code from ${TEACHER}`;
+$('#hubCredit').innerHTML = `${TEACHER}'s Math Island Adventure · with Ramen Raccoon 🍜`;
 // The Teacher screen is hidden on student tablets. Add #teacher to the end of the address to show it.
 function showTeacherLinks() { const on = location.hash === '#teacher'; $('#teacherLink1').hidden = !on; $('#teacherLink2').hidden = !on; }
 showTeacherLinks(); window.addEventListener('hashchange', showTeacherLinks);

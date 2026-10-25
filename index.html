@@ -3372,7 +3372,10 @@ function runnerStart() {
              speed: 0.2, blocks: [], jumping: false, jumpUntil: 0, pauseUntil: 0, last: performance.now(), raf: 0, q: null };
   arcadeHud();
   $('#track').addEventListener('pointerdown', e => { e.preventDefault(); hop(); });
-  $('#jumpBtn').addEventListener('click', hop);
+  { const jb = $('#jumpBtn'); let touched = 0;
+    jb.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; e.preventDefault(); touched = Date.now(); hop(); });
+    jb.addEventListener('click', () => { if (Date.now() - touched < 600) return; hop(); });
+    jb.addEventListener('dblclick', e => e.preventDefault()); }
   later(runnerSet, 700);
   arcade.raf = requestAnimationFrame(runnerLoop);
 }

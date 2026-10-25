@@ -1435,7 +1435,8 @@ function summaryOf(p) {
 function syncBody(p, withActivity) {
   const copy = JSON.parse(JSON.stringify(p)); delete copy.code; delete copy.pending;
   const bp = p.bossPend && p.bossPend.hits ? { week: p.bossPend.week, hits: p.bossPend.hits } : { week: weekInfo().id, hits: 0 };
-  return { action: 'save', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [], boss: bp };
+  return { action: 'save', name: p.sheetName, code: p.code || '', profile: copy, summary: summaryOf(p), activity: withActivity ? (p.pending || []).slice(0, 50) : [], boss: bp,
+    games: GAMES.map(g => ({ id: g.id, name: g.name, practices: g.practices })) };
 }
 let syncTimer = null; const syncingIds = new Set();
 function setSyncStatus(state) {

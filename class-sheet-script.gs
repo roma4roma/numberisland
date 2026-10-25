@@ -92,8 +92,8 @@ function doPost(e) {
     lock.waitLock(20000);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss.getSheetByName(TABS.roster)) setup();
-    if (!ss.getSheetByName(TABS.games)) setupGames_(ss, null);
-    if (req.games && req.games.length) setupGames_(ss, req.games);
+    setupGames_(ss, null); // makes sure every game in this script is listed
+    if (req.games && req.games.length) setupGames_(ss, req.games); // and any newer ones the app knows about
     var who = findStudent_(ss, req.name, req.code);
     if (who === 'bad_code') return out_({ ok: false, error: 'bad_code' });
     if (!who) return out_({ ok: false, error: 'not_on_roster' });

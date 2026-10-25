@@ -619,7 +619,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
         </div>
       </form>
       <p class="note" id="whoNote">Progress is saved on this device.</p>
-      <div class="foot-row"><button type="button" class="link-btn" id="teacherLink1">Teacher</button></div>
+      <div class="foot-row"><button type="button" class="link-btn" id="teacherLink1" hidden>Teacher</button></div>
     </section>
 
     <!-- Hub -->
@@ -644,7 +644,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
       <div class="foot-row">
         <button type="button" class="link-btn" id="switchPlayer">Switch player</button>
         <button type="button" class="link-btn" id="soundToggle">Sound: on</button>
-        <button type="button" class="link-btn" id="teacherLink2">Teacher</button>
+        <button type="button" class="link-btn" id="teacherLink2" hidden>Teacher</button>
       </div>
       <p class="note" id="syncStatus" aria-live="polite"></p>
     </section>
@@ -2932,6 +2932,9 @@ function copyTable(list) {
 /* =========================================================
    Boot
    ========================================================= */
+// The Teacher screen is hidden on student tablets. Add #teacher to the end of the address to show it.
+function showTeacherLinks() { const on = location.hash === '#teacher'; $('#teacherLink1').hidden = !on; $('#teacherLink2').hidden = !on; }
+showTeacherLinks(); window.addEventListener('hashchange', showTeacherLinks);
 load();
 if (store.current && store.profiles[store.current]) { ensureProfile(P()); openHub(); }
 else { store.current = null; renderWho(); }

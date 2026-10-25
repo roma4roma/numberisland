@@ -2161,7 +2161,11 @@ QLIB['4-2'] = () => {
 const NAMES = ['Maya', 'Sam', 'Ari', 'Noah', 'Lina', 'Theo', 'Zoe', 'Kai'];
 QLIB['4-3'] = () => {
   const L = lvl('t4est');
-  const a = L === 1 ? noFive(12, 49) : noFive(12, 98), b = L === 1 ? noFive(12, 29) : noFive(12, 98);
+  // Only use problems where the estimate lands close to the real answer (within 20%),
+  // so "close to my estimate" always means "reasonable".
+  let a, b;
+  do { a = L === 1 ? noFive(12, 49) : noFive(12, 98); b = L === 1 ? noFive(12, 29) : noFive(12, 98); }
+  while (Math.abs(a * b - round10(a) * round10(b)) / (round10(a) * round10(b)) > 0.2);
   const ra = round10(a), rb = round10(b), est = ra * rb, exact = a * b;
   const roundWhy = (n, r) => `${n} rounds to ${r}: the ones digit is ${n % 10}, so round ${n % 10 >= 5 ? 'up' : 'down'}.`;
   const body = $('#gameBody');
@@ -2171,7 +2175,7 @@ QLIB['4-3'] = () => {
     let claim = exact;
     if (!fine) {
       const opts = shuffle([exact * 10, Math.round(exact / 10), exact + est, Math.max(10, exact - Math.round(est * 0.6))]);
-      claim = opts.find(c => Math.abs(c - est) / est > 0.45) || exact * 10;
+      claim = opts.find(c => Math.abs(c - est) / est >= 0.5) || exact * 10; // clearly far from the estimate
     }
     const who = pick(NAMES);
     body.innerHTML = `
@@ -2188,7 +2192,7 @@ QLIB['4-3'] = () => {
       const said = btn.dataset.c === '1';
       answered(said === fine, `<p class="big-fact">${a} × ${b} ≈ <b>${fmt(est)}</b></p>
         <p>${roundWhy(a, ra)}<br>${roundWhy(b, rb)}<br>${ra} × ${rb} = ${fmt(est)}.</p>
-        <p>${fine ? `${fmt(claim)} is close to ${fmt(est)}, so it is reasonable.` : `${fmt(claim)} is far from ${fmt(est)}, so it isn't reasonable. The exact answer is ${fmt(exact)}.`}</p>`,
+        <p>${fine ? `${fmt(claim)} is close to ${fmt(est)}, so it is reasonable.` : `${fmt(claim)} is far from ${fmt(est)}${claim > est * 5 || claim * 5 < est ? ' (check the number of digits!)' : ''}, so it isn't reasonable. The exact answer is ${fmt(exact)}.`}</p>`,
         said ? 'reasonable' : 'not reasonable');
     }));
     return;
@@ -2212,7 +2216,7 @@ QLIB['4-3'] = () => {
     answered(ok, `<p class="big-fact">${a} × ${b} ≈ <b>${fmt(est)}</b></p>
       <p>${roundWhy(a, ra)}<br>${roundWhy(b, rb)}</p>
       <p>${ra} × ${rb}: ${ra / 10} × ${rb / 10} = ${ra * rb / 100}, then add two zeros → ${fmt(est)}.</p>
-      <p>The exact answer is ${fmt(exact)}, which is close to ${fmt(est)}. Compatible numbers that are easy to multiply work too, but this stop checks rounding to the nearest ten.</p>`,
+      <p>The exact answer is ${fmt(exact)}, which is close to ${fmt(est)}. Compatible numbers that are easy to multiply work too, but this game checks rounding to the nearest ten.</p>`,
       `${fields[0].value || '?'} × ${fields[1].value || '?'} ≈ ${fields[2].value}`);
   }, { onChange: () => { const l = $('#estLabel'); if (l) l.textContent = `${fields[0].value || '?'} × ${fields[1].value || '?'}`; } });
 };

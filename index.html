@@ -427,6 +427,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .isle-item { position: absolute; transform: translateX(-50%); line-height: 1; filter: drop-shadow(0 3px 0 rgba(0,0,0,.15)); }
 .isle-empty { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); font-weight: 800; color: var(--sea-deep); background: rgba(255,255,255,.8); padding: 4px 12px; border-radius: 12px; text-align: center; width: max-content; max-width: 80%; }
 .isle-count { z-index: 200; position: absolute; left: 10px; top: 8px; background: rgba(255,255,255,.85); border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-weight: 800; font-size: 13px; }
+.fprev { display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; margin: 6px auto 2px; }
 .avatar.frame-wood { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #9B6B3D; }
 .avatar.frame-leaf { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #3FA34D, 0 0 0 9px #C6F59A; }
 .avatar.frame-ice { box-shadow: 0 0 0 3px #E8FBFF, 0 0 0 7px #7FD6F0, 0 0 14px 4px rgba(127,214,240,.9); }
@@ -3533,7 +3534,7 @@ function bindIsland() {
 }
 function itemVisual(tab, it, p) {
   if (tab === 'bg') return `<span class="swatch" style="background:${it.css}"></span>`;
-  if (tab === 'frame') return `<span class="avatar frame-${it.id}" style="--s:42px;background:#fff"><span class="face">${p.avatar}</span></span>`;
+  if (tab === 'frame') return `<span class="fprev"><span class="avatar frame-${it.id}" style="--s:38px;background:#fff"><span class="face">${p.avatar}</span></span></span>`;
   if (tab === 'effect') return `<span class="iicon" style="font-size:26px">${it.fx.join('')}</span>`;
   if (tab === 'title') return `<span class="title-pill big">${esc(it.name)}</span>`;
   return `<span class="iicon">${it.icon}</span>`;

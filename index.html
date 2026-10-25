@@ -3545,7 +3545,7 @@ function sellIslandCopy(key) {
 }
 /* ---------- Island visits: look at classmates' islands and leave one reaction ---------- */
 const REACTIONS = ['⭐', '❤️', '🦝', '🔥', '🤩'];
-function canVisit(p) { return !!(sheetUrl() && p && p.sheetName && !(store.settings && store.settings.islandVisits === false)); }
+function canVisit(p) { return !!(sheetUrl() && p && p.sheetName && store.settings && store.settings.islandVisits === true); } // only once the updated sheet script is in
 function reactLine(m) { return REACTIONS.filter(e => m && m[e]).map(e => `<span class="rx-pill">${e} ${m[e]}</span>`).join(''); }
 function applyMyReactions(p, m) {
   if (!p || !m || typeof m !== 'object') return;

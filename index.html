@@ -203,6 +203,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .play { display: grid; gap: 16px; align-items: center; }
 @media (min-width: 720px) { .play.with-pad { grid-template-columns: 1fr 250px; } }
 
+/* no double-tap zoom anywhere in the game (tablets) */
+html, body, * { touch-action: manipulation; }
+button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 /* number pad */
 .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 300px; width: 100%; margin: 0 auto; }
 .key {
@@ -3279,8 +3282,13 @@ function driverStart(mode) {
   arcade = { type: 'driver', mode, skill: mode.skill, running: true, lane: 1, hearts: 3, points: 0, combo: 0, correct: 0,
              speed: 0.045, row: null, pauseUntil: 0, last: performance.now(), stripe: 0, raf: 0 };
   arcadeHud(); setLane(1);
-  $('#left').addEventListener('click', () => steer(-1));
-  $('#right').addEventListener('click', () => steer(1));
+  // steer as soon as a finger touches the arrow (no waiting, no double-tap zoom); click still works for mouse/keyboard
+  [['#left', -1], ['#right', 1]].forEach(([sel, d]) => {
+    const btn = $(sel); let touched = 0;
+    btn.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; e.preventDefault(); touched = Date.now(); steer(d); });
+    btn.addEventListener('click', e => { if (Date.now() - touched < 600) return; steer(d); });
+    btn.addEventListener('dblclick', e => e.preventDefault());
+  });
   $('#road').addEventListener('pointerdown', e => {
     const r = $('#road').getBoundingClientRect();
     setLane(Math.max(0, Math.min(2, Math.floor((e.clientX - r.left) / r.width * 3))));

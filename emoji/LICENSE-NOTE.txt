@@ -1,0 +1,1 @@
+Emoji pictures in emoji/ are from Noto Emoji by Google (Apache License 2.0), via the emoji-datasource-google package.

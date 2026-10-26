@@ -295,8 +295,8 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
   font-size: calc(var(--cell) * .72); line-height: 1; cursor: pointer;
 }
 .garden .plot.on { background: #FFF3B5; }
-.garden .plot.on::after { content: "🌻"; }
-.garden .plot.hint::after { content: "🌱"; }
+.garden .plot.on::after { content: ""; width: 1em; height: 1em; background: url(emoji/1f33b.png) center / contain no-repeat; }
+.garden .plot.hint::after { content: ""; width: 1em; height: 1em; background: url(emoji/1f331.png) center / contain no-repeat; }
 .garden-status { text-align: center; font-family: var(--display); font-size: 24px; min-height: 34px; }
 .mini-garden { display: inline-grid; gap: 2px; padding: 6px; background: #8FD16B; border: 2px solid var(--ink); border-radius: 10px; }
 .mini-garden span { width: 16px; height: 16px; border-radius: 4px; background: #FFF3B5; font-size: 12px; line-height: 16px; text-align: center; }
@@ -315,7 +315,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
   background: repeating-linear-gradient(45deg, #13889A 0 10px, #0E7383 10px 20px); box-shadow: 0 4px 0 var(--ink);
   font-family: var(--display); color: var(--ink); padding: 0;
 }
-.mcard::before { content: "🐚"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; }
+.mcard::before { content: ""; position: absolute; inset: 0; background: url(emoji/1f41a.png) center / 34px no-repeat; }
 .mcard.up, .mcard.done { background: #fff; }
 .mcard.up::before, .mcard.done::before { content: none; }
 .mcard .mface { display: none; }
@@ -413,7 +413,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .shop-top { min-height: 140px; position: relative; }
 #shopTop:has(.isle) { display: block; }
 .avatar-btn { background: none; border: 0; padding: 0; cursor: pointer; position: relative; border-radius: 50%; }
-.avatar-btn::after { content: "✏️"; position: absolute; left: -6px; bottom: -4px; font-size: 18px; background: #fff; border: 2px solid var(--ink); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; }
+.avatar-btn::after { content: ""; background: #fff url(emoji/270f-fe0f.png) center / 18px no-repeat; position: absolute; left: -6px; bottom: -4px; font-size: 18px; border: 2px solid var(--ink); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; }
 .shop-side { display: grid; gap: 4px; max-width: 280px; }
 .item { position: relative; }
 .rarity { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; border: 2px solid var(--ink); border-radius: 999px; padding: 0 7px; white-space: nowrap; }
@@ -580,6 +580,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .fact-chip { background: #fff; border: 2px solid var(--coral); border-radius: 999px; padding: 2px 12px; font-family: var(--display); font-size: 18px; }
 @media (max-width: 640px) { .prog-row { grid-template-columns: minmax(0, 1fr) auto; } .prog-acc, .prog-row > button, .prog-row > span:last-child { display: none; } .prog-stats { margin-left: 0; } }
 .closed-modal .closed-pic { display: flex; justify-content: center; }
+img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; object-fit: contain; pointer-events: none; -webkit-user-drag: none; user-select: none; }
 .modal-back { position: fixed; inset: 0; z-index: 300; background: rgba(30, 42, 51, .55); display: grid; place-items: center; padding: 16px; }
 .modal { background: var(--sand); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 18px 20px; max-width: 380px; width: 100%; text-align: center; display: grid; gap: 10px; }
 .modal .micon { font-size: 60px; line-height: 1; }
@@ -923,6 +924,42 @@ function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(
 }
   return draw;
 })();
+/* ---------- Same emoji pictures on every tablet ----------
+   iPads, Samsung and other Androids each draw emoji differently. The game swaps every emoji
+   for Google's emoji picture (stored with the game in the emoji/ folder), so all tablets match.
+   If a picture can't load, the tablet's own emoji shows instead. */
+const EMOJI_FILES = {"🌻":"1f33b.png","🌱":"1f331.png","🐚":"1f41a.png","✏️":"270f-fe0f.png","✏":"270f-fe0f.png","🪙":"1fa99.png","🛍️":"1f6cd-fe0f.png","🛍":"1f6cd-fe0f.png","📈":"1f4c8.png","🏝️":"1f3dd-fe0f.png","🏝":"1f3dd-fe0f.png","🏅":"1f3c5.png","🚗":"1f697.png","🏃":"1f3c3.png","🗼":"1f5fc.png","🧱":"1f9f1.png","🎯":"1f3af.png","🧗":"1f9d7.png","💰":"1f4b0.png","📜":"1f4dc.png","🌲":"1f332.png","🥧":"1f967.png","🍳":"1f373.png","📏":"1f4cf.png","⚓":"2693.png","⛰️":"26f0-fe0f.png","⛰":"26f0-fe0f.png","🧩":"1f9e9.png","📐":"1f4d0.png","🔷":"1f537.png","⚔️":"2694-fe0f.png","⚔":"2694-fe0f.png","🦊":"1f98a.png","🐼":"1f43c.png","🐯":"1f42f.png","🐸":"1f438.png","🐨":"1f428.png","🐙":"1f419.png","🦉":"1f989.png","🐢":"1f422.png","🐰":"1f430.png","🦁":"1f981.png","🐧":"1f427.png","🐬":"1f42c.png","🐻":"1f43b.png","🐵":"1f435.png","🐷":"1f437.png","🐮":"1f42e.png","🐺":"1f43a.png","🦒":"1f992.png","🦝":"1f99d.png","🧢":"1f9e2.png","🎀":"1f380.png","🌸":"1f338.png","👒":"1f452.png","🎩":"1f3a9.png","⛑️":"26d1-fe0f.png","⛑":"26d1-fe0f.png","🎓":"1f393.png","👑":"1f451.png","🌟":"1f31f.png","💎":"1f48e.png","🐣":"1f423.png","🐶":"1f436.png","🐱":"1f431.png","🦀":"1f980.png","🐠":"1f420.png","🐝":"1f41d.png","🦜":"1f99c.png","🦋":"1f98b.png","🦩":"1f9a9.png","🦄":"1f984.png","🦖":"1f996.png","🦚":"1f99a.png","🐉":"1f409.png","✨":"2728.png","⭐":"2b50.png","💖":"1f496.png","💕":"1f495.png","🎈":"1f388.png","🎉":"1f389.png","🎊":"1f38a.png","🎵":"1f3b5.png","🎶":"1f3b6.png","🎷":"1f3b7.png","🍕":"1f355.png","🍩":"1f369.png","🧁":"1f9c1.png","🦕":"1f995.png","🌿":"1f33f.png","🎆":"1f386.png","🎇":"1f387.png","💥":"1f4a5.png","💠":"1f4a0.png","🌙":"1f319.png","🚕":"1f695.png","🚜":"1f69c.png","🚙":"1f699.png","🚓":"1f693.png","🚒":"1f692.png","🏎️":"1f3ce-fe0f.png","🏎":"1f3ce-fe0f.png","🛸":"1f6f8.png","🚀":"1f680.png","🌺":"1f33a.png","🌴":"1f334.png","⛱️":"26f1-fe0f.png","⛱":"26f1-fe0f.png","🏕️":"1f3d5-fe0f.png","🏕":"1f3d5-fe0f.png","⛵":"26f5.png","🛖":"1f6d6.png","🗿":"1f5ff.png","🐳":"1f433.png","🌋":"1f30b.png","🚁":"1f681.png","🎡":"1f3a1.png","🏰":"1f3f0.png","🪨":"1faa8.png","🌵":"1f335.png","🍄":"1f344.png","🌳":"1f333.png","🐒":"1f412.png","🦭":"1f9ad.png","🛝":"1f6dd.png","🦙":"1f999.png","⛲":"26f2.png","🏡":"1f3e1.png","🚂":"1f682.png","🐘":"1f418.png","🏪":"1f3ea.png","🎠":"1f3a0.png","🏫":"1f3eb.png","🏆":"1f3c6.png","🏯":"1f3ef.png","🏟️":"1f3df-fe0f.png","🏟":"1f3df-fe0f.png","🛶":"1f6f6.png","🚤":"1f6a4.png","🛳️":"1f6f3-fe0f.png","🛳":"1f6f3-fe0f.png","☁️":"2601-fe0f.png","☁":"2601-fe0f.png","🪁":"1fa81.png","🪂":"1fa82.png","✈️":"2708-fe0f.png","✈":"2708-fe0f.png","🌈":"1f308.png","🌕":"1f315.png","🎃":"1f383.png","❄️":"2744-fe0f.png","❄":"2744-fe0f.png","🧧":"1f9e7.png","🏖️":"1f3d6-fe0f.png","🏖":"1f3d6-fe0f.png","🍁":"1f341.png","🌷":"1f337.png","🐇":"1f407.png","🦇":"1f987.png","👻":"1f47b.png","⛄":"26c4.png","🦌":"1f98c.png","🐐":"1f410.png","🐞":"1f41e.png","🦑":"1f991.png","🦈":"1f988.png","🐲":"1f432.png","🦞":"1f99e.png","🐊":"1f40a.png","🐡":"1f421.png","🍂":"1f342.png","🎁":"1f381.png","🏮":"1f3ee.png","🌊":"1f30a.png","🏄":"1f3c4.png","☀️":"2600-fe0f.png","☀":"2600-fe0f.png","🏚️":"1f3da-fe0f.png","🏚":"1f3da-fe0f.png","🎄":"1f384.png","🔥":"1f525.png","💯":"1f4af.png","🧭":"1f9ed.png","🏁":"1f3c1.png","🦘":"1f998.png","🧠":"1f9e0.png","🏦":"1f3e6.png","🗃️":"1f5c3-fe0f.png","🗃":"1f5c3-fe0f.png","📅":"1f4c5.png","🗓️":"1f5d3-fe0f.png","🗓":"1f5d3-fe0f.png","💫":"1f4ab.png","🌠":"1f320.png","⚡":"26a1.png","🏔️":"1f3d4-fe0f.png","🏔":"1f3d4-fe0f.png","🪐":"1fa90.png","🏵️":"1f3f5-fe0f.png","🏵":"1f3f5-fe0f.png","🥇":"1f947.png","💌":"1f48c.png","🛡️":"1f6e1-fe0f.png","🛡":"1f6e1-fe0f.png","⬆️":"2b06-fe0f.png","⬆":"2b06-fe0f.png","🔒":"1f512.png","🔁":"1f501.png","❤️":"2764-fe0f.png","❤":"2764-fe0f.png","🤍":"1f90d.png","✋":"270b.png","🗑️":"1f5d1-fe0f.png","🗑":"1f5d1-fe0f.png","🤩":"1f929.png","📋":"1f4cb.png"};
+const EMOJI_RE = new RegExp(Object.keys(EMOJI_FILES).sort((a, b) => b.length - a.length).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
+const EMOJI_ANY = new RegExp(EMOJI_RE.source, 'u');
+const EMOJI_SKIP = 'script,style,textarea,input,title,svg,option,.no-emo';
+function emojiImg(e) {
+  const img = document.createElement('img');
+  img.className = 'emo'; img.alt = e; img.draggable = false; img.src = 'emoji/' + EMOJI_FILES[e];
+  img.addEventListener('error', () => img.replaceWith(document.createTextNode(e)), { once: true });
+  return img;
+}
+function emojifyText(n) {
+  const t = n.nodeValue; if (!t || !EMOJI_ANY.test(t)) return;
+  const par = n.parentNode; if (!par || (par.closest && par.closest(EMOJI_SKIP))) return;
+  const frag = document.createDocumentFragment(); let last = 0;
+  t.replace(EMOJI_RE, (m, i) => { if (i > last) frag.append(t.slice(last, i)); frag.append(emojiImg(m)); last = i + m.length; return m; });
+  if (last < t.length) frag.append(t.slice(last));
+  n.replaceWith(frag);
+}
+function emojify(root) {
+  if (!root) return;
+  if (root.nodeType === 3) return emojifyText(root);
+  if (root.nodeType !== 1 || (root.closest && root.closest(EMOJI_SKIP))) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), list = [];
+  while (w.nextNode()) list.push(w.currentNode);
+  list.forEach(emojifyText);
+}
+function startEmoji() {
+  emojify(document.body);
+  new MutationObserver(muts => muts.forEach(m => {
+    if (m.type === 'characterData') emojifyText(m.target); else m.addedNodes.forEach(emojify);
+  })).observe(document.body, { childList: true, subtree: true, characterData: true });
+}
 /* =========================================================
    Helpers
    ========================================================= */
@@ -4097,6 +4134,7 @@ $('#whoTeacher').innerHTML = teacherSVG('wave', 120);
 // The Teacher screen is hidden on student tablets. Add #teacher to the end of the address to show it.
 function showTeacherLinks() { const on = location.hash === '#teacher'; $('#teacherLink1').hidden = !on; $('#teacherLink2').hidden = !on; }
 showTeacherLinks(); window.addEventListener('hashchange', showTeacherLinks);
+startEmoji();
 load();
 if (store.current && store.profiles[store.current]) { ensureProfile(P()); openHub(); setTimeout(() => refreshFromSheet(true), 800); }
 else { store.current = null; renderWho(); }

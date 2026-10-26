@@ -111,6 +111,15 @@ function doPost(e) {
       var ca = peekCoinAdjust_(ss, who); if (ca) { coinAdjust = ca.n; coinId = ca.id; }
     }
     if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, myReactions: reactionsFor_(ss, who), boards: boards_(ss) });
+    if (req.action === 'setCode') { // a student changes their own secret code (already checked their current one above)
+      if (!readSettings_(ss).codeChange) return out_({ ok: false, error: 'off' });
+      var nc = String(req.newCode == null ? '' : req.newCode).trim();
+      if (!/^\d{3,8}$/.test(nc)) return out_({ ok: false, error: 'bad_new_code' });
+      setRosterCode_(ss, who, nc);
+      var act = ss.getSheetByName(TABS.activity);
+      if (act) act.getRange(act.getLastRow() + 1, 1, 1, 7).setValues([[new Date(), who, 'Secret code', 'Student changed their code', '', '', '']]);
+      return out_({ ok: true });
+    }
     if (req.action === 'islands') {
       if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
       return out_({ ok: true, islands: allIslands_(ss, who) });
@@ -294,7 +303,8 @@ var EXTRA_ROWS = [
   ['Play hours', '8:00-16:00', 'Times students can play on those days. Examples: 8:30-15:30, or 9:00-12:00, 13:00-15:00 (two times a day). Any time = no limit.'],
   ['Can always play', '', 'Names that can play any time, like a test account. Separate names with commas. These names are also left off the top 3 lists.'],
   ['Top 3 lists', 'On', 'On = each game shows this week\'s top 3 (it starts fresh every Monday). Off = hide them.'],
-  ['Hide from top 3', '', 'Other names to leave off the top 3 lists. Separate names with commas.']
+  ['Hide from top 3', '', 'Other names to leave off the top 3 lists. Separate names with commas.'],
+  ['Students can change their code', 'On', 'On = students can change their own secret code from the home screen (they must type their current code first). The new code shows on the Roster, so you can always look it up. Off = only you can change codes.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -330,7 +340,8 @@ function readSettings_(ss) {
            islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()),
            challenge: text_(v[5], 'Auto'), multA: text_(v[6], 'Auto'), multB: text_(v[7], 'Auto'), addRange: text_(v[8], 'Auto'),
            playDays: text_(v[9], 'Every day'), playHours: text_(v[10], 'Any time'), alwaysPlay: text_(v[11], ''),
-           top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], '') };
+           top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], ''),
+           codeChange: !/^(off|no|false|0)$/i.test(String(v[14]).trim()) };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {
@@ -514,4 +525,14 @@ function boards_(ss) {
     b[k] = all[k].sort(function (x, y) { return (low ? x.score - y.score : y.score - x.score) || x.name.localeCompare(y.name); }).slice(0, 3);
   });
   return { week: week, b: b };
+}
+
+/** Writes a student's new secret code into Roster column B (as text, so 007 stays 007). */
+function setRosterCode_(ss, who, code) {
+  var sh = ss.getSheetByName(TABS.roster), last = sh.getLastRow();
+  if (last < 2) return;
+  var names = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (var i = 0; i < names.length; i++) {
+    if (normName_(names[i][0]) === normName_(who)) { sh.getRange(i + 2, 2).setNumberFormat('@').setValue(code); return; }
+  }
 }

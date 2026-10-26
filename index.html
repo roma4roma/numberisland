@@ -593,6 +593,8 @@ img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125
 .top3.compact .t3-row { font-size: 14px; padding: 1px 4px; }
 .t3-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; margin-top: 6px; }
 .t3-modes .top3 { margin: 0; max-width: none; }
+.code-field { display: grid; gap: 4px; text-align: left; font-weight: 700; }
+.code-modal .note.err { color: var(--coral); font-weight: 700; }
 .modal-back { position: fixed; inset: 0; z-index: 300; background: rgba(30, 42, 51, .55); display: grid; place-items: center; padding: 16px; }
 .modal { background: var(--sand); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 18px 20px; max-width: 380px; width: 100%; text-align: center; display: grid; gap: 10px; }
 .modal .micon { font-size: 60px; line-height: 1; }
@@ -753,6 +755,7 @@ img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125
       <div id="lockedGames"></div>
       <div class="foot-row">
         <button type="button" class="link-btn" id="switchPlayer">Switch player</button>
+        <button type="button" class="link-btn" id="changeCode" hidden>🔑 Change my code</button>
         <button type="button" class="link-btn" id="soundToggle">Sound: on</button>
         <button type="button" class="link-btn" id="teacherLink2" hidden>Teacher</button>
       </div>
@@ -1341,7 +1344,7 @@ function applySettings(st) {
   const before = JSON.stringify(store.settings || {});
   store.settings = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (before !== JSON.stringify(st) && currentScreen === 'hub') renderGameGrid();
-  enforceHours();
+  enforceHours(); showCodeButton();
   const was = JSON.parse(before || '{}').islandVisits;
   if (was !== st.islandVisits && currentScreen === 'shop' && shopTab === 'island' && !islandEdit) openShop('island');
 }
@@ -1642,9 +1645,49 @@ function enforceHours() {
   $('#closedSwitch', m).addEventListener('click', () => { m.remove(); $('#switchPlayer').click(); });
 }
 setInterval(enforceHours, 30000);
+/* ---------- Students change their own secret code (the new code is written into the Roster) ---------- */
+function showCodeButton() {
+  const b = $('#changeCode'), p = P();
+  if (b) b.hidden = !(sheetUrl() && p && p.sheetName && store.settings && store.settings.codeChange === true);
+}
+function openChangeCode() {
+  const p = P(); if (!p || !p.sheetName) return;
+  const m = document.createElement('div'); m.className = 'modal-back';
+  const field = (id, label) => `<label class="code-field"><span>${label}</span><input id="${id}" class="text-input" type="password" inputmode="numeric" autocomplete="off" maxlength="8"></label>`;
+  m.innerHTML = `<form class="modal code-modal" role="dialog" aria-modal="true" aria-label="Change your secret code">
+    <h3>🔑 Change your secret code</h3>
+    ${field('ccOld', 'Your code now')}${field('ccNew', 'New code (3 to 8 numbers)')}${field('ccNew2', 'New code again')}
+    <p class="note" id="ccMsg" aria-live="polite">Pick numbers you'll remember. Don't tell anyone, except ${TEACHER}!</p>
+    <div class="row"><button type="button" class="btn plain" id="ccCancel">Cancel</button><button type="submit" class="btn leaf" id="ccSave">Save new code</button></div></form>`;
+  document.body.appendChild(m);
+  const msg = t => { $('#ccMsg', m).textContent = t; $('#ccMsg', m).classList.add('err'); };
+  $('#ccCancel', m).addEventListener('click', () => m.remove());
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  m.querySelector('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const old = $('#ccOld', m).value.trim(), nw = $('#ccNew', m).value.trim(), nw2 = $('#ccNew2', m).value.trim();
+    if (!/^\d{3,8}$/.test(nw)) return msg('Your new code needs 3 to 8 numbers (only numbers).');
+    if (nw !== nw2) return msg("The two new codes don't match. Try again.");
+    if (nw === old) return msg('That is the same as your code now. Pick a different one.');
+    const btn = $('#ccSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const r = await api({ action: 'setCode', name: p.sheetName, code: old, newCode: nw });
+      if (r.ok) {
+        p.code = nw; save(); m.remove(); sfx('coin');
+        toast('🔑 New code saved! Use it next time you sign in.', true);
+        return;
+      }
+      msg(r.error === 'bad_code' ? "Your code now isn't right. Try again, or ask " + TEACHER + '.'
+        : r.error === 'off' ? TEACHER + ' has turned off changing codes.' : r.error === 'bad_new_code' ? 'Your new code needs 3 to 8 numbers.' : 'Something went wrong. Try again.');
+    } catch (err) { msg("Can't reach your class right now. Try again in a minute."); }
+    btn.disabled = false; btn.textContent = 'Save new code';
+  });
+  setTimeout(() => { try { $('#ccOld', m).focus(); } catch (x) {} }, 50);
+}
 function show(name) {
   SCREENS.forEach(s => { $('#scr-' + s).hidden = s !== name; });
   currentScreen = name;
+  if (name === 'hub') showCodeButton();
   if (name !== 'game') setTimeout(enforceHours, 0);
   try { window.scrollTo(0, 0); } catch (e) {}
 }
@@ -1846,6 +1889,11 @@ async function syncNow(id) {
     if (r.ok && r.coinAdjust && !r.stale) applyCoinAdjust(p, r.coinAdjust, r.coinId);
     if (r.ok && r.myReactions && !r.stale) applyMyReactions(p, r.myReactions);
     if (r.ok && r.boards && !r.stale) applyBoards(r.boards);
+    if (!r.ok && r.error === 'bad_code') { // the code was changed (on another tablet, or by the teacher): sign in again
+      p.code = null; p.needsSignIn = true; save();
+      if (store.current === id) { store.current = null; save(); renderWho(); toast(`Your secret code changed. Please sign in again with your new code.`, true); }
+      return;
+    }
     if (r.ok && r.stale) { // the teacher started a new school year
       delete store.profiles[id];
       if (store.current === id) { store.current = null; save(); renderWho(); toast('A new school year has started! Sign in to begin.', true); }
@@ -1960,6 +2008,7 @@ function applyLocks(map) {
   if (before !== JSON.stringify(map) && currentScreen === 'hub') renderGameGrid();
 }
 $('#switchPlayer').addEventListener('click', () => { if (P()) syncNow(store.current); store.current = null; save(); renderWho(); });
+$('#changeCode').addEventListener('click', openChangeCode);
 $('#soundToggle').addEventListener('click', () => { store.sound = !store.sound; save(); $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off'); sfx('tap'); });
 $('#openShop').addEventListener('click', () => openShop('hat'));
 $('#openBadges').addEventListener('click', openBadges);

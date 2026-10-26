@@ -110,7 +110,7 @@ function doPost(e) {
     if (Number(req.coinV) >= 2 && !staleSave && (req.action === 'load' || req.action === 'boss' || req.action === 'save')) {
       var ca = peekCoinAdjust_(ss, who); if (ca) { coinAdjust = ca.n; coinId = ca.id; }
     }
-    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, myReactions: reactionsFor_(ss, who) });
+    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, myReactions: reactionsFor_(ss, who), boards: boards_(ss) });
     if (req.action === 'islands') {
       if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
       return out_({ ok: true, islands: allIslands_(ss, who) });
@@ -132,7 +132,7 @@ function doPost(e) {
       if (req.profile) writeSave_(ss, who, req.profile);
       if (req.summary) { writeSummary_(ss, who, req.summary); buildNeedsHelp_(ss); }
       if (req.activity && req.activity.length) writeActivity_(ss, who, req.activity);
-      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who) });
+      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who), boards: boards_(ss) });
     }
     return out_({ ok: false, error: 'bad_action' });
   } catch (err) {
@@ -292,7 +292,9 @@ var EXTRA_ROWS = [
   ['+ and − numbers', 'Auto', 'Auto = by level. Or a range like 10-99 (two-digit numbers) or 100-999 (three-digit numbers). Used in Math Driver and Boss Battle.'],
   ['Play days', 'Mon-Fri', 'Days students can play. Examples: Mon-Fri, or Mon,Tue,Thu, or Every day.'],
   ['Play hours', '8:00-16:00', 'Times students can play on those days. Examples: 8:30-15:30, or 9:00-12:00, 13:00-15:00 (two times a day). Any time = no limit.'],
-  ['Can always play', '', 'Names that can play any time, like a test account. Separate names with commas.']
+  ['Can always play', '', 'Names that can play any time, like a test account. Separate names with commas. These names are also left off the top 3 lists.'],
+  ['Top 3 lists', 'On', 'On = each game shows this week\'s top 3 (it starts fresh every Monday). Off = hide them.'],
+  ['Hide from top 3', '', 'Other names to leave off the top 3 lists. Separate names with commas.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -327,7 +329,8 @@ function readSettings_(ss) {
            coinRate: Number(v[2]) > 0 ? Number(v[2]) : 1, version: Number(v[3]) > 0 ? Number(v[3]) : 1,
            islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()),
            challenge: text_(v[5], 'Auto'), multA: text_(v[6], 'Auto'), multB: text_(v[7], 'Auto'), addRange: text_(v[8], 'Auto'),
-           playDays: text_(v[9], 'Every day'), playHours: text_(v[10], 'Any time'), alwaysPlay: text_(v[11], '') };
+           playDays: text_(v[9], 'Every day'), playHours: text_(v[10], 'Any time'), alwaysPlay: text_(v[11], ''),
+           top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], '') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {
@@ -485,4 +488,30 @@ function react_(ss, who, target, reaction) {
   }
   sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setValues([[who, owner, reaction, new Date()]]);
   return { ok: true, reacts: reactionsFor_(ss, owner), mine: mine };
+}
+
+/* ---------- Weekly top 3: each game's best scores this week (starts fresh every Monday) ---------- */
+function boards_(ss) {
+  var st = readSettings_(ss);
+  if (!st.top3) return { off: true };
+  var hidden = {};
+  (st.alwaysPlay + ',' + st.hideTop3).split(/[,;]/).forEach(function (n) { if (normName_(n)) hidden[normName_(n)] = true; });
+  var week = isoWeek_(new Date()), all = {};
+  var sh = ss.getSheetByName(TABS.data);
+  if (sh && sh.getLastRow() >= 2) sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues().forEach(function (r) {
+    if (!r[0] || hidden[normName_(r[0])]) return;
+    var p; try { p = JSON.parse(r[2]); } catch (e) { return; }
+    var wb = p && p.weekBest;
+    if (!wb || wb.week !== week || !wb.s) return;
+    Object.keys(wb.s).forEach(function (k) {
+      var v = Number(wb.s[k]); if (!(v > 0)) return;
+      (all[k] = all[k] || []).push({ name: String(r[0]), avatar: p.avatar || '🙂', score: v });
+    });
+  });
+  var b = {};
+  Object.keys(all).forEach(function (k) {
+    var low = k === 'memory'; // fewest moves wins
+    b[k] = all[k].sort(function (x, y) { return (low ? x.score - y.score : y.score - x.score) || x.name.localeCompare(y.name); }).slice(0, 3);
+  });
+  return { week: week, b: b };
 }

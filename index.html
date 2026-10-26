@@ -581,6 +581,18 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 @media (max-width: 640px) { .prog-row { grid-template-columns: minmax(0, 1fr) auto; } .prog-acc, .prog-row > button, .prog-row > span:last-child { display: none; } .prog-stats { margin-left: 0; } }
 .closed-modal .closed-pic { display: flex; justify-content: center; }
 img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; object-fit: contain; pointer-events: none; -webkit-user-drag: none; user-select: none; }
+.top3 { max-width: 460px; margin: 10px auto 0; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 8px 12px; text-align: left; }
+.t3-head { font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+.t3-row { display: grid; grid-template-columns: 26px 26px 1fr auto; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 10px; font-size: 16px; }
+.t3-row.me { background: #FFF1B8; }
+.t3-face { font-size: 20px; line-height: 1; }
+.t3-score { font-weight: 800; white-space: nowrap; }
+.t3-mine { margin-top: 4px; font-size: 14px; color: var(--ink-soft); }
+.t3-new { margin: 8px auto 0; font-weight: 800; color: var(--plum); }
+.top3.compact { margin-top: 8px; }
+.top3.compact .t3-row { font-size: 14px; padding: 1px 4px; }
+.t3-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; margin-top: 6px; }
+.t3-modes .top3 { margin: 0; max-width: none; }
 .modal-back { position: fixed; inset: 0; z-index: 300; background: rgba(30, 42, 51, .55); display: grid; place-items: center; padding: 16px; }
 .modal { background: var(--sand); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 18px 20px; max-width: 380px; width: 100%; text-align: center; display: grid; gap: 10px; }
 .modal .micon { font-size: 60px; line-height: 1; }
@@ -928,7 +940,7 @@ function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(
    iPads, Samsung and other Androids each draw emoji differently. The game swaps every emoji
    for Google's emoji picture (stored with the game in the emoji/ folder), so all tablets match.
    If a picture can't load, the tablet's own emoji shows instead. */
-const EMOJI_FILES = {"🌻":"1f33b.png","🌱":"1f331.png","🐚":"1f41a.png","✏️":"270f-fe0f.png","✏":"270f-fe0f.png","🪙":"1fa99.png","🛍️":"1f6cd-fe0f.png","🛍":"1f6cd-fe0f.png","📈":"1f4c8.png","🏝️":"1f3dd-fe0f.png","🏝":"1f3dd-fe0f.png","🏅":"1f3c5.png","🚗":"1f697.png","🏃":"1f3c3.png","🗼":"1f5fc.png","🧱":"1f9f1.png","🎯":"1f3af.png","🧗":"1f9d7.png","💰":"1f4b0.png","📜":"1f4dc.png","🌲":"1f332.png","🥧":"1f967.png","🍳":"1f373.png","📏":"1f4cf.png","⚓":"2693.png","⛰️":"26f0-fe0f.png","⛰":"26f0-fe0f.png","🧩":"1f9e9.png","📐":"1f4d0.png","🔷":"1f537.png","⚔️":"2694-fe0f.png","⚔":"2694-fe0f.png","🦊":"1f98a.png","🐼":"1f43c.png","🐯":"1f42f.png","🐸":"1f438.png","🐨":"1f428.png","🐙":"1f419.png","🦉":"1f989.png","🐢":"1f422.png","🐰":"1f430.png","🦁":"1f981.png","🐧":"1f427.png","🐬":"1f42c.png","🐻":"1f43b.png","🐵":"1f435.png","🐷":"1f437.png","🐮":"1f42e.png","🐺":"1f43a.png","🦒":"1f992.png","🦝":"1f99d.png","🧢":"1f9e2.png","🎀":"1f380.png","🌸":"1f338.png","👒":"1f452.png","🎩":"1f3a9.png","⛑️":"26d1-fe0f.png","⛑":"26d1-fe0f.png","🎓":"1f393.png","👑":"1f451.png","🌟":"1f31f.png","💎":"1f48e.png","🐣":"1f423.png","🐶":"1f436.png","🐱":"1f431.png","🦀":"1f980.png","🐠":"1f420.png","🐝":"1f41d.png","🦜":"1f99c.png","🦋":"1f98b.png","🦩":"1f9a9.png","🦄":"1f984.png","🦖":"1f996.png","🦚":"1f99a.png","🐉":"1f409.png","✨":"2728.png","⭐":"2b50.png","💖":"1f496.png","💕":"1f495.png","🎈":"1f388.png","🎉":"1f389.png","🎊":"1f38a.png","🎵":"1f3b5.png","🎶":"1f3b6.png","🎷":"1f3b7.png","🍕":"1f355.png","🍩":"1f369.png","🧁":"1f9c1.png","🦕":"1f995.png","🌿":"1f33f.png","🎆":"1f386.png","🎇":"1f387.png","💥":"1f4a5.png","💠":"1f4a0.png","🌙":"1f319.png","🚕":"1f695.png","🚜":"1f69c.png","🚙":"1f699.png","🚓":"1f693.png","🚒":"1f692.png","🏎️":"1f3ce-fe0f.png","🏎":"1f3ce-fe0f.png","🛸":"1f6f8.png","🚀":"1f680.png","🌺":"1f33a.png","🌴":"1f334.png","⛱️":"26f1-fe0f.png","⛱":"26f1-fe0f.png","🏕️":"1f3d5-fe0f.png","🏕":"1f3d5-fe0f.png","⛵":"26f5.png","🛖":"1f6d6.png","🗿":"1f5ff.png","🐳":"1f433.png","🌋":"1f30b.png","🚁":"1f681.png","🎡":"1f3a1.png","🏰":"1f3f0.png","🪨":"1faa8.png","🌵":"1f335.png","🍄":"1f344.png","🌳":"1f333.png","🐒":"1f412.png","🦭":"1f9ad.png","🛝":"1f6dd.png","🦙":"1f999.png","⛲":"26f2.png","🏡":"1f3e1.png","🚂":"1f682.png","🐘":"1f418.png","🏪":"1f3ea.png","🎠":"1f3a0.png","🏫":"1f3eb.png","🏆":"1f3c6.png","🏯":"1f3ef.png","🏟️":"1f3df-fe0f.png","🏟":"1f3df-fe0f.png","🛶":"1f6f6.png","🚤":"1f6a4.png","🛳️":"1f6f3-fe0f.png","🛳":"1f6f3-fe0f.png","☁️":"2601-fe0f.png","☁":"2601-fe0f.png","🪁":"1fa81.png","🪂":"1fa82.png","✈️":"2708-fe0f.png","✈":"2708-fe0f.png","🌈":"1f308.png","🌕":"1f315.png","🎃":"1f383.png","❄️":"2744-fe0f.png","❄":"2744-fe0f.png","🧧":"1f9e7.png","🏖️":"1f3d6-fe0f.png","🏖":"1f3d6-fe0f.png","🍁":"1f341.png","🌷":"1f337.png","🐇":"1f407.png","🦇":"1f987.png","👻":"1f47b.png","⛄":"26c4.png","🦌":"1f98c.png","🐐":"1f410.png","🐞":"1f41e.png","🦑":"1f991.png","🦈":"1f988.png","🐲":"1f432.png","🦞":"1f99e.png","🐊":"1f40a.png","🐡":"1f421.png","🍂":"1f342.png","🎁":"1f381.png","🏮":"1f3ee.png","🌊":"1f30a.png","🏄":"1f3c4.png","☀️":"2600-fe0f.png","☀":"2600-fe0f.png","🏚️":"1f3da-fe0f.png","🏚":"1f3da-fe0f.png","🎄":"1f384.png","🔥":"1f525.png","💯":"1f4af.png","🧭":"1f9ed.png","🏁":"1f3c1.png","🦘":"1f998.png","🧠":"1f9e0.png","🏦":"1f3e6.png","🗃️":"1f5c3-fe0f.png","🗃":"1f5c3-fe0f.png","📅":"1f4c5.png","🗓️":"1f5d3-fe0f.png","🗓":"1f5d3-fe0f.png","💫":"1f4ab.png","🌠":"1f320.png","⚡":"26a1.png","🏔️":"1f3d4-fe0f.png","🏔":"1f3d4-fe0f.png","🪐":"1fa90.png","🏵️":"1f3f5-fe0f.png","🏵":"1f3f5-fe0f.png","🥇":"1f947.png","💌":"1f48c.png","🛡️":"1f6e1-fe0f.png","🛡":"1f6e1-fe0f.png","⬆️":"2b06-fe0f.png","⬆":"2b06-fe0f.png","🔒":"1f512.png","🔁":"1f501.png","❤️":"2764-fe0f.png","❤":"2764-fe0f.png","🤍":"1f90d.png","✋":"270b.png","🗑️":"1f5d1-fe0f.png","🗑":"1f5d1-fe0f.png","🤩":"1f929.png","📋":"1f4cb.png"};
+const EMOJI_FILES = {"🪙":"1fa99.png","🛍️":"1f6cd-fe0f.png","🛍":"1f6cd-fe0f.png","📈":"1f4c8.png","🏝️":"1f3dd-fe0f.png","🏝":"1f3dd-fe0f.png","🏅":"1f3c5.png","🚗":"1f697.png","🏃":"1f3c3.png","🐚":"1f41a.png","🌻":"1f33b.png","🗼":"1f5fc.png","🧱":"1f9f1.png","🎯":"1f3af.png","🧗":"1f9d7.png","💰":"1f4b0.png","📜":"1f4dc.png","🌲":"1f332.png","🥧":"1f967.png","🍳":"1f373.png","📏":"1f4cf.png","⚓":"2693.png","⛰️":"26f0-fe0f.png","⛰":"26f0-fe0f.png","🧩":"1f9e9.png","📐":"1f4d0.png","🔷":"1f537.png","⚔️":"2694-fe0f.png","⚔":"2694-fe0f.png","🦊":"1f98a.png","🐼":"1f43c.png","🐯":"1f42f.png","🐸":"1f438.png","🐨":"1f428.png","🐙":"1f419.png","🦉":"1f989.png","🐢":"1f422.png","🐰":"1f430.png","🦁":"1f981.png","🐧":"1f427.png","🐬":"1f42c.png","🐻":"1f43b.png","🐵":"1f435.png","🐷":"1f437.png","🐮":"1f42e.png","🐺":"1f43a.png","🦒":"1f992.png","🦝":"1f99d.png","🧢":"1f9e2.png","🎀":"1f380.png","🌸":"1f338.png","👒":"1f452.png","🎩":"1f3a9.png","⛑️":"26d1-fe0f.png","⛑":"26d1-fe0f.png","🎓":"1f393.png","👑":"1f451.png","🌟":"1f31f.png","💎":"1f48e.png","🐣":"1f423.png","🐶":"1f436.png","🐱":"1f431.png","🦀":"1f980.png","🐠":"1f420.png","🐝":"1f41d.png","🦜":"1f99c.png","🦋":"1f98b.png","🦩":"1f9a9.png","🦄":"1f984.png","🦖":"1f996.png","🦚":"1f99a.png","🐉":"1f409.png","✨":"2728.png","⭐":"2b50.png","💖":"1f496.png","💕":"1f495.png","🎈":"1f388.png","🎉":"1f389.png","🎊":"1f38a.png","🎵":"1f3b5.png","🎶":"1f3b6.png","🎷":"1f3b7.png","🍕":"1f355.png","🍩":"1f369.png","🧁":"1f9c1.png","🦕":"1f995.png","🌿":"1f33f.png","🎆":"1f386.png","🎇":"1f387.png","💥":"1f4a5.png","💠":"1f4a0.png","🌙":"1f319.png","🚕":"1f695.png","🚜":"1f69c.png","🚙":"1f699.png","🚓":"1f693.png","🚒":"1f692.png","🏎️":"1f3ce-fe0f.png","🏎":"1f3ce-fe0f.png","🛸":"1f6f8.png","🚀":"1f680.png","🌺":"1f33a.png","🌴":"1f334.png","⛱️":"26f1-fe0f.png","⛱":"26f1-fe0f.png","🏕️":"1f3d5-fe0f.png","🏕":"1f3d5-fe0f.png","⛵":"26f5.png","🛖":"1f6d6.png","🗿":"1f5ff.png","🐳":"1f433.png","🌋":"1f30b.png","🚁":"1f681.png","🎡":"1f3a1.png","🏰":"1f3f0.png","🪨":"1faa8.png","🌵":"1f335.png","🍄":"1f344.png","🌳":"1f333.png","🐒":"1f412.png","🦭":"1f9ad.png","🛝":"1f6dd.png","🦙":"1f999.png","⛲":"26f2.png","🏡":"1f3e1.png","🚂":"1f682.png","🐘":"1f418.png","🏪":"1f3ea.png","🎠":"1f3a0.png","🏫":"1f3eb.png","🏆":"1f3c6.png","🏯":"1f3ef.png","🏟️":"1f3df-fe0f.png","🏟":"1f3df-fe0f.png","🛶":"1f6f6.png","🚤":"1f6a4.png","🛳️":"1f6f3-fe0f.png","🛳":"1f6f3-fe0f.png","☁️":"2601-fe0f.png","☁":"2601-fe0f.png","🪁":"1fa81.png","🪂":"1fa82.png","✈️":"2708-fe0f.png","✈":"2708-fe0f.png","🌈":"1f308.png","🌕":"1f315.png","🎃":"1f383.png","❄️":"2744-fe0f.png","❄":"2744-fe0f.png","🧧":"1f9e7.png","🏖️":"1f3d6-fe0f.png","🏖":"1f3d6-fe0f.png","🍁":"1f341.png","🌷":"1f337.png","🐇":"1f407.png","🦇":"1f987.png","👻":"1f47b.png","⛄":"26c4.png","🦌":"1f98c.png","🐐":"1f410.png","🐞":"1f41e.png","🦑":"1f991.png","🦈":"1f988.png","🐲":"1f432.png","🦞":"1f99e.png","🐊":"1f40a.png","🐡":"1f421.png","🍂":"1f342.png","🎁":"1f381.png","🏮":"1f3ee.png","🌊":"1f30a.png","🏄":"1f3c4.png","☀️":"2600-fe0f.png","☀":"2600-fe0f.png","🏚️":"1f3da-fe0f.png","🏚":"1f3da-fe0f.png","🎄":"1f384.png","🔥":"1f525.png","💯":"1f4af.png","🧭":"1f9ed.png","🏁":"1f3c1.png","🦘":"1f998.png","🧠":"1f9e0.png","🏦":"1f3e6.png","🗃️":"1f5c3-fe0f.png","🗃":"1f5c3-fe0f.png","📅":"1f4c5.png","🗓️":"1f5d3-fe0f.png","🗓":"1f5d3-fe0f.png","💫":"1f4ab.png","🌠":"1f320.png","⚡":"26a1.png","🏔️":"1f3d4-fe0f.png","🏔":"1f3d4-fe0f.png","🪐":"1fa90.png","🏵️":"1f3f5-fe0f.png","🏵":"1f3f5-fe0f.png","🥇":"1f947.png","💌":"1f48c.png","🛡️":"1f6e1-fe0f.png","🛡":"1f6e1-fe0f.png","⬆️":"2b06-fe0f.png","⬆":"2b06-fe0f.png","🔒":"1f512.png","🔁":"1f501.png","🥈":"1f948.png","🥉":"1f949.png","🙂":"1f642.png","❤️":"2764-fe0f.png","❤":"2764-fe0f.png","🤍":"1f90d.png","✋":"270b.png","🗑️":"1f5d1-fe0f.png","🗑":"1f5d1-fe0f.png","🤩":"1f929.png","📋":"1f4cb.png"};
 const EMOJI_RE = new RegExp(Object.keys(EMOJI_FILES).sort((a, b) => b.length - a.length).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
 const EMOJI_ANY = new RegExp(EMOJI_RE.source, 'u');
 const EMOJI_SKIP = 'script,style,textarea,input,title,svg,option,.no-emo';
@@ -1464,6 +1476,7 @@ let session = null; // per-round notes: level changes, badges
 function record(skill, ok) {
   const p = P(); const s = p.skills[skill];
   const dk = dayKey(); p.days = p.days || []; if (!p.days.includes(dk)) p.days.push(dk);
+  if (session) { session.run = ok ? (session.run || 0) + 1 : 0; session.bestRun = Math.max(session.bestRun || 0, session.run); }
   s.total++; if (ok) s.correct++;
   s.recent.push(ok ? 1 : 0); if (s.recent.length > 20) s.recent.shift();
   if (ok) {
@@ -1751,6 +1764,7 @@ $('#signIn').addEventListener('submit', async e => {
       store.current = key; ensureProfile(P()); save(); openHub();
       if (coinAdjust) applyCoinAdjust(P(), coinAdjust, r.coinId);
       if (r.myReactions) applyMyReactions(P(), r.myReactions);
+      if (r.boards) applyBoards(r.boards);
       syncNow(key);
     } else {
       startAvatarStep(r.name, code, false, coinAdjust, r.coinId);
@@ -1831,6 +1845,7 @@ async function syncNow(id) {
     if (r.ok && !r.stale && body.coinAck && p.coinAck === body.coinAck) delete p.coinAck; // the sheet cleared it
     if (r.ok && r.coinAdjust && !r.stale) applyCoinAdjust(p, r.coinAdjust, r.coinId);
     if (r.ok && r.myReactions && !r.stale) applyMyReactions(p, r.myReactions);
+    if (r.ok && r.boards && !r.stale) applyBoards(r.boards);
     if (r.ok && r.stale) { // the teacher started a new school year
       delete store.profiles[id];
       if (store.current === id) { store.current = null; save(); renderWho(); toast('A new school year has started! Sign in to begin.', true); }
@@ -2252,8 +2267,52 @@ function finishRound() {
 }
 function gameStats(id) { const p = P(); p.games[id] = p.games[id] || { plays: 0, stars: 0, best: 0 }; p.games[id].plays++; return p.games[id]; }
 
+/* ---------- Weekly top 3 (from the class sheet; starts fresh every Monday) ---------- */
+const SCORE_WORD = key => key === 'memory' ? 'moves' : key === 'runner' || key.startsWith('driver') ? 'points' : 'in a row';
+function boardTitle(key) {
+  if (key.startsWith('driver')) { const m = DRIVE_MODES.find(x => 'driver' + x.op === key); return `Math Driver${m ? ' · ' + m.name : ''}`; }
+  return GAME[key] ? GAME[key].name : key;
+}
+function hiddenFromTop3(name) {
+  const st = store.settings || {}, me = String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return (String(st.alwaysPlay || '') + ',' + String(st.hideTop3 || '')).split(/[,;]/).some(n => n.trim() && n.trim().toLowerCase().replace(/\s+/g, ' ') === me);
+}
+function boardsOn() { return !!(sheetUrl() && store.boards && !store.boards.off && store.settings && store.settings.top3 !== false); }
+function noteWeekBest(p) { // returns { key, score, better }
+  const g = session && session.game; if (!g || g === 'boss') return null;
+  const key = session.scoreKey || g, score = session.score != null ? session.score : (session.bestRun || 0);
+  if (!(score > 0)) return null;
+  const w = weekInfo().id; if (!p.weekBest || p.weekBest.week !== w) p.weekBest = { week: w, s: {} };
+  const old = p.weekBest.s[key], low = key === 'memory', better = old == null || (low ? score < old : score > old);
+  if (better) { p.weekBest.s[key] = score; p.updated = Date.now(); save(); scheduleSync(1500); } // send it so classmates see it
+  return { key, score, better };
+}
+function boardFor(key) {
+  const p = P(), w = weekInfo().id, low = key === 'memory';
+  let list = ((store.boards && store.boards.week === w && store.boards.b && store.boards.b[key]) || []).map(x => Object.assign({}, x));
+  const mine = p.weekBest && p.weekBest.week === w ? p.weekBest.s[key] : null;
+  const me = String(p.sheetName || p.name).toLowerCase();
+  list = list.filter(x => String(x.name).toLowerCase() !== me);
+  if (mine != null && !hiddenFromTop3(p.sheetName)) list.push({ name: p.sheetName || p.name, avatar: p.avatar, score: mine, me: true });
+  list.sort((x, y) => (low ? x.score - y.score : y.score - x.score) || String(x.name).localeCompare(String(y.name)));
+  return { top: list.slice(0, 3), mine };
+}
+function top3HTML(key, compact) {
+  if (!boardsOn()) return '';
+  const { top, mine } = boardFor(key), medals = ['🥇', '🥈', '🥉'], word = SCORE_WORD(key);
+  const rows = top.length ? top.map((x, i) => `<div class="t3-row ${x.me ? 'me' : ''}"><span>${medals[i]}</span><span class="t3-face">${esc(x.avatar || '🙂')}</span><b>${esc(x.name)}${x.me ? ' (you)' : ''}</b><span class="t3-score">${fmt(x.score)} ${word}</span></div>`).join('')
+    : `<div class="note">Nobody's on the list yet this week. Be the first!</div>`;
+  return `<div class="top3 ${compact ? 'compact' : ''}" data-key="${esc(key)}"><div class="t3-head">🏆 ${compact && key.startsWith('driver') ? `Top 3 this week · ${esc(key.slice(6))} ${esc((DRIVE_MODES.find(m => 'driver' + m.op === key) || {}).name || '')}` : `This week's top 3 · ${esc(boardTitle(key))}`}</div>${rows}
+    ${mine != null && !top.some(x => x.me) ? `<div class="t3-mine">Your best this week: <b>${fmt(mine)} ${word}</b>. Keep going!</div>` : ''}</div>`;
+}
+function applyBoards(b) {
+  if (!b || typeof b !== 'object') return;
+  store.boards = b; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+  $$('.top3[data-key]').forEach(el => { const html = top3HTML(el.dataset.key, el.classList.contains('compact')); if (html) el.outerHTML = html; });
+}
 function showResults({ stars, title, lines, again, next, back }) {
   const p = P();
+  const wk = noteWeekBest(p);
   const chg = todaysChallenge();
   if (chg && session && session.game === chg.id && stars >= 1 && p.challengeDay !== dayKey()) { // first finished round of today's challenge
     p.challengeDay = dayKey(); p.challengesDone = (p.challengesDone || 0) + 1;
@@ -2273,6 +2332,7 @@ function showResults({ stars, title, lines, again, next, back }) {
       <div class="result-line hl"><span>Earned</span><span>🪙 ${fmt(coins)} · ${fmt(xp)} XP</span></div>
       ${extra.map(([a, b]) => `<div class="result-line hl"><span>${esc(a)}</span><span>${b}</span></div>`).join('')}
     </div>
+    ${wk ? (wk.better && boardsOn() ? `<div class="t3-new">⭐ New best this week: ${fmt(wk.score)} ${SCORE_WORD(wk.key)}!</div>` : '') + top3HTML(wk.key) : ''}
     <div class="result-actions">
       ${next ? `<button type="button" class="btn leaf" id="nextStop">${next.label}</button>` : ''}
       <button type="button" class="btn ${next ? 'plain' : 'leaf'}" id="playAgain">Play again</button>
@@ -3470,6 +3530,7 @@ function memoryEnd(st) {
   reward(stars * 5, 20 + stars * 10);
   const g = gameStats('memory'); g.stars = Math.max(g.stars || 0, stars);
   g.bestMoves = g.bestMoves ? Math.min(g.bestMoves, st.moves) : st.moves;
+  if (session) { session.score = st.moves; session.scoreKey = 'memory'; }
   checkBadges({ finished: true, stars, memoryMoves: st.moves });
   logActivity('Memory Reef', `${st.moves} moves`, stars, null);
   showResults({ stars, title: stars === 3 ? 'Sharp memory!' : 'All pairs found!',
@@ -3504,6 +3565,7 @@ function arcadeEnd() {
   const stars = a.correct >= 15 ? 3 : a.correct >= 7 ? 2 : 1;
   reward(stars * 5, 20 + stars * 10);
   const g = gameStats(id); const best = Math.max(g.best || 0, a.points); g.best = best; g.stars = Math.max(g.stars || 0, stars);
+  if (session) { session.score = a.points; session.scoreKey = id === 'driver' && a.mode ? 'driver' + a.mode.op : id; }
   checkBadges({ finished: true, stars, [id]: a.points });
   logActivity(GAME[id].name + (a.mode ? ` (${a.mode.name})` : ''), `${a.correct} correct, ${fmt(a.points)} points`, stars, a.skill);
   showResults({ stars, title: a.points >= best && a.points > 0 ? 'New best score!' : 'Out of hearts!',
@@ -3521,7 +3583,7 @@ function driverPicker() {
   $('#gameBody').innerHTML = `<div class="picker">
     <h3>Choose your road</h3>
     <div class="mode-grid">${DRIVE_MODES.map((m, i) => `<button type="button" class="mode-btn" data-m="${i}"><span class="big">${m.op}</span>${m.name}<small>${(m.skill === 'mental' ? teacherFacts().add : teacherSetsMult()) ? `🎯 Numbers picked by ${TEACHER}` : `Level ${lvl(m.skill)}: ${SKILLS[m.skill].levels[lvl(m.skill) - 1]}`}</small></button>`).join('')}</div>
-    <p class="note">Steer with the ◀ ▶ buttons, the arrow keys, or by tapping a lane. Drive into the right answer!</p></div>`;
+    <p class="note">Steer with the ◀ ▶ buttons, the arrow keys, or by tapping a lane. Drive into the right answer!</p>${boardsOn() ? `<div class="t3-modes">${DRIVE_MODES.map(m => top3HTML('driver' + m.op, true)).join('')}</div>` : ''}</div>`;
   $$('.mode-btn').forEach(b => b.addEventListener('click', () => driverStart(DRIVE_MODES[+b.dataset.m])));
 }
 const LANES = [100 / 6, 50, 500 / 6];
@@ -3609,7 +3671,7 @@ function runnerPicker() {
     <h3>Pick your runner</h3>
     <div class="runner-pick">${opts.map(o => `<button type="button" data-f="${o}" aria-pressed="${o === runnerFace}">${o}</button>`).join('')}</div>
     <p class="note">Run into the right answer. Jump over the wrong ones by tapping the beach or pressing Space.<br>${teacherSetsMult() ? `🎯 ${TEACHER} picked these facts.` : `Level ${lvl('mult')}: ${SKILLS.mult.levels[lvl('mult') - 1]}`}</p>
-    <div><button type="button" class="btn leaf" id="runGo">Start running ➜</button></div></div>`;
+    <div><button type="button" class="btn leaf" id="runGo">Start running ➜</button></div>${top3HTML('runner', true)}</div>`;
   $$('.runner-pick button').forEach(b => b.addEventListener('click', () => { runnerFace = b.dataset.f; $$('.runner-pick button').forEach(x => x.setAttribute('aria-pressed', x === b)); sfx('tap'); }));
   $('#runGo').addEventListener('click', runnerStart);
 }

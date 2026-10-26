@@ -579,6 +579,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .fact-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .fact-chip { background: #fff; border: 2px solid var(--coral); border-radius: 999px; padding: 2px 12px; font-family: var(--display); font-size: 18px; }
 @media (max-width: 640px) { .prog-row { grid-template-columns: minmax(0, 1fr) auto; } .prog-acc, .prog-row > button, .prog-row > span:last-child { display: none; } .prog-stats { margin-left: 0; } }
+.closed-modal .closed-pic { display: flex; justify-content: center; }
 .modal-back { position: fixed; inset: 0; z-index: 300; background: rgba(30, 42, 51, .55); display: grid; place-items: center; padding: 16px; }
 .modal { background: var(--sand); border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 18px 20px; max-width: 380px; width: 100%; text-align: center; display: grid; gap: 10px; }
 .modal .micon { font-size: 60px; line-height: 1; }
@@ -1291,6 +1292,7 @@ function applySettings(st) {
   const before = JSON.stringify(store.settings || {});
   store.settings = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (before !== JSON.stringify(st) && currentScreen === 'hub') renderGameGrid();
+  enforceHours();
   const was = JSON.parse(before || '{}').islandVisits;
   if (was !== st.islandVisits && currentScreen === 'shop' && shopTab === 'island' && !islandEdit) openShop('island');
 }
@@ -1535,9 +1537,65 @@ function cheer(text, host) {
    ========================================================= */
 const SCREENS = ['who', 'hub', 'game', 'results', 'shop', 'badges', 'teacher', 'progress'];
 let currentScreen = 'who';
+/* ---------- School hours: the teacher sets play days and hours on the Settings tab (uses the tablet's clock) ---------- */
+const DAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+function parseDays(text) { // Set of 0-6, or null for every day
+  const t = String(text || '').trim().toLowerCase();
+  if (!t || /^(every ?day|any ?day|all|daily|any ?time)$/.test(t)) return null;
+  if (/^week ?days?$/.test(t)) return new Set([1, 2, 3, 4, 5]);
+  if (/^week ?ends?$/.test(t)) return new Set([0, 6]);
+  const out = new Set(), idx = w => DAY_ABBR.indexOf(String(w).trim().slice(0, 3));
+  t.replace(/\s*(?:-|–|—|to)\s*/g, '-').split(/[,;\s]+/).forEach(part => {
+    const [a, b] = part.split('-'), i = idx(a), j = b != null ? idx(b) : i;
+    if (i < 0 || j < 0) return;
+    for (let k = i, n = 0; n < 7; k = (k + 1) % 7, n++) { out.add(k); if (k === j) break; }
+  });
+  return out.size ? out : null;
+}
+function parseClock(t) { // "8", "8:30", "3:30pm", "15:30" -> minutes after midnight
+  const m = String(t).trim().toLowerCase().match(/^(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?$/); if (!m) return null;
+  let h = +m[1]; const min = +(m[2] || 0);
+  if (m[3] === 'pm' && h < 12) h += 12; if (m[3] === 'am' && h === 12) h = 0;
+  return h <= 24 && min < 60 ? h * 60 + min : null;
+}
+function parseHours(text) { // [[start, end], ...] in minutes, or null for any time
+  const t = String(text || '').trim().toLowerCase();
+  if (!t || /^(any ?time|all ?day|always|no limit)$/.test(t)) return null;
+  const out = [];
+  t.replace(/\s*(?:–|—|to)\s*/g, '-').split(/\s*(?:,|;|\band\b)\s*/).forEach(part => {
+    const [a, b] = part.split(/\s*-\s*/), s0 = parseClock(a), e0 = b != null ? parseClock(b) : null;
+    if (s0 != null && e0 != null && e0 > s0) out.push([s0, e0]);
+  });
+  return out.length ? out : null;
+}
+function playStatus(p = P()) {
+  const st = store.settings || {};
+  if (!sheetUrl() || !p || !p.sheetName || st.playHours === undefined) return { open: true };
+  const me = String(p.sheetName).trim().toLowerCase();
+  if (String(st.alwaysPlay || '').split(/[,;]/).some(n => n.trim().toLowerCase().replace(/\s+/g, ' ') === me.replace(/\s+/g, ' ') && n.trim())) return { open: true };
+  const days = parseDays(st.playDays), hours = parseHours(st.playHours), now = new Date(), min = now.getHours() * 60 + now.getMinutes();
+  const open = (!days || days.has(now.getDay())) && (!hours || hours.some(([a, b]) => min >= a && min < b));
+  return { open, when: [days ? st.playDays : '', hours ? st.playHours : ''].filter(Boolean).join(', ') };
+}
+function enforceHours() {
+  const p = P(), s = playStatus(p), el = $('#closedBack');
+  if (s.open || !p) { if (el) el.remove(); return; }
+  if (currentScreen === 'game' || el) return; // let a round that already started finish
+  const m = document.createElement('div'); m.className = 'modal-back'; m.id = 'closedBack';
+  m.innerHTML = `<div class="modal closed-modal" role="dialog" aria-modal="true" aria-label="The island is closed">
+    <div class="closed-pic">${teacherSVG('chibi', 96)}</div>
+    <h3>🌙 The island is closed right now</h3>
+    <p>You can play ${esc(s.when || 'at school')}.</p>
+    <p><b>See you at school, ${esc(p.name)}!</b></p>
+    <button type="button" class="btn small plain" id="closedSwitch">Switch player</button></div>`;
+  document.body.appendChild(m);
+  $('#closedSwitch', m).addEventListener('click', () => { m.remove(); $('#switchPlayer').click(); });
+}
+setInterval(enforceHours, 30000);
 function show(name) {
   SCREENS.forEach(s => { $('#scr-' + s).hidden = s !== name; });
   currentScreen = name;
+  if (name !== 'game') setTimeout(enforceHours, 0);
   try { window.scrollTo(0, 0); } catch (e) {}
 }
 
@@ -1768,7 +1826,7 @@ window.addEventListener('pagehide', () => {
   if ((p.syncedAt || 0) >= (p.updated || 0)) return;
   try { navigator.sendBeacon(url, new Blob([JSON.stringify(syncBody(p, false))], { type: 'text/plain' })); } catch (e) {}
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden && P()) syncNow(store.current); else refreshFromSheet(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && P()) syncNow(store.current); else { refreshFromSheet(); enforceHours(); } });
 /* Check in with the class sheet (new locks, settings, coin gifts, island reactions) at most every 30 seconds. */
 let lastRefresh = 0;
 function refreshFromSheet(force) {
@@ -2086,6 +2144,7 @@ function later(fn, ms) { const t = setTimeout(() => { timers.delete(t); fn(); },
 function clearTimers() { timers.forEach(t => clearTimeout(t)); timers.clear(); }
 
 function startGame(id) {
+  if (!playStatus().open) { show('hub'); return; }
   clearTimers(); stopArcade(); padClear(); round = null;
   const g = GAME[id];
   session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp, t0: Date.now(), game: id };

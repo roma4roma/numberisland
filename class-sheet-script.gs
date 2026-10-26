@@ -289,7 +289,10 @@ var EXTRA_ROWS = [
   ['Today\'s challenge', 'Auto', 'Auto = a different practice game each day. Or type a game name, like Story Problems or Tens Tower. Off = no challenge. The challenge game pays double coins all day, plus a bonus for the first round.'],
   ['× and ÷ facts: first number', 'Auto', 'Auto = each student\'s level picks the facts. Or type numbers: 2-9, or 6-9, or 3,4,6,7,8. For two-digit facts (no single digits) try 11-20.'],
   ['× and ÷ facts: second number', 'Auto', 'The other number in each fact. Example: first number 11-20 and second number 2-9 gives facts like 14 × 6 and 84 ÷ 6.'],
-  ['+ and − numbers', 'Auto', 'Auto = by level. Or a range like 10-99 (two-digit numbers) or 100-999 (three-digit numbers). Used in Math Driver and Boss Battle.']
+  ['+ and − numbers', 'Auto', 'Auto = by level. Or a range like 10-99 (two-digit numbers) or 100-999 (three-digit numbers). Used in Math Driver and Boss Battle.'],
+  ['Play days', 'Mon-Fri', 'Days students can play. Examples: Mon-Fri, or Mon,Tue,Thu, or Every day.'],
+  ['Play hours', '8:00-16:00', 'Times students can play on those days. Examples: 8:30-15:30, or 9:00-12:00, 13:00-15:00 (two times a day). Any time = no limit.'],
+  ['Can always play', '', 'Names that can play any time, like a test account. Separate names with commas.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -323,11 +326,15 @@ function readSettings_(ss) {
   return { bossDay: String(v[0] || 'Friday'), bossHp: Number(v[1]) > 0 ? Number(v[1]) : BOSS_HP_PER_STUDENT,
            coinRate: Number(v[2]) > 0 ? Number(v[2]) : 1, version: Number(v[3]) > 0 ? Number(v[3]) : 1,
            islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()),
-           challenge: text_(v[5], 'Auto'), multA: text_(v[6], 'Auto'), multB: text_(v[7], 'Auto'), addRange: text_(v[8], 'Auto') };
+           challenge: text_(v[5], 'Auto'), multA: text_(v[6], 'Auto'), multB: text_(v[7], 'Auto'), addRange: text_(v[8], 'Auto'),
+           playDays: text_(v[9], 'Every day'), playHours: text_(v[10], 'Any time'), alwaysPlay: text_(v[11], '') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {
-  if (x instanceof Date) return (x.getMonth() + 1) + '-' + x.getDate();
+  if (x instanceof Date) {
+    if (x.getFullYear() < 1901) return Utilities.formatDate(x, Session.getScriptTimeZone(), 'H:mm'); // a time like 8:30 typed into the cell
+    return (x.getMonth() + 1) + '-' + x.getDate();
+  }
   var t = String(x == null ? '' : x).trim();
   return t || dflt;
 }

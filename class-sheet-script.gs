@@ -304,7 +304,11 @@ var EXTRA_ROWS = [
   ['Can always play', '', 'Names that can play any time, like a test account. Separate names with commas. These names are also left off the top 3 lists.'],
   ['Top 3 lists', 'On', 'On = each game shows this week\'s top 3 (it starts fresh every Monday). Off = hide them.'],
   ['Hide from top 3', '', 'Other names to leave off the top 3 lists. Separate names with commas.'],
-  ['Students can change their code', 'On', 'On = students can change their own secret code from the home screen (they must type their current code first). The new code shows on the Roster, so you can always look it up. Off = only you can change codes.']
+  ['Students can change their code', 'On', 'On = students can change their own secret code from the home screen (they must type their current code first). The new code shows on the Roster, so you can always look it up. Off = only you can change codes.'],
+  ['Boss questions', 'Mixed', 'Mixed = ×, ÷, + and − (plus tens × tens once Tens Tower is unlocked). Or choose: × ÷  or  × only  or  + −  or  ×, ÷, tens.'],
+  ['Boss × and ÷: first number', 'Same', 'Same = use the × and ÷ numbers above. Auto = by each student\'s level. Or type numbers like 6-9 or 11-20 just for Boss Battle.'],
+  ['Boss × and ÷: second number', 'Same', 'The other number in each Boss Battle fact. Example: first 11-20 and second 2-9 gives 14 × 6 and 84 ÷ 6.'],
+  ['Boss + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 100-999 just for Boss Battle.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -341,7 +345,8 @@ function readSettings_(ss) {
            challenge: text_(v[5], 'Auto'), multA: text_(v[6], 'Auto'), multB: text_(v[7], 'Auto'), addRange: text_(v[8], 'Auto'),
            playDays: text_(v[9], 'Every day'), playHours: text_(v[10], 'Any time'), alwaysPlay: text_(v[11], ''),
            top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], ''),
-           codeChange: !/^(off|no|false|0)$/i.test(String(v[14]).trim()) };
+           codeChange: !/^(off|no|false|0)$/i.test(String(v[14]).trim()),
+           bossTypes: text_(v[15], 'Mixed'), bossA: text_(v[16], 'Same'), bossB: text_(v[17], 'Same'), bossAdd: text_(v[18], 'Same') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {

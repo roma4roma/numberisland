@@ -2100,14 +2100,31 @@ function parseNums(text, min, max) {
   });
   return out.size ? [...out] : null;
 }
-function teacherFacts() {
+const isSame = t => !String(t == null ? '' : t).trim() || /^same$/i.test(String(t).trim());
+function teacherFacts(forBoss = false) {
   const s = store.settings || {};
-  return { A: parseNums(s.multA, 0, 100), B: parseNums(s.multB, 0, 100), add: parseNums(s.addRange, 1, 9999) };
+  const T = { A: parseNums(s.multA, 0, 100), B: parseNums(s.multB, 0, 100), add: parseNums(s.addRange, 1, 9999) };
+  if (!forBoss) return T;
+  return { A: isSame(s.bossA) ? T.A : parseNums(s.bossA, 0, 100), B: isSame(s.bossB) ? T.B : parseNums(s.bossB, 0, 100),
+           add: isSame(s.bossAdd) ? T.add : parseNums(s.bossAdd, 1, 9999) };
+}
+const bossOwnNumbers = () => { const s = store.settings || {}; return !(isSame(s.bossA) && isSame(s.bossB) && isSame(s.bossAdd)); };
+/* Which question types Boss Battle uses: null = mixed (the usual mix). */
+function bossKinds() {
+  const t = String((store.settings || {}).bossTypes || '').trim().toLowerCase();
+  if (!t || /^(mixed|mix|auto|all|any)$/.test(t)) return null;
+  const k = new Set();
+  if (/tens|multiples/.test(t)) k.add('t4tens');
+  if (/[×*]|(^|[^a-z])x([^a-z]|$)|mult|times/.test(t.replace(/multiples/g, ''))) k.add('mult');
+  if (/[÷/]|div/.test(t)) k.add('div');
+  if (/\+|add|plus/.test(t)) k.add('add');
+  if (/[−–]|(^|[\s,])-([\s,]|$)|sub|minus|take/.test(t)) k.add('sub');
+  return k.size ? k : null;
 }
 const teacherSetsMult = () => { const T = teacherFacts(); return !!(T.A || T.B); };
 const from2to12 = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-function genMult(L, free = false) {
-  const T = free ? {} : teacherFacts();
+function genMult(L, free = false, forBoss = false) {
+  const T = free ? {} : teacherFacts(forBoss);
   if (T.A || T.B) {
     let a = pick(T.A || from2to12), b = pick(T.B || from2to12);
     if (Math.random() < 0.5) [a, b] = [b, a];
@@ -2142,8 +2159,8 @@ function explainMult(a, b) {
   }
   return `<p class="big-fact">${a} × ${b} = <b>${fmt(p)}</b></p><p>${tip}</p>`;
 }
-function genDiv(L, free = false) {
-  const T = free ? {} : teacherFacts();
+function genDiv(L, free = false, forBoss = false) {
+  const T = free ? {} : teacherFacts(forBoss);
   if (T.A || T.B) {
     // the divisor comes from the second number (or the only one the teacher set); the answer from the other
     const dset = ((T.B || T.A) || from2to12).filter(n => n > 0), qset = T.B && T.A ? T.A : from2to12;
@@ -2162,9 +2179,9 @@ function genDiv(L, free = false) {
     `<p class="big-fact">${fmt(n)} ÷ ${d} = <b>${q}</b></p><p>Think multiplication: ${d} × <b>${q}</b> = ${fmt(n)}.</p>` +
     (L === 5 ? `<p>Shortcut: ${n / 10} ÷ ${d} = ${q / 10}, so ${n} ÷ ${d} = ${q / 10} tens = ${q}.</p>` : `<p>Ask yourself: how many groups of ${d} make ${n}?</p>`) };
 }
-function genMental(L, op, free = false) {
+function genMental(L, op, free = false, forBoss = false) {
   const add = op === '+', s = add ? '+' : '−';
-  const R = free ? null : teacherFacts().add;
+  const R = free ? null : teacherFacts(forBoss).add;
   if (R) {
     for (let t = 0; t < 50; t++) {
       let a = pick(R), b = pick(R);
@@ -2936,6 +2953,7 @@ async function bossIntro() {
         `Every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit that does double damage!`}</p>
       <div class="boss-stats"><span>Your hits this week: <b>${fmt(((P().bossHits || {})[st.week]) || st.mine || 0)}</b></span>${st.helpers ? `<span>Classmates helping: <b>${st.helpers}</b></span>` : ''}</div>
       <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
+      ${bossKinds() || bossOwnNumbers() ? `<p class="note">🎯 ${TEACHER} picked this week's battle questions${bossKinds() ? ': <b>' + [...bossKinds()].map(k => ({ mult: '×', div: '÷', add: '+', sub: '−', t4tens: 'tens × tens' })[k]).join('  ') + '</b>' : ''}.</p>` : ''}
       <button type="button" class="btn coral" id="bossGo" style="font-size:24px">⚔️ ${done ? 'Practice attack' : 'Attack!'} (${BOSS_ROUND_SECS} seconds)</button>
     </div>`;
     $('#bossGo').addEventListener('click', bossRound);
@@ -2945,11 +2963,14 @@ async function bossIntro() {
   if (fresh && currentScreen === 'game' && !bossFight && $('#bossGo')) render(fresh);
 }
 function bossQuestion() {
-  const kinds = [['mult', 4], ['div', 2], ['mental', 2], ['t4tens', isUnlocked('tens') ? 2 : 0]].filter(k => k[1] > 0);
+  const picked = bossKinds();
+  const kinds = picked ? [...picked].map(k => [k, 1]) : [['mult', 4], ['div', 2], ['add', 1], ['sub', 1], ['t4tens', isUnlocked('tens') ? 2 : 0]].filter(k => k[1] > 0);
   const bag = kinds.flatMap(([k, w]) => Array(w).fill(k)), k = pick(bag);
-  if (k === 'mult') return { skill: k, ...factQ('mult', () => genMult(lvl('mult'))) };
-  if (k === 'div') return { skill: k, ...factQ('div', () => genDiv(lvl('div'))) };
-  if (k === 'mental') { const op = Math.random() < 0.5 ? '+' : '−'; return { skill: k, ...factQ('mental', () => genMental(lvl('mental'), op), op) }; }
+  // missed facts come back as usual, unless the teacher picked special numbers just for Boss Battle
+  const q = (skill, gen, op) => bossOwnNumbers() ? gen() : factQ(skill, gen, op);
+  if (k === 'mult') return { skill: 'mult', ...q('mult', () => genMult(lvl('mult'), false, true)) };
+  if (k === 'div') return { skill: 'div', ...q('div', () => genDiv(lvl('div'), false, true)) };
+  if (k === 'add' || k === 'sub') { const op = k === 'add' ? '+' : '−'; return { skill: 'mental', ...q('mental', () => genMental(lvl('mental'), op, false, true), op) }; }
   const L = lvl('t4tens');
   if (L <= 2 || Math.random() < 0.5) { const x = rnd(2, L <= 1 ? 5 : 9), y = rnd(2, 9); return { skill: k, text: `${x * 10} × ${y * 10}`, answer: x * y * 100 }; }
   const x = ones(11, L >= 4 ? 98 : 49), t = rnd(2, 9); return { skill: k, text: `${x} × ${t * 10}`, answer: x * t * 10 };

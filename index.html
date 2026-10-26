@@ -178,6 +178,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .stars .off { color: #D6C9A6; }
 .lvl { font-size: 12px; font-weight: 800; background: var(--ink); color: #fff; border-radius: 8px; padding: 0 7px; white-space: nowrap; }
 .game-card.locked { filter: grayscale(.85); opacity: .6; box-shadow: 0 3px 0 var(--ink); }
+.challenge-card { grid-column: 1 / -1; background: linear-gradient(110deg, #FFF3C4, #FFD36B); gap: 4px; }
+.challenge-card.done { background: linear-gradient(110deg, #E4F8E9, #B8EBC6); }
+.ch-eyebrow { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--plum); }
+.ch-main { display: flex; align-items: center; gap: 10px; }
+.ch-tag { position: absolute; top: -11px; right: 10px; background: var(--sun); border: 2px solid var(--ink); border-radius: 999px; font-size: 12px; font-weight: 800; padding: 0 8px; white-space: nowrap; }
 .game-card.locked:hover { transform: none; }
 .game-card.feature { grid-column: span 2; flex-direction: row; align-items: center; gap: 14px; }
 .game-card.feature .gicon { font-size: 56px; }
@@ -1228,6 +1233,8 @@ const SEASON_ITEMS = {
   ]
 };
 Object.entries(SEASON_ITEMS).forEach(([cat, items]) => SHOP[cat].push(...items));
+// Levels now stretch over the whole year, so shop level locks are spread out to match (level 9 -> 18, 13 -> 26).
+Object.values(SHOP).flat().forEach(it => { if (it.minLevel) it.minLevel *= 2; });
 const BOSSES = [
   { face: '🐙', name: 'The Kraken', reward: 'kraken' },
   { face: '🦈', name: 'Mega Shark', reward: 'sharkpup' },
@@ -1311,6 +1318,29 @@ const BADGES = [
   { id: 'raccoonclub', icon: '🦝', name: 'Raccoon Club',    desc: 'Own 3 raccoon things from the shop' },
   { id: 'starstudent', icon: '🌟', name: `${TEACHER}'s Star Student`, desc: 'Earn 3 stars in 10 different games' },
   { id: 'bossbeater', icon: '⚔️', name: 'Boss Beater',     desc: 'Help your class beat a weekly boss' },
+  // long-term goals for the rest of the year
+  { id: 'days5',      icon: '📅', name: 'Regular',          desc: 'Play on 5 different days' },
+  { id: 'days20',     icon: '🗓️', name: 'Dedicated',        desc: 'Play on 20 different days' },
+  { id: 'days50',     icon: '🏅', name: 'Unstoppable',      desc: 'Play on 50 different days' },
+  { id: 'days100',    icon: '💫', name: 'Island Lifer',     desc: 'Play on 100 different days' },
+  { id: 'correct500', icon: '🎯', name: 'Sharpshooter',     desc: 'Answer 500 questions correctly' },
+  { id: 'correct2000', icon: '🚀', name: 'Math Machine',    desc: 'Answer 2,000 questions correctly' },
+  { id: 'correct5000', icon: '🌠', name: 'Superstar',       desc: 'Answer 5,000 questions correctly' },
+  { id: 'streak50',   icon: '⚡', name: 'Lightning',        desc: 'Get 50 right in a row' },
+  { id: 'level10',    icon: '🧗', name: 'Level 10',         desc: 'Reach player level 10' },
+  { id: 'level20',    icon: '🏔️', name: 'Level 20',         desc: 'Reach player level 20' },
+  { id: 'level30',    icon: '🪐', name: 'Level 30',         desc: 'Reach player level 30' },
+  { id: 'challenge1', icon: '🎯', name: 'Challenge Accepted', desc: "Finish a Today's Challenge" },
+  { id: 'challenge10', icon: '🏵️', name: 'Challenge Champ', desc: "Finish 10 of Today's Challenges" },
+  { id: 'challenge30', icon: '🥇', name: 'Challenge Legend', desc: "Finish 30 of Today's Challenges" },
+  { id: 'stars25',    icon: '✨', name: 'Star Catcher',     desc: 'Earn 3 stars 25 times' },
+  { id: 'stars100',   icon: '🌟', name: 'Star Collector',   desc: 'Earn 3 stars 100 times' },
+  { id: 'wellround',  icon: '🧠', name: 'Well-Rounded',     desc: 'Reach level 3 in 8 different skills' },
+  { id: 'architect',  icon: '🏰', name: 'Island Architect', desc: 'Put 25 things on your island' },
+  { id: 'islandstar', icon: '💌', name: 'Island Star',      desc: 'Get 10 reactions on your island' },
+  { id: 'boss3',      icon: '🛡️', name: 'Boss Squad',       desc: 'Help your class beat 3 weekly bosses' },
+  { id: 'boss10',     icon: '🐉', name: 'Boss Slayer',      desc: 'Help your class beat 10 weekly bosses' },
+  { id: 'raccoonmaster', icon: '🦝', name: 'Raccoon Master', desc: 'Own every raccoon thing in the shop' },
 ];
 const PRAISE = ['Nice!', 'You got it!', 'Brilliant!', 'Super!', 'Yes!', 'Awesome!', 'Spot on!', 'Great thinking!'];
 
@@ -1353,13 +1383,33 @@ function ensureProfile(p) { // fills gaps if the data shape grows later
 /* =========================================================
    Levels, rewards, badges
    ========================================================= */
+/* Levels are paced for a whole school year: about level 5 after the first day,
+   level 15-20 by mid-year, level 25-30 by June for students who play often. */
+const XP_AT = L => L <= 1 ? 0 : Math.round(80 * Math.pow(L - 1, 2.4) / 10) * 10; // total XP needed to reach level L
 function levelInfo(xp) {
-  let L = 1, need = 80, acc = 0;
-  while (xp >= acc + need) { acc += need; L++; need = 80 + 30 * (L - 1); }
-  return { L, into: xp - acc, need, rank: RANKS[Math.min(L, RANKS.length) - 1] };
+  let L = 1; while (xp >= XP_AT(L + 1)) L++;
+  return { L, into: xp - XP_AT(L), need: XP_AT(L + 1) - XP_AT(L), rank: RANKS[Math.min(Math.floor((L - 1) / 3), RANKS.length - 1)] };
 }
+const dayKey = (d = today()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const ARCADE_IDS = ['driver', 'runner', 'memory', 'boss'];
+/* Today's Challenge: the teacher picks a game on the Settings tab, or Auto rotates through the practice games. */
+function todaysChallenge() {
+  const raw = String((store.settings && store.settings.challenge) || 'Auto').trim();
+  if (/^(off|no|none|0|false)$/i.test(raw)) return null;
+  if (!/^auto$/i.test(raw)) {
+    const want = raw.toLowerCase().replace(/[^a-z]/g, '');
+    const g = GAMES.find(x => x.id !== 'boss' && (x.id === want || x.name.toLowerCase().replace(/[^a-z]/g, '') === want));
+    if (g && isUnlocked(g.id)) return g;
+  }
+  const pool = GAMES.filter(g => !ARCADE_IDS.includes(g.id) && !g.wide && isUnlocked(g.id));
+  if (!pool.length) return null;
+  const d = today(), n = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  return pool[n % pool.length];
+}
+const CHALLENGE_BONUS = 30;
 function reward(coins, xp) {
   const p = P(); const before = levelInfo(p.xp).L;
+  const chg = todaysChallenge(); if (coins > 0 && chg && session && session.game === chg.id) coins *= 2; // double coins in the challenge game
   if (coins > 0) coins = Math.max(1, Math.round(coins * ((store.settings && Number(store.settings.coinRate)) || 1)));
   p.coins += coins; p.coinsEarned += coins; p.xp += xp;
   const after = levelInfo(p.xp);
@@ -1374,6 +1424,7 @@ let session = null; // per-round notes: level changes, badges
 
 function record(skill, ok) {
   const p = P(); const s = p.skills[skill];
+  const dk = dayKey(); p.days = p.days || []; if (!p.days.includes(dk)) p.days.push(dk);
   s.total++; if (ok) s.correct++;
   s.recent.push(ok ? 1 : 0); if (s.recent.length > 20) s.recent.shift();
   if (ok) {
@@ -1405,6 +1456,19 @@ function checkBadges(extra = {}) {
   if (p.bestStreak >= 10) award('streak10');
   if (p.bestStreak >= 25) award('streak25');
   if (p.totalCorrect >= 100) award('century');
+  if (extra.stars === 3) p.threeStars = (p.threeStars || 0) + 1;
+  const days = (p.days || []).length, L = levelInfo(p.xp || 0).L, boss = (p.bossWins || []).length;
+  if (days >= 5) award('days5'); if (days >= 20) award('days20'); if (days >= 50) award('days50'); if (days >= 100) award('days100');
+  if (p.totalCorrect >= 500) award('correct500'); if (p.totalCorrect >= 2000) award('correct2000'); if (p.totalCorrect >= 5000) award('correct5000');
+  if (p.bestStreak >= 50) award('streak50');
+  if (L >= 10) award('level10'); if (L >= 20) award('level20'); if (L >= 30) award('level30');
+  const ch = p.challengesDone || 0; if (ch >= 1) award('challenge1'); if (ch >= 10) award('challenge10'); if (ch >= 30) award('challenge30');
+  if ((p.threeStars || 0) >= 25) award('stars25'); if ((p.threeStars || 0) >= 100) award('stars100');
+  if (SKILL_IDS.filter(k => p.skills[k].level >= 3).length >= 8) award('wellround');
+  if (islandCopies(p).length >= 25) award('architect');
+  if ((p.reactsTotal || 0) >= 10) award('islandstar');
+  if (boss >= 3) award('boss3'); if (boss >= 10) award('boss10');
+  const rac = Object.values(SHOP).flat().filter(it => it.raccoon); if (rac.length && rac.every(it => p.owned.includes(it.id))) award('raccoonmaster');
   if (p.coinsEarned >= 500) award('rich');
   if (Object.values(p.games || {}).filter(g => (g.stars || 0) >= 3).length >= 10) award('starstudent');
   if (p.coinsEarned >= 5000) award('rich2');
@@ -1482,7 +1546,7 @@ function avatarHTML(p, size = 64) {
   const hat = p.wear && p.wear.hat ? SHOP.hat.find(h => h.id === p.wear.hat) : null;
   const pet = p.wear && p.wear.pet ? SHOP.pet.find(h => h.id === p.wear.pet) : null;
   const L = levelInfo(p.xp || 0).L;
-  const ring = p.wear && p.wear.frame ? 'frame-' + p.wear.frame : L >= 9 ? 'ring-3' : L >= 6 ? 'ring-2' : L >= 3 ? 'ring-1' : '';
+  const ring = p.wear && p.wear.frame ? 'frame-' + p.wear.frame : L >= 20 ? 'ring-3' : L >= 12 ? 'ring-2' : L >= 5 ? 'ring-1' : '';
   return `<div class="avatar ${ring}" style="--s:${size}px;background:${bg.css}" aria-hidden="true">
     <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? `<span class="pet">${pet.icon}</span>` : ''}</div>`;
 }
@@ -1738,7 +1802,12 @@ function renderGameGrid() {
   $('#lockedGames').innerHTML = lockedList.length || !isUnlocked('boss') ? `<h2 class="section-label" style="font-size:18px;margin-top:14px">Coming later</h2>
     <div class="locked-row">${[...lockedList, ...(isUnlocked('boss') ? [] : [GAME.boss])].map(g => `<button type="button" class="locked-chip" data-lockedg="${g.id}">🔒 ${g.icon} ${g.name}</button>`).join('')}</div>` : '';
   $$('[data-lockedg]').forEach(b => b.addEventListener('click', () => { toast(`${GAME[b.dataset.lockedg].name} is locked for now. ${TEACHER} will open it soon!`, false, true); sfx('bad'); }));
-  $('#gameGrid').innerHTML = ordered.map(g => {
+  const ch = todaysChallenge(), chDone = ch && p.challengeDay === dayKey();
+  const chCard = ch ? `<button type="button" class="game-card challenge-card ${chDone ? 'done' : ''}" data-g="${ch.id}">
+      <span class="ch-eyebrow">🎯 Today's Challenge</span>
+      <span class="ch-main"><span class="gicon">${ch.icon}</span><span class="gname">${ch.name}</span></span>
+      <span class="gblurb">${chDone ? '✓ Done! You earned the bonus today. It still pays double coins until tomorrow.' : `Double coins all day, plus a bonus for your first round!`}</span></button>` : '';
+  $('#gameGrid').innerHTML = chCard + ordered.map(g => {
     const st = p.games[g.id] || {}, open = isUnlocked(g.id);
     if (g.wide) {
       const B = currentBoss(), bs = bossCached(), left = Math.max(0, bs.max - bs.total), dd = daysToFriday(), weekend = [0, 6].includes(today().getDay());
@@ -1757,13 +1826,14 @@ function renderGameGrid() {
         <span class="gblurb">${open ? (left ? `${TEACHER}'s class has knocked off ${fmt(bs.total)} of ${fmt(bs.max)} HP. Every right answer hits it!` : 'Defeated this week! 🎉 A new boss comes next week.') : `Opens when ${TEACHER} starts the battle.`}</span>
         <span class="hpbar small"><i style="width:${Math.round(left / bs.max * 100)}%"></i></span></span></button>`;
     }
+    const chTag = ch && ch.id === g.id ? '<span class="ch-tag">🎯 2× coins</span>' : '';
     const lv = !open ? `<span class="lvl">🔒 Locked</span>` : g.skill ? `<span class="lvl">Lv ${p.skills[g.skill].level}</span>` : `<span class="lvl">Best ${fmt(st.best || 0)}</span>`;
     const foot = `<div class="gfoot">${starsHTML(st.stars || 0)}${lv}</div>`;
     const cls = `game-card ${g.feature ? 'feature' : ''} ${open ? '' : 'locked'}`;
     const label = open ? '' : ` aria-label="${g.name}, locked"`;
-    if (g.feature) return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>
+    if (g.feature) return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>${chTag}
         <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gtext"><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</span></button>`;
-    return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>
+    return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>${chTag}
         <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
   }).join('');
   $$('.game-card').forEach(b => b.addEventListener('click', () => {
@@ -1859,7 +1929,31 @@ document.addEventListener('keydown', e => {
 /* =========================================================
    Question generators
    ========================================================= */
-function genMult(L) {
+/* Numbers the teacher picked on the Settings tab ("2-9", "6,7,8", "11-20"). null = Auto (by level). */
+function parseNums(text, min, max) {
+  const t = String(text == null ? '' : text).trim();
+  if (!t || /^auto$/i.test(t)) return null;
+  const out = new Set();
+  t.replace(/\s*(?:-|–|—|to)\s*/gi, '-').split(/[,;\s]+/).forEach(part => {
+    let m = part.match(/^(\d+)-(\d+)$/);
+    if (m) { let lo = +m[1], hi = +m[2]; if (lo > hi) [lo, hi] = [hi, lo]; for (let n = Math.max(lo, min); n <= Math.min(hi, max) && out.size < 2000; n++) out.add(n); return; }
+    m = part.match(/^\d+$/); if (m && +part >= min && +part <= max) out.add(+part);
+  });
+  return out.size ? [...out] : null;
+}
+function teacherFacts() {
+  const s = store.settings || {};
+  return { A: parseNums(s.multA, 0, 100), B: parseNums(s.multB, 0, 100), add: parseNums(s.addRange, 1, 9999) };
+}
+const teacherSetsMult = () => { const T = teacherFacts(); return !!(T.A || T.B); };
+const from2to12 = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+function genMult(L, free = false) {
+  const T = free ? {} : teacherFacts();
+  if (T.A || T.B) {
+    let a = pick(T.A || from2to12), b = pick(T.B || from2to12);
+    if (Math.random() < 0.5) [a, b] = [b, a];
+    return { a, b, text: `${a} × ${b}`, answer: a * b, explain: () => explainMult(a, b) };
+  }
   let a, b;
   if (L === 1) { a = pick([2, 5, 10]); b = rnd(1, 10); }
   else if (L === 2) { a = rnd(2, 5); b = rnd(2, 10); }
@@ -1889,7 +1983,15 @@ function explainMult(a, b) {
   }
   return `<p class="big-fact">${a} × ${b} = <b>${fmt(p)}</b></p><p>${tip}</p>`;
 }
-function genDiv(L) {
+function genDiv(L, free = false) {
+  const T = free ? {} : teacherFacts();
+  if (T.A || T.B) {
+    // the divisor comes from the second number (or the only one the teacher set); the answer from the other
+    const dset = ((T.B || T.A) || from2to12).filter(n => n > 0), qset = T.B && T.A ? T.A : from2to12;
+    const d = pick(dset.length ? dset : from2to12), q = pick(qset), n = d * q;
+    return { a: d, b: q, text: `${fmt(n)} ÷ ${d}`, answer: q, explain: () =>
+      `<p class="big-fact">${fmt(n)} ÷ ${d} = <b>${q}</b></p><p>Think multiplication: ${d} × <b>${q}</b> = ${fmt(n)}.</p><p>Ask yourself: how many groups of ${d} make ${fmt(n)}?</p>` };
+  }
   let d, q;
   if (L === 1) { d = pick([2, 5, 10]); q = rnd(1, 10); }
   else if (L === 2) { d = rnd(2, 5); q = rnd(2, 10); }
@@ -1901,8 +2003,18 @@ function genDiv(L) {
     `<p class="big-fact">${fmt(n)} ÷ ${d} = <b>${q}</b></p><p>Think multiplication: ${d} × <b>${q}</b> = ${fmt(n)}.</p>` +
     (L === 5 ? `<p>Shortcut: ${n / 10} ÷ ${d} = ${q / 10}, so ${n} ÷ ${d} = ${q / 10} tens = ${q}.</p>` : `<p>Ask yourself: how many groups of ${d} make ${n}?</p>`) };
 }
-function genMental(L, op) {
+function genMental(L, op, free = false) {
   const add = op === '+', s = add ? '+' : '−';
+  const R = free ? null : teacherFacts().add;
+  if (R) {
+    for (let t = 0; t < 50; t++) {
+      let a = pick(R), b = pick(R);
+      if (!add && b > a) [a, b] = [b, a];
+      if (!add && a === b && R.length > 1) continue;
+      const ans = add ? a + b : a - b;
+      return { a, b, op: s, text: `${a} ${s} ${b}`, answer: ans, explain: () => mentalExplain(a, b, add) };
+    }
+  }
   for (let t = 0; t < 500; t++) {
     let a, b;
     if (L === 1) { a = rnd(11, 98); b = rnd(1, 9); }
@@ -1976,7 +2088,7 @@ function clearTimers() { timers.forEach(t => clearTimeout(t)); timers.clear(); }
 function startGame(id) {
   clearTimers(); stopArcade(); padClear(); round = null;
   const g = GAME[id];
-  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp, t0: Date.now() };
+  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp, t0: Date.now(), game: id };
   $('#gameTitle').textContent = g.icon + ' ' + g.name;
   $('#progressDots').innerHTML = '';
   updateCoinChips();
@@ -2046,6 +2158,13 @@ function gameStats(id) { const p = P(); p.games[id] = p.games[id] || { plays: 0,
 
 function showResults({ stars, title, lines, again, next, back }) {
   const p = P();
+  const chg = todaysChallenge();
+  if (chg && session && session.game === chg.id && stars >= 1 && p.challengeDay !== dayKey()) { // first finished round of today's challenge
+    p.challengeDay = dayKey(); p.challengesDone = (p.challengesDone || 0) + 1;
+    reward(CHALLENGE_BONUS, 50);
+    session.notes.push(`🎯 Today's Challenge complete! Bonus coins`);
+    checkBadges();
+  }
   const coins = p.coins - session.coins0, xp = p.xp - session.xp0;
   const extra = [...session.notes.map(n => [n, '⬆️']), ...session.badges.map(b => [`New badge: ${b.name}`, b.icon])];
   $('#resultsBody').innerHTML = `
@@ -3222,10 +3341,11 @@ function memoryStart() {
   const L = lvl('mult'), pairs = [], used = new Set();
   let guard = 0;
   while (pairs.length < 6 && guard++ < 500) { const q = genMult(L); if (!used.has(q.answer)) { used.add(q.answer); pairs.push(q); } }
+  while (pairs.length < 6 && guard++ < 2000) { const q = genMult(L, true); if (!used.has(q.answer)) { used.add(q.answer); pairs.push(q); } } // the teacher's numbers gave fewer than 6 different answers
   const cards = shuffle(pairs.flatMap(q => [{ key: q.answer, face: q.text }, { key: q.answer, face: fmt(q.answer) }]));
   const st = { first: null, lock: false, matched: 0, moves: 0, t0: Date.now() };
   $('#gameBody').innerHTML = `
-    <div class="prompt">Find each fact and its product. Level ${L}: ${SKILLS.mult.levels[L - 1]}</div>
+    <div class="prompt">Find each fact and its product. ${teacherSetsMult() ? `🎯 ${TEACHER} picked these facts.` : `Level ${L}: ${SKILLS.mult.levels[L - 1]}`}</div>
     <div class="mem-hud"><span id="memMoves">Moves: 0</span><span id="memPairs">Pairs: 0 / 6</span></div>
     <div class="reef">${cards.map((c, i) => `<button type="button" class="mcard" data-i="${i}" aria-label="Hidden card"><span class="mface">${c.face}</span></button>`).join('')}</div>`;
   $$('.mcard').forEach(el => el.addEventListener('click', () => {
@@ -3304,7 +3424,7 @@ function driverPicker() {
   round = null;
   $('#gameBody').innerHTML = `<div class="picker">
     <h3>Choose your road</h3>
-    <div class="mode-grid">${DRIVE_MODES.map((m, i) => `<button type="button" class="mode-btn" data-m="${i}"><span class="big">${m.op}</span>${m.name}<small>Level ${lvl(m.skill)}: ${SKILLS[m.skill].levels[lvl(m.skill) - 1]}</small></button>`).join('')}</div>
+    <div class="mode-grid">${DRIVE_MODES.map((m, i) => `<button type="button" class="mode-btn" data-m="${i}"><span class="big">${m.op}</span>${m.name}<small>${(m.skill === 'mental' ? teacherFacts().add : teacherSetsMult()) ? `🎯 Numbers picked by ${TEACHER}` : `Level ${lvl(m.skill)}: ${SKILLS[m.skill].levels[lvl(m.skill) - 1]}`}</small></button>`).join('')}</div>
     <p class="note">Steer with the ◀ ▶ buttons, the arrow keys, or by tapping a lane. Drive into the right answer!</p></div>`;
   $$('.mode-btn').forEach(b => b.addEventListener('click', () => driverStart(DRIVE_MODES[+b.dataset.m])));
 }
@@ -3392,7 +3512,7 @@ function runnerPicker() {
   $('#gameBody').innerHTML = `<div class="picker">
     <h3>Pick your runner</h3>
     <div class="runner-pick">${opts.map(o => `<button type="button" data-f="${o}" aria-pressed="${o === runnerFace}">${o}</button>`).join('')}</div>
-    <p class="note">Run into the right answer. Jump over the wrong ones by tapping the beach or pressing Space.<br>Level ${lvl('mult')}: ${SKILLS.mult.levels[lvl('mult') - 1]}</p>
+    <p class="note">Run into the right answer. Jump over the wrong ones by tapping the beach or pressing Space.<br>${teacherSetsMult() ? `🎯 ${TEACHER} picked these facts.` : `Level ${lvl('mult')}: ${SKILLS.mult.levels[lvl('mult') - 1]}`}</p>
     <div><button type="button" class="btn leaf" id="runGo">Start running ➜</button></div></div>`;
   $$('.runner-pick button').forEach(b => b.addEventListener('click', () => { runnerFace = b.dataset.f; $$('.runner-pick button').forEach(x => x.setAttribute('aria-pressed', x === b)); sfx('tap'); }));
   $('#runGo').addEventListener('click', runnerStart);

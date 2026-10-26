@@ -14,7 +14,8 @@
  *   Games           Tick a box to unlock a game for every student. Untick to lock it.
  *   Boss Battles    How many hits each student landed on each week's boss.
  *   Needs Help      Who's struggling, which facts they keep missing, and minutes practiced this week.
- *   Settings        Boss Battle day, boss health, coin rate, island visits on/off.
+ *   Settings        Boss Battle day, boss health, coin rate, island visits, Today's Challenge,
+ *                   and which numbers the fact games use (Fact Runner, Math Driver, Memory Reef, Boss Battle).
  *   Island Reactions  Who left which reaction on whose island (one per visitor per island).
  *
  * The "Number Island" menu at the top of the sheet has "Start a new school year…".
@@ -282,11 +283,23 @@ function bossStatus_(ss, week, who) {
 }
 
 /* ---------- Settings tab ---------- */
-var ISLAND_ROW = ['Island visits', 'On', 'On = students can visit classmates\' islands and leave a reaction (⭐ ❤️ 🦝 🔥 🤩). Off = turn it off.'];
+// Rows added in later versions (row 6 onward). They're filled in automatically if missing.
+var EXTRA_ROWS = [
+  ['Island visits', 'On', 'On = students can visit classmates\' islands and leave a reaction (⭐ ❤️ 🦝 🔥 🤩). Off = turn it off.'],
+  ['Today\'s challenge', 'Auto', 'Auto = a different practice game each day. Or type a game name, like Story Problems or Tens Tower. Off = no challenge. The challenge game pays double coins all day, plus a bonus for the first round.'],
+  ['× and ÷ facts: first number', 'Auto', 'Auto = each student\'s level picks the facts. Or type numbers: 2-9, or 6-9, or 3,4,6,7,8. For two-digit facts (no single digits) try 11-20.'],
+  ['× and ÷ facts: second number', 'Auto', 'The other number in each fact. Example: first number 11-20 and second number 2-9 gives facts like 14 × 6 and 84 ÷ 6.'],
+  ['+ and − numbers', 'Auto', 'Auto = by level. Or a range like 10-99 (two-digit numbers) or 100-999 (three-digit numbers). Used in Math Driver and Boss Battle.']
+];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
   if (sh) {
-    if (String(sh.getRange(6, 1).getValue()) !== ISLAND_ROW[0]) sh.getRange(6, 1, 1, 3).setValues([ISLAND_ROW]); // added in a later version
+    EXTRA_ROWS.forEach(function (row, i) {
+      if (String(sh.getRange(6 + i, 1).getValue()) !== row[0]) {
+        sh.getRange(6 + i, 2).setNumberFormat('@'); // plain text, so 2-9 doesn't turn into a date
+        sh.getRange(6 + i, 1, 1, 3).setValues([row]);
+      }
+    });
     return sh;
   }
   var hp = BOSS_HP_PER_STUDENT, boss = ss.getSheetByName(TABS.boss);
@@ -299,16 +312,24 @@ function settingsTab_(ss) {
     ['Coin rate', 1, '1 = normal coins. 2 = double coins. 0.5 = half coins.'],
     ['Data version (do not change)', 1, 'Goes up by itself when you start a new school year.']
   ]);
-  sh.getRange(6, 1, 1, 3).setValues([ISLAND_ROW]);
+  sh.getRange(6, 2, EXTRA_ROWS.length, 1).setNumberFormat('@');
+  sh.getRange(6, 1, EXTRA_ROWS.length, 3).setValues(EXTRA_ROWS);
   sh.getRange(1, 1, 1, 3).setFontWeight('bold'); sh.setFrozenRows(1);
   sh.setColumnWidth(1, 230); sh.setColumnWidth(2, 120); sh.setColumnWidth(3, 520);
   return sh;
 }
 function readSettings_(ss) {
-  var v = settingsTab_(ss).getRange(2, 2, 5, 1).getValues().map(function (r) { return r[0]; });
+  var v = settingsTab_(ss).getRange(2, 2, 4 + EXTRA_ROWS.length, 1).getValues().map(function (r) { return r[0]; });
   return { bossDay: String(v[0] || 'Friday'), bossHp: Number(v[1]) > 0 ? Number(v[1]) : BOSS_HP_PER_STUDENT,
            coinRate: Number(v[2]) > 0 ? Number(v[2]) : 1, version: Number(v[3]) > 0 ? Number(v[3]) : 1,
-           islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()) };
+           islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()),
+           challenge: text_(v[5], 'Auto'), multA: text_(v[6], 'Auto'), multB: text_(v[7], 'Auto'), addRange: text_(v[8], 'Auto') };
+}
+/** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
+function text_(x, dflt) {
+  if (x instanceof Date) return (x.getMonth() + 1) + '-' + x.getDate();
+  var t = String(x == null ? '' : x).trim();
+  return t || dflt;
 }
 
 /* ---------- Needs Help tab, rebuilt from Class Progress after every save ---------- */

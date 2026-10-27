@@ -1093,7 +1093,7 @@ const SKILL_IDS = Object.keys(SKILLS);
 const GAMES = [
   { id: 'driver',   name: 'Math Driver',        icon: '🚗', blurb: 'Steer into the right answer. Pick ×, ÷, + or −.', skill: null, bg: '#FFE6A6', feature: true, practices: 'Facts: ×, ÷, + and −' },
   { id: 'runner',   name: 'Fact Runner',        icon: '🏃', blurb: 'Run into the right answer and jump the wrong ones.', skill: 'mult', bg: '#CBE8FF', feature: true, practices: 'Multiplication facts' },
-  { id: 'soccer',   name: 'Penalty Shootout',   icon: '⚽', blurb: 'Kick the ball into the right answer before the goalie gets there!', skill: null, bg: '#CFF2C8', feature: true, practices: 'Facts: ×, ÷, + and − (soccer penalty kicks)' },
+  { id: 'soccer',   name: 'Penalty Shootout',   icon: '⚽', blurb: 'Kick the ball into the right answer before the shot clock runs out!', skill: null, bg: '#CFF2C8', feature: true, practices: 'Facts: ×, ÷, + and − (soccer penalty kicks)' },
   { id: 'memory',   name: 'Memory Reef',        icon: '🐚', blurb: 'Match facts to products.', skill: 'mult', bg: '#D7F7F2', practices: 'Multiplication facts' },
   { id: 'arrays',   name: 'Array Garden',       icon: '🌻', blurb: 'Plant rows and columns.', skill: 'arrays', bg: '#CDEFD9', practices: 'Arrays and area' },
   { id: 'tens',     name: 'Tens Tower',         icon: '🗼', blurb: 'Multiply by multiples of 10.', skill: 't4tens', bg: '#FFE1DB', practices: 'Multiplying by multiples of 10, like 40 × 30 and 23 × 40' },
@@ -3839,7 +3839,7 @@ function driverHit(row) {
 
 /* ---------- Penalty Shootout (soccer) ----------
    10 penalty kicks. Each kick: a fact, four answers in the corners of the goal. Tap the right one to score.
-   The goalie slides toward the right answer as the shot clock runs out, so quick answers score more. */
+   The shot clock runs down; the goalie shuffles around at random (no hints) and grabs the ball when time is up. Quick answers score more. */
 const SOCCER_TEAMS = [['Tigers', '🐯'], ['Sharks', '🦈'], ['Dragons', '🐉'], ['Eagles', '🦅'], ['Lions', '🦁'], ['Rockets', '🚀'], ['Wolves', '🐺'], ['Bears', '🐻']];
 const SOCCER_SHOTS = 10;
 const SOCCER_ZONES = [[24, 30], [76, 30], [24, 74], [76, 74]]; // corners of the goal (left %, top %)
@@ -3848,7 +3848,7 @@ function soccerPicker() {
   $('#gameBody').innerHTML = `<div class="picker">
     <h3>⚽ Choose your match</h3>
     <div class="mode-grid">${DRIVE_MODES.map((m, i) => `<button type="button" class="mode-btn" data-m="${i}"><span class="big">${m.op}</span>${m.name}<small>${(m.skill === 'mental' ? teacherFacts().add : teacherSetsMult()) ? `🎯 Numbers picked by ${TEACHER}` : `Level ${lvl(m.skill)}: ${SKILLS[m.skill].levels[lvl(m.skill) - 1]}`}</small></button>`).join('')}</div>
-    <p class="note">Ten penalty kicks. Tap the right answer in the goal (or press 1, 2, 3, 4). Be quick: the goalie slides toward the right answer!</p>
+    <p class="note">Ten penalty kicks. Tap the right answer in the goal (or press 1, 2, 3, 4). Be quick: when the shot clock runs out, the goalie grabs the ball!</p>
     ${boardsOn() ? `<div class="t3-modes">${DRIVE_MODES.map(m => top3HTML('soccer' + m.op, true)).join('')}</div>` : ''}</div>`;
   $$('.mode-btn').forEach(b => b.addEventListener('click', () => soccerStart(DRIVE_MODES[+b.dataset.m])));
 }
@@ -3887,7 +3887,7 @@ function soccerKick() {
   $('#scShot').textContent = `Kick ${a.shot} of ${SOCCER_SHOTS}`;
   $$('.gz').forEach((b, i) => { b.textContent = fmt(a.vals[i]); b.className = 'gz'; b.disabled = false; });
   const ball = $('#ball'); ball.className = 'ball'; ball.style.left = ''; ball.style.top = '';
-  const k = $('#keeper'); k.className = 'keeper'; k.style.left = '50%'; k.style.top = '58%';
+  const k = $('#keeper'); k.className = 'keeper'; k.style.left = '50%'; k.style.top = '58%'; a.wander = null;
   a.dur = 7000 + (q.answer >= 100 ? 2500 : 0) + (q.answer >= 1000 ? 2000 : 0); // bigger answers get more time
   a.t0 = performance.now(); a.open = true;
 }
@@ -3896,8 +3896,18 @@ function soccerLoop(now) {
   if (a.open) {
     const f = Math.min(1, (now - a.t0) / a.dur), bar = $('#clockBar');
     if (bar) { bar.style.width = (100 - f * 100) + '%'; bar.style.background = f > .7 ? 'var(--coral)' : f > .45 ? 'var(--sun)' : 'var(--leaf)'; }
-    const z = SOCCER_ZONES[a.vals.indexOf(a.q.answer)], k = $('#keeper'), g = Math.max(0, (f - .45) / .55); // the goalie starts moving halfway through
-    if (k && z) { k.style.left = (50 + (z[0] - 50) * g) + '%'; k.style.top = (58 + (z[1] - 58) * g) + '%'; }
+    // the goalie shuffles around at random. It never moves toward the right answer, so it gives no hints
+    const k = $('#keeper');
+    if (k) {
+      if (!a.wander || now - a.wander.t0 > a.wander.ms) {
+        const spots = [[50, 58], ...SOCCER_ZONES.map(([x, y]) => [50 + (x - 50) * .55, 58 + (y - 58) * .55])];
+        const from = a.wander ? a.wander.to : [50, 58];
+        let to; do { to = pick(spots); } while (to === from);
+        a.wander = { from, to, t0: now, ms: rnd(600, 1100) };
+      }
+      const w = a.wander, t = Math.min(1, (now - w.t0) / w.ms), e = t * t * (3 - 2 * t);
+      k.style.left = (w.from[0] + (w.to[0] - w.from[0]) * e) + '%'; k.style.top = (w.from[1] + (w.to[1] - w.from[1]) * e) + '%';
+    }
     if (f >= 1) soccerShoot(-1); // too slow: the goalie gets there first
   }
   a.raf = requestAnimationFrame(soccerLoop);

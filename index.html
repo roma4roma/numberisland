@@ -1324,6 +1324,31 @@ function bossDayIndex() {
 function bossDayName() { const i = bossDayIndex(); return i < 0 ? 'any day' : DAY_NAMES[i][0].toUpperCase() + DAY_NAMES[i].slice(1); }
 function isBossDay(d = today()) { const i = bossDayIndex(); return i < 0 || d.getDay() === i; }
 function daysToFriday(d = today()) { const i = bossDayIndex(); return i < 0 ? 0 : (i - d.getDay() + 7) % 7; }
+/* Boss Battle can also have set hours on its day (Settings tab: "Boss Battle hours", like 13:00-14:00). */
+const fmtClock = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+function bossTiming(d = today()) {
+  if (!isBossDay(d)) return { open: false, dd: daysToFriday(d) };
+  const hours = parseHours((store.settings || {}).bossHours);
+  if (!hours) return { open: true };
+  const t = new Date(), min = t.getHours() * 60 + t.getMinutes();
+  if (hours.some(([a, b]) => min >= a && min < b)) return { open: true };
+  const next = hours.map(h => h[0]).filter(a => a > min).sort((a, b) => a - b)[0];
+  if (next != null) return { open: false, today: true, at: fmtClock(next), mins: next - min };
+  return { open: false, after: true, dd: bossDayIndex() < 0 ? 1 : 7 }; // today's battle is over
+}
+const bossOpenNow = () => bossTiming().open;
+function bossPreviewInfo() {
+  const d = today(), T = bossTiming(d), weekend = [0, 6].includes(d.getDay()), B = currentBoss(), bs = bossCached();
+  const hours = parseHours((store.settings || {}).bossHours), at = hours ? ` at ${fmtClock(hours[0][0])}` : '';
+  if (T.today) {
+    const chip = T.mins >= 60 ? `<b>${Math.floor(T.mins / 60)}h ${T.mins % 60}m</b>` : `<b>${T.mins}</b>min`;
+    return { nb: B, eyebrow: `Today at ${T.at}!`, headline: `${B.name} arrives at ${T.at}!`, chip, B, bs, T };
+  }
+  const dd = T.dd || 7, jump = (T.after && bossDayIndex() >= 0) || weekend;
+  const nb = jump ? currentBoss(new Date(d.getTime() + dd * 86400000)) : B;
+  const eyebrow = (weekend || T.after) && bs.total >= bs.max ? `Your class beat ${B.name}! 🎉 Next up:` : T.after ? `Today's battle is over. Next up:` : `Coming ${bossDayName()}${at}`;
+  return { nb, eyebrow, headline: `${nb.name} arrives ${dd === 1 ? 'tomorrow' : `in ${dd} days`}!`, chip: `<b>${dd}</b>day${dd === 1 ? '' : 's'}`, B, bs, T };
+}
 function applyCoinAdjust(p, n, id) {
   n = Math.round(Number(n) || 0); if (!p || !n) return;
   if (id) { // each gift has an id: add it once, then tell the sheet it arrived so the cell can clear
@@ -1645,6 +1670,7 @@ function enforceHours() {
   $('#closedSwitch', m).addEventListener('click', () => { m.remove(); $('#switchPlayer').click(); });
 }
 setInterval(enforceHours, 30000);
+setInterval(() => { if (currentScreen === 'hub' && P()) renderGameGrid(); }, 60000);
 /* ---------- Students change their own secret code (the new code is written into the Roster) ---------- */
 function showCodeButton() {
   const b = $('#changeCode'), p = P();
@@ -1970,13 +1996,13 @@ function renderGameGrid() {
     if (g.wide) {
       const B = currentBoss(), bs = bossCached(), left = Math.max(0, bs.max - bs.total), dd = daysToFriday(), weekend = [0, 6].includes(today().getDay());
       const pet = SHOP.pet.find(x => x.id === B.reward);
-      if (open && !isBossDay()) {
-        const nb = weekend ? currentBoss(new Date(today().getTime() + (dd || 7) * 86400000)) : B;
+      if (open && !bossOpenNow()) {
+        const I = bossPreviewInfo(), nb = I.nb;
         return `<button type="button" class="game-card boss-card preview" data-g="boss">
           <span class="gicon boss-shadow">${nb.face}</span>
-          <span class="gtext"><span class="eyebrow-light">${weekend && bs.total >= bs.max ? `Your class beat ${B.name}! 🎉 Next up:` : `Coming ${bossDayName()}`}</span><span class="gname">${nb.name} arrives in ${dd} day${dd === 1 ? '' : 's'}!</span>
+          <span class="gtext"><span class="eyebrow-light">${I.eyebrow}</span><span class="gname">${I.headline}</span>
           <span class="gblurb">Practice your facts so you're ready. Beat it together to win the ${SHOP.pet.find(x => x.id === nb.reward).name} ${SHOP.pet.find(x => x.id === nb.reward).icon}</span></span>
-          <span class="countdown"><b>${dd}</b>day${dd === 1 ? '' : 's'}</span></button>`;
+          <span class="countdown">${I.chip}</span></button>`;
       }
       return `<button type="button" class="game-card boss-card ${open ? '' : 'locked'}" data-g="boss"${open ? '' : ' aria-label="Boss Battle, locked"'}>
         <span class="gicon">${open ? B.face : '🔒'}</span>
@@ -2922,15 +2948,15 @@ function hpBarHTML(st, id) {
     <div class="hp-text"><b id="${id ? id + 'Text' : ''}">${fmt(left)} / ${fmt(st.max)} HP</b> left</div></div>`;
 }
 function bossPreview() {
-  const d = today(), dd = daysToFriday(d), weekend = [0, 6].includes(d.getDay());
-  const B = weekend ? currentBoss(new Date(d.getTime() + (dd || 7) * 86400000)) : currentBoss();
+  const d = today(), I = bossPreviewInfo(), weekend = [0, 6].includes(d.getDay()) || I.T.after;
+  const B = I.nb;
   const pet = SHOP.pet.find(x => x.id === B.reward), last = bossCached(), lastBoss = currentBoss();
   const prep = ['runner', 'driver', 'memory', 'tens'].filter(id => isUnlocked(id)).map(id => GAME[id]);
   $('#gameBody').innerHTML = `<div class="boss-intro">
-    <div class="eyebrow-dark">⚡ Coming ${bossDayName()} ⚡</div>
+    <div class="eyebrow-dark">⚡ ${I.eyebrow} ⚡</div>
     <div class="boss-face idle boss-shadow big">${B.face}</div>
     <h3>${B.name}</h3>
-    <div class="countdown big"><b>${dd}</b>day${dd === 1 ? '' : 's'} to go</div>
+    <div class="countdown big">${I.chip} to go</div>
     ${weekend && last.total ? `<p class="story">${last.total >= last.max ? `Your class beat ${lastBoss.name} this week! 🎉` : `${lastBoss.name} got away this week with ${fmt(Math.max(0, last.max - last.total))} HP left.`}</p>` : ''}
     <p class="story">On ${bossDayName()}, every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit!</p>
     <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
@@ -2941,7 +2967,7 @@ function bossPreview() {
 }
 async function bossIntro() {
   round = null;
-  if (!isBossDay()) return bossPreview();
+  if (!bossOpenNow()) return bossPreview();
   const B = currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
   const render = st => {
     const done = st.total >= st.max;
@@ -2976,7 +3002,7 @@ function bossQuestion() {
   const x = ones(11, L >= 4 ? 98 : 49), t = rnd(2, 9); return { skill: k, text: `${x} × ${t * 10}`, answer: x * t * 10 };
 }
 function bossRound() {
-  if (!isBossDay()) return bossPreview();
+  if (!bossOpenNow()) return bossPreview();
   const B = currentBoss();
   const base = bossCached();
   bossFight = { hits: 0, unsent: 0, correct: 0, wrong: 0, combo: 0, end: Date.now() + BOSS_ROUND_SECS * 1000, base, q: null, over: false };

@@ -308,7 +308,8 @@ var EXTRA_ROWS = [
   ['Boss questions', 'Mixed', 'Mixed = ×, ÷, + and − (plus tens × tens once Tens Tower is unlocked). Or choose: × ÷  or  × only  or  + −  or  ×, ÷, tens.'],
   ['Boss × and ÷: first number', 'Same', 'Same = use the × and ÷ numbers above. Auto = by each student\'s level. Or type numbers like 6-9 or 11-20 just for Boss Battle.'],
   ['Boss × and ÷: second number', 'Same', 'The other number in each Boss Battle fact. Example: first 11-20 and second 2-9 gives 14 × 6 and 84 ÷ 6.'],
-  ['Boss + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 100-999 just for Boss Battle.']
+  ['Boss + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 100-999 just for Boss Battle.'],
+  ['Boss Battle hours', 'All day', 'All day = Boss Battle is open all day on Boss Battle day. Or a time like 13:00-14:00 (or 1pm-2pm). Before then, students see a countdown.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -346,7 +347,8 @@ function readSettings_(ss) {
            playDays: text_(v[9], 'Every day'), playHours: text_(v[10], 'Any time'), alwaysPlay: text_(v[11], ''),
            top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], ''),
            codeChange: !/^(off|no|false|0)$/i.test(String(v[14]).trim()),
-           bossTypes: text_(v[15], 'Mixed'), bossA: text_(v[16], 'Same'), bossB: text_(v[17], 'Same'), bossAdd: text_(v[18], 'Same') };
+           bossTypes: text_(v[15], 'Mixed'), bossA: text_(v[16], 'Same'), bossB: text_(v[17], 'Same'), bossAdd: text_(v[18], 'Same'),
+           bossHours: text_(v[19], 'All day') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {

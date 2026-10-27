@@ -401,6 +401,19 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .runner { position: absolute; left: 10%; bottom: 74px; font-size: 48px; line-height: 1; z-index: 3; transform: scaleX(-1); }
 .runner.hop { animation: hop .75s cubic-bezier(.3,.7,.4,1); }
 @keyframes hop { 0% { translate: 0 0; } 50% { translate: 0 -118px; } 100% { translate: 0 0; } }
+.track::before { /* night sky, fades in and out */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff 99%, transparent), radial-gradient(1.5px 1.5px at 28% 40%, #fff 99%, transparent),
+    radial-gradient(2px 2px at 44% 12%, #fff 99%, transparent), radial-gradient(1.5px 1.5px at 58% 34%, #fff 99%, transparent),
+    radial-gradient(2px 2px at 70% 20%, #fff 99%, transparent), radial-gradient(1.5px 1.5px at 84% 46%, #fff 99%, transparent),
+    radial-gradient(1.5px 1.5px at 36% 26%, #fff 99%, transparent), radial-gradient(2px 2px at 92% 10%, #fff 99%, transparent),
+    linear-gradient(#0E1B3D 0, #24356B 62%, #6B6A86 62% 66%, #57566F 66%);
+}
+.track.night::before { opacity: 1; }
+.track .sun { transition: background .8s, box-shadow .8s; }
+.track.night .sun { background: #F6F1CF; box-shadow: inset -12px -4px 0 #D9D1A0, 0 0 0 8px rgba(246,241,207,.12); }
+.track.night .runner { filter: drop-shadow(0 0 6px rgba(255,255,255,.5)); }
 .block {
   position: absolute; bottom: 74px; left: 0; z-index: 2; will-change: transform;
   min-width: 60px; padding: 6px 8px; background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 10px;
@@ -4058,6 +4071,10 @@ function runnerResolve(b) { // returns true when this set is finished
   if (correct) {
     record('mult', true); noteFact(a.q, 'mult', true); a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.34, a.speed * 1.05);
     sfx('ok'); arcadeHud(); b.el.style.background = 'var(--leaf)'; cheer('', $('#track'));
+    if (a.correct % 5 === 0) { // every 5 right answers: day turns to night, then back to day
+      const t = $('#track'), night = t.classList.toggle('night');
+      arcadeBanner(t, night ? '🌙 Night falls!' : '☀️ Good morning!', 1000);
+    }
     later(runnerSet, 250); a.blocks.forEach(x => x.done = true);
     return true;
   }

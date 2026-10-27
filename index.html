@@ -3832,11 +3832,8 @@ function runnerLoop(now) {
 function runnerResolve(b) { // returns true when this set is finished
   const a = arcade, correct = b.v === a.q.answer;
   if (a.jumping) {
-    if (!correct) { a.points += 10; arcadeHud(); return false; }   // good jump
-    a.combo = 0; a.repeat = true; arcadeHud(); sfx('bad');          // jumped over the right one: it comes back
-    const m = document.createElement('div'); m.className = 'abanner'; m.style.top = '22%';
-    m.innerHTML = `Missed it!<small>${fmt(a.q.answer)} was the right answer. It's coming back!</small>`;
-    $('#track').appendChild(m); later(() => m.remove(), 1400);
+    if (!correct) return false;                                    // jumped a wrong one: fine, but no points (so jumping everything doesn't pay)
+    a.combo = 0; a.repeat = true; arcadeHud();                      // jumped over the right one: no hint, the same question just comes around again
     return false;
   }
   if (correct) {

@@ -255,6 +255,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
   animation: pop .9s ease-out forwards;
 }
 @keyframes pop { 0% { transform: translate(-50%, -30%) scale(.5); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(-50%, -80%) scale(1); opacity: 0; } }
+#resultsBody, #resultsBody .big-stars { position: relative; }
 .spark { position: absolute; z-index: 24; pointer-events: none; font-size: 22px; animation: fly .8s ease-out forwards; }
 @keyframes fly { to { transform: translate(var(--dx), var(--dy)) rotate(200deg); opacity: 0; } }
 .shake { animation: shake .4s; }
@@ -2510,6 +2511,8 @@ function showResults({ stars, title, lines, again, next, back }) {
       <button type="button" class="btn plain" id="toMap">${back ? back.label : '⬅ Map'}</button>
     </div>`;
   $('#playAgain').addEventListener('click', again);
+  // the student's celebration plays when the round ends: one burst per star
+  for (let i = 0; i < Math.max(1, stars || 1); i++) setTimeout(() => { if (currentScreen === 'results') cheer('', $('#resultsBody .big-stars') || $('#resultsBody')); }, 200 + i * 380);
   $('#toMap').addEventListener('click', back ? back.fn : openHub);
   if (next) $('#nextStop').addEventListener('click', next.fn);
   sfx('coin');
@@ -3826,7 +3829,7 @@ function driverHit(row) {
   record(a.skill, ok); noteFact(a.q, a.skill, ok);
   if (ok) {
     a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.11, a.speed * 1.04);
-    boxes[a.lane].classList.add('good'); sfx('ok'); arcadeHud();
+    boxes[a.lane].classList.add('good'); sfx('ok'); arcadeHud(); cheer('', $('#road')); // the student's celebration
     later(() => { row.el.remove(); driverRow(); }, 220);
   } else {
     a.combo = 0; a.hearts--; arcadeHud(); sfx('bad');
@@ -3929,7 +3932,7 @@ function soccerShoot(i) {
     a.goals++; a.correct++; a.combo++; a.best = Math.max(a.best, a.combo);
     const quick = Math.round(50 * (1 - f)); // faster kicks earn a bonus
     a.points += 100 + quick + (a.combo >= 3 ? 50 : 0);
-    zones[i].classList.add('good'); k.classList.add('dive-miss'); sfx('ok');
+    zones[i].classList.add('good'); k.classList.add('dive-miss'); sfx('ok'); cheer('', $('#pitch'));
     let msg = pick(['GOAL!', 'GOOOAL!', 'What a shot!', 'Top corner!', 'Back of the net!']);
     if (a.combo === 3) { a.hatTricks++; msg = 'HAT TRICK! 🎩'; reward(10, 20); }
     arcadeBanner(pitch, `${msg}<small class="ok">${quick >= 35 ? '⚡ Lightning fast!' : a.combo >= 3 ? `${a.combo} goals in a row!` : ''}</small>`, 1100);
@@ -4040,7 +4043,7 @@ function runnerResolve(b) { // returns true when this set is finished
   }
   if (correct) {
     record('mult', true); noteFact(a.q, 'mult', true); a.combo++; a.correct++; a.points += 100 * Math.min(a.combo, 5); a.speed = Math.min(0.34, a.speed * 1.05);
-    sfx('ok'); arcadeHud(); b.el.style.background = 'var(--leaf)';
+    sfx('ok'); arcadeHud(); b.el.style.background = 'var(--leaf)'; cheer('', $('#track'));
     later(runnerSet, 250); a.blocks.forEach(x => x.done = true);
     return true;
   }

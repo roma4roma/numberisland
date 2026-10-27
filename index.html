@@ -427,6 +427,10 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .big-stars span { display: inline-block; animation: starIn .5s backwards; }
 .big-stars span:nth-child(2) { animation-delay: .2s; } .big-stars span:nth-child(3) { animation-delay: .4s; }
 .big-stars .off { filter: grayscale(1) opacity(.3); }
+.big-stars [data-star] { position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.big-stars [data-star].pop { animation: starPop .35s ease-out; }
+.big-stars [data-star].nope { animation: shake .4s; }
+@keyframes starPop { 50% { transform: scale(1.35) rotate(12deg); } }
 @keyframes starIn { from { transform: scale(0) rotate(-90deg); } }
 .result-lines { display: grid; gap: 6px; width: 100%; max-width: 420px; }
 .result-line { display: flex; justify-content: space-between; gap: 10px; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -2498,7 +2502,7 @@ function showResults({ stars, title, lines, again, next, back }) {
     ${avatarHTML(p, 86)}
     <h2>${title}</h2>
     <div class="res-teacher">${teacherSVG(stars === 3 ? 'thumbs' : 'chibi', 84)}<div class="bubble">${pick(stars === 3 ? ['Awesome job! 3 stars!', "That's how it's done!", 'I knew you could do it!'] : stars === 2 ? ['Great effort! Go for 3 stars!', "You're getting there!", 'Nice work. Keep it up!'] : ["Mistakes help us learn. Try again!", "Don't give up. You've got this!", 'Practice makes progress!'])}<small>– ${TEACHER}</small></div></div>
-    <div class="big-stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? '' : 'off'}">⭐</span>`).join('')}</div>
+    <div class="big-stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? '' : 'off'}" data-star="${i <= stars ? 1 : 0}" role="button" tabindex="0" aria-label="${i <= stars ? 'Tap to celebrate' : 'Star not earned yet'}">⭐</span>`).join('')}</div>
     <div class="result-lines">
       ${lines.map(([a, b]) => `<div class="result-line"><span>${a}</span><span>${b}</span></div>`).join('')}
       <div class="result-line hl"><span>Earned</span><span>🪙 ${fmt(coins)} · ${fmt(xp)} XP</span></div>
@@ -2511,6 +2515,16 @@ function showResults({ stars, title, lines, again, next, back }) {
       <button type="button" class="btn plain" id="toMap">${back ? back.label : '⬅ Map'}</button>
     </div>`;
   $('#playAgain').addEventListener('click', again);
+  // tap an earned star to play the celebration again (an unearned star just wiggles)
+  $$('#resultsBody .big-stars [data-star]').forEach(st => {
+    const go = e => {
+      if (e) e.preventDefault();
+      st.classList.remove('pop', 'nope'); void st.offsetWidth;
+      if (st.dataset.star === '1') { st.classList.add('pop'); cheer('', st); sfx('coin'); } else { st.classList.add('nope'); sfx('tap'); }
+    };
+    st.addEventListener('pointerdown', go);
+    st.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') go(e); });
+  });
   // the student's celebration plays when the round ends: one burst per star
   for (let i = 0; i < Math.max(1, stars || 1); i++) setTimeout(() => { if (currentScreen === 'results') cheer('', $('#resultsBody .big-stars') || $('#resultsBody')); }, 200 + i * 380);
   $('#toMap').addEventListener('click', back ? back.fn : openHub);

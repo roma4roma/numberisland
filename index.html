@@ -949,17 +949,34 @@ const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg"
 const EMOJI_RE = new RegExp(Object.keys(EMOJI_FILES).sort((a, b) => b.length - a.length).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
 const EMOJI_ANY = new RegExp(EMOJI_RE.source, 'u');
 const EMOJI_SKIP = 'script,style,textarea,input,title,svg,option,.no-emo';
+const EMOJI_FAILED = new Set();   // pictures that didn't load: show the tablet's own emoji instead, and never retry (no flicker)
+const EMOJI_READY = {};           // each picture loaded once at the start and kept, so redrawn screens don't flash
+function preloadEmoji() {
+  for (const f of new Set(Object.values(EMOJI_FILES))) {
+    const im = new Image(); im.decoding = 'sync'; im.src = 'emoji/' + f;
+    im.onload = () => { EMOJI_READY[f] = im; };
+    im.onerror = () => Object.keys(EMOJI_FILES).forEach(e => { if (EMOJI_FILES[e] === f) EMOJI_FAILED.add(e); });
+  }
+}
+function emojiFallback(e) { const sp = document.createElement('span'); sp.className = 'no-emo'; sp.textContent = e; return sp; }
 function emojiImg(e) {
-  const img = document.createElement('img');
-  img.className = 'emo'; img.alt = e; img.draggable = false; img.src = 'emoji/' + EMOJI_FILES[e];
-  img.addEventListener('error', () => img.replaceWith(document.createTextNode(e)), { once: true });
+  const ready = EMOJI_READY[EMOJI_FILES[e]];
+  const img = ready ? ready.cloneNode(false) : document.createElement('img');
+  img.className = 'emo'; img.alt = e; img.draggable = false; img.decoding = 'sync';
+  if (!ready) img.src = 'emoji/' + EMOJI_FILES[e];
+  img.addEventListener('error', () => { EMOJI_FAILED.add(e); img.replaceWith(emojiFallback(e)); }, { once: true });
   return img;
 }
 function emojifyText(n) {
   const t = n.nodeValue; if (!t || !EMOJI_ANY.test(t)) return;
   const par = n.parentNode; if (!par || (par.closest && par.closest(EMOJI_SKIP))) return;
   const frag = document.createDocumentFragment(); let last = 0;
-  t.replace(EMOJI_RE, (m, i) => { if (i > last) frag.append(t.slice(last, i)); frag.append(emojiImg(m)); last = i + m.length; return m; });
+  let changed = false;
+  t.replace(EMOJI_RE, (m, i) => {
+    if (EMOJI_FAILED.has(m)) return m; // leave it as the tablet's emoji
+    if (i > last) frag.append(t.slice(last, i)); frag.append(emojiImg(m)); last = i + m.length; changed = true; return m;
+  });
+  if (!changed) return;
   if (last < t.length) frag.append(t.slice(last));
   n.replaceWith(frag);
 }
@@ -972,6 +989,7 @@ function emojify(root) {
   list.forEach(emojifyText);
 }
 function startEmoji() {
+  preloadEmoji();
   emojify(document.body);
   new MutationObserver(muts => muts.forEach(m => {
     if (m.type === 'characterData') emojifyText(m.target); else m.addedNodes.forEach(emojify);

@@ -424,8 +424,8 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .results { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 8px 0; }
 .results h2 { font-size: 36px; color: var(--sea-deep); }
 .big-stars { font-size: 64px; letter-spacing: 6px; line-height: 1; }
-.big-stars span { display: inline-block; animation: starIn .5s backwards; }
-.big-stars span:nth-child(2) { animation-delay: .2s; } .big-stars span:nth-child(3) { animation-delay: .4s; }
+.big-stars > span { display: inline-block; animation: starIn .5s backwards; }
+.big-stars > span:nth-child(2) { animation-delay: .2s; } .big-stars > span:nth-child(3) { animation-delay: .4s; }
 .big-stars .off { filter: grayscale(1) opacity(.3); }
 .big-stars [data-star] { position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .big-stars [data-star].pop { animation: starPop .35s ease-out; }

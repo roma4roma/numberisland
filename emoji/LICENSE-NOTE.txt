@@ -1,1 +1,2 @@
-Emoji pictures in emoji/ are from Noto Emoji by Google (Apache License 2.0), via the emoji-datasource-google package.
+Emoji pictures in this folder are from OpenMoji (https://openmoji.org), the open-source emoji project.
+License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).

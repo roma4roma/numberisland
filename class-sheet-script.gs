@@ -18,12 +18,13 @@
  *                   and which numbers the fact games use (Fact Runner, Math Driver, Memory Reef, Boss Battle).
  *   Island Reactions  Who left which reaction on whose island (one per visitor per island).
  *   Ideas           Ideas students send you from the game's Idea box (one per student per day).
+ *   Race Day        Each student's best Race Day score, how many tries, and who won (and got the prize).
  *
  * The "Number Island" menu at the top of the sheet has "Start a new school year…".
  *   Save Data       The game's save files. Hidden. Please don't edit it.
  */
 
-var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions', ideas: 'Ideas' };
+var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions', ideas: 'Ideas', race: 'Race Day' };
 var REACTIONS = ['⭐', '❤️', '🦝', '🔥', '🤩'];
 var BOSS_HP_PER_STUDENT = 100; // starting value; change it any time on the Settings tab
 
@@ -111,7 +112,7 @@ function doPost(e) {
     if (Number(req.coinV) >= 2 && !staleSave && (req.action === 'load' || req.action === 'boss' || req.action === 'save')) {
       var ca = peekCoinAdjust_(ss, who); if (ca) { coinAdjust = ca.n; coinId = ca.id; }
     }
-    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, myReactions: reactionsFor_(ss, who), boards: boards_(ss) });
+    if (req.action === 'load') return out_({ ok: true, name: who, profile: loadSave_(ss, who), games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, myReactions: reactionsFor_(ss, who), boards: boards_(ss), race: raceInfo_(ss, who) });
     if (req.action === 'setCode') { // a student changes their own secret code (already checked their current one above)
       if (!readSettings_(ss).codeChange) return out_({ ok: false, error: 'off' });
       var nc = String(req.newCode == null ? '' : req.newCode).trim();
@@ -122,6 +123,8 @@ function doPost(e) {
       return out_({ ok: true });
     }
     if (req.action === 'suggest') return out_(suggest_(ss, who, req.kind, req.idea));
+    if (req.raceAck) raceAck_(ss, who, String(req.raceAck));
+    if (req.action === 'raceScore') return out_(raceScore_(ss, who, req.score));
     if (req.action === 'islands') {
       if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
       return out_({ ok: true, islands: allIslands_(ss, who) });
@@ -143,7 +146,7 @@ function doPost(e) {
       if (req.profile) writeSave_(ss, who, req.profile);
       if (req.summary) { writeSummary_(ss, who, req.summary); buildNeedsHelp_(ss); }
       if (req.activity && req.activity.length) writeActivity_(ss, who, req.activity);
-      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who), boards: boards_(ss) });
+      return out_({ ok: true, games: readGames_(ss), settings: readSettings_(ss), coinAdjust: coinAdjust, coinId: coinId, boss: req.boss && req.boss.week ? bossStatus_(ss, req.boss.week, who) : null, myReactions: reactionsFor_(ss, who), boards: boards_(ss), race: raceInfo_(ss, who) });
     }
     return out_({ ok: false, error: 'bad_action' });
   } catch (err) {
@@ -312,7 +315,14 @@ var EXTRA_ROWS = [
   ['Boss × and ÷: second number', 'Same', 'The other number in each Boss Battle fact. Example: first 11-20 and second 2-9 gives 14 × 6 and 84 ÷ 6.'],
   ['Boss + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 100-999 just for Boss Battle.'],
   ['Boss Battle hours', 'All day', 'All day = Boss Battle is open all day on Boss Battle day. Or a time like 13:00-14:00 (or 1pm-2pm). Before then, students see a countdown.'],
-  ['Idea box', 'On', 'On = students can send you one idea a day (a new game, a shop item...). Ideas show up on the Ideas tab. Off = hide the Idea box.']
+  ['Idea box', 'On', 'On = students can send you one idea a day (a new game, a shop item...). Ideas show up on the Ideas tab. Off = hide the Idea box.'],
+  ['Race Day', 'Thursday', 'The day of the weekly 2-minute race (+1 for a right answer, -1 for a wrong one). Type a day like Thursday, or Off.'],
+  ['Race Day results time', '14:20', 'When the winner is decided. Students can race as many times as they like before then; their best score counts.'],
+  ['Race Day prize', 200, 'Coins for the winner (if there is a tie, everyone tied for first wins).'],
+  ['Race Day questions', 'Mixed', 'Mixed = ×, ÷, + and −. Or choose: × ÷  or  + −  or  × only  or  ÷ only.'],
+  ['Race Day × and ÷: first number', 'Same', 'Same = use the × and ÷ numbers above. Auto = by each student\'s level. Or numbers like 2-9 or 11-20 just for Race Day.'],
+  ['Race Day × and ÷: second number', 'Same', 'The other number in each Race Day fact.'],
+  ['Race Day + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 10-99 just for Race Day.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -351,7 +361,9 @@ function readSettings_(ss) {
            top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], ''),
            codeChange: !/^(off|no|false|0)$/i.test(String(v[14]).trim()),
            bossTypes: text_(v[15], 'Mixed'), bossA: text_(v[16], 'Same'), bossB: text_(v[17], 'Same'), bossAdd: text_(v[18], 'Same'),
-           bossHours: text_(v[19], 'All day'), ideaBox: !/^(off|no|false|0)$/i.test(String(v[20]).trim()) };
+           bossHours: text_(v[19], 'All day'), ideaBox: !/^(off|no|false|0)$/i.test(String(v[20]).trim()),
+           raceDay: text_(v[21], 'Thursday'), raceTime: text_(v[22], '14:20'), racePrize: Number(v[23]) >= 0 && String(v[23]).trim() !== '' ? Number(v[23]) : 200,
+           raceTypes: text_(v[24], 'Mixed'), raceA: text_(v[25], 'Same'), raceB: text_(v[26], 'Same'), raceAdd: text_(v[27], 'Same') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {
@@ -569,4 +581,86 @@ function suggest_(ss, who, kind, idea) {
   }
   sh.getRange(last + 1, 1, 1, 4).setValues([[new Date(), who, kind, idea]]);
   return { ok: true };
+}
+
+/* ---------- Race Day: a weekly 2-minute race. Best score of the day wins coins at the results time ---------- */
+var DAYS_ = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+function raceTab_(ss) { return tab_(ss, TABS.race, ['Date', 'Student', 'Best score', 'Tries', 'Result', 'Prize']); }
+function raceNow_(ss) {
+  var st = readSettings_(ss), tz = Session.getScriptTimeZone(), now = new Date();
+  var d = String(st.raceDay).trim().toLowerCase(), day = DAYS_.indexOf(d.slice(0, 3));
+  var m = String(st.raceTime).match(/(\d{1,2})[:.](\d{2})/), endMin = m ? Number(m[1]) * 60 + Number(m[2]) : 14 * 60 + 20;
+  var today = Utilities.formatDate(now, tz, 'yyyy-MM-dd'), dow = Number(Utilities.formatDate(now, tz, 'u')) % 7;
+  var hm = Utilities.formatDate(now, tz, 'HH:mm').split(':'), min = Number(hm[0]) * 60 + Number(hm[1]);
+  var on = !/^(off|no|false|0)$/i.test(d) && day >= 0;
+  return { on: on, isDay: on && dow === day, open: on && dow === day && min < endMin, today: today, endMin: endMin,
+           time: m ? m[1] + ':' + m[2] : '14:20', day: day, prize: st.racePrize, st: st };
+}
+function raceHidden_(st) {
+  var hidden = {};
+  (st.alwaysPlay + ',' + st.hideTop3).split(/[,;]/).forEach(function (n) { if (normName_(n)) hidden[normName_(n)] = true; });
+  return hidden;
+}
+function raceRows_(ss) {
+  var sh = ss.getSheetByName(TABS.race); if (!sh || sh.getLastRow() < 2) return [];
+  var tz = Session.getScriptTimeZone();
+  return sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues().map(function (r, i) {
+    return { row: i + 2, date: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : String(r[0]).slice(0, 10),
+             name: String(r[1]), score: Number(r[2]) || 0, tries: Number(r[3]) || 0, result: String(r[4] || ''), prize: String(r[5] || '') };
+  });
+}
+/** Decides winners for any race day whose results time has passed (only once per day). */
+function raceFinalize_(ss, R) {
+  var rows = raceRows_(ss); if (!rows.length) return rows;
+  var hidden = raceHidden_(R.st), sh = ss.getSheetByName(TABS.race), byDate = {};
+  rows.forEach(function (r) { (byDate[r.date] = byDate[r.date] || []).push(r); });
+  Object.keys(byDate).forEach(function (date) {
+    var list = byDate[date];
+    if (list.some(function (r) { return r.result; })) return;                       // already decided
+    if (date > R.today || (date === R.today && R.open)) return;                     // still racing
+    var eligible = list.filter(function (r) { return !hidden[normName_(r.name)]; });
+    var best = Math.max.apply(null, eligible.map(function (r) { return r.score; }).concat([-1e9]));
+    list.forEach(function (r) {
+      var win = eligible.indexOf(r) >= 0 && r.score === best && best > 0;
+      r.result = win ? 'Winner 🏆' : '—';
+      if (win) r.prize = String(R.prize) + ' coins (waiting)';
+      sh.getRange(r.row, 5, 1, 2).setValues([[r.result, win ? r.prize : '']]);
+    });
+  });
+  return rows;
+}
+function raceInfo_(ss, who) {
+  var R = raceNow_(ss); if (!R.on) return { on: false };
+  var rows = raceFinalize_(ss, R), hidden = raceHidden_(R.st), me = normName_(who);
+  var todays = rows.filter(function (r) { return r.date === R.today && !hidden[normName_(r.name)]; }).sort(function (a, b) { return b.score - a.score; });
+  var mine = rows.filter(function (r) { return r.date === R.today && normName_(r.name) === me; })[0];
+  var avatars = {};
+  var data = ss.getSheetByName(TABS.data);
+  if (data && data.getLastRow() >= 2 && todays.length) data.getRange(2, 1, data.getLastRow() - 1, 3).getValues().forEach(function (r) {
+    try { avatars[normName_(r[0])] = (JSON.parse(r[2]) || {}).avatar; } catch (e) {}
+  });
+  var prize = rows.filter(function (r) { return normName_(r.name) === me && /waiting/.test(r.prize); })[0];
+  var winners = todays.filter(function (r) { return /Winner/.test(r.result); });
+  return { on: true, isDay: R.isDay, open: R.open, today: R.today, time: R.time, day: R.day, prizeCoins: R.prize,
+           top: todays.slice(0, 3).map(function (r) { return { name: r.name, score: r.score, avatar: avatars[normName_(r.name)] || '🙂' }; }),
+           mine: mine ? { score: mine.score, tries: mine.tries } : null,
+           winners: winners.map(function (r) { return { name: r.name, score: r.score, avatar: avatars[normName_(r.name)] || '🙂' }; }),
+           prize: prize ? { date: prize.date, coins: parseInt(prize.prize, 10) || R.prize } : null };
+}
+function raceScore_(ss, who, score) {
+  var R = raceNow_(ss);
+  if (!R.open) return { ok: false, error: 'closed', race: raceInfo_(ss, who) };
+  score = Math.max(-999, Math.min(999, Math.round(Number(score) || 0)));
+  var sh = raceTab_(ss), rows = raceRows_(ss), me = normName_(who);
+  var r = rows.filter(function (x) { return x.date === R.today && normName_(x.name) === me; })[0];
+  if (r) sh.getRange(r.row, 3, 1, 2).setValues([[Math.max(r.score, score), r.tries + 1]]);
+  else sh.getRange(sh.getLastRow() + 1, 1, 1, 4).setValues([[R.today, who, score, 1]]);
+  return { ok: true, race: raceInfo_(ss, who) };
+}
+/** The game added the prize coins: mark them as paid. */
+function raceAck_(ss, who, date) {
+  var sh = ss.getSheetByName(TABS.race); if (!sh) return;
+  raceRows_(ss).forEach(function (r) {
+    if (r.date === date && normName_(r.name) === normName_(who) && /waiting/.test(r.prize)) sh.getRange(r.row, 6).setValue(r.prize.replace('(waiting)', '(paid)'));
+  });
 }

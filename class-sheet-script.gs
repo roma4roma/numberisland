@@ -17,12 +17,13 @@
  *   Settings        Boss Battle day, boss health, coin rate, island visits, Today's Challenge,
  *                   and which numbers the fact games use (Fact Runner, Math Driver, Memory Reef, Boss Battle).
  *   Island Reactions  Who left which reaction on whose island (one per visitor per island).
+ *   Ideas           Ideas students send you from the game's Idea box (one per student per day).
  *
  * The "Number Island" menu at the top of the sheet has "Start a new school year…".
  *   Save Data       The game's save files. Hidden. Please don't edit it.
  */
 
-var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions' };
+var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions', ideas: 'Ideas' };
 var REACTIONS = ['⭐', '❤️', '🦝', '🔥', '🤩'];
 var BOSS_HP_PER_STUDENT = 100; // starting value; change it any time on the Settings tab
 
@@ -120,6 +121,7 @@ function doPost(e) {
       if (act) act.getRange(act.getLastRow() + 1, 1, 1, 7).setValues([[new Date(), who, 'Secret code', 'Student changed their code', '', '', '']]);
       return out_({ ok: true });
     }
+    if (req.action === 'suggest') return out_(suggest_(ss, who, req.kind, req.idea));
     if (req.action === 'islands') {
       if (!readSettings_(ss).islandVisits) return out_({ ok: true, off: true });
       return out_({ ok: true, islands: allIslands_(ss, who) });
@@ -309,7 +311,8 @@ var EXTRA_ROWS = [
   ['Boss × and ÷: first number', 'Same', 'Same = use the × and ÷ numbers above. Auto = by each student\'s level. Or type numbers like 6-9 or 11-20 just for Boss Battle.'],
   ['Boss × and ÷: second number', 'Same', 'The other number in each Boss Battle fact. Example: first 11-20 and second 2-9 gives 14 × 6 and 84 ÷ 6.'],
   ['Boss + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 100-999 just for Boss Battle.'],
-  ['Boss Battle hours', 'All day', 'All day = Boss Battle is open all day on Boss Battle day. Or a time like 13:00-14:00 (or 1pm-2pm). Before then, students see a countdown.']
+  ['Boss Battle hours', 'All day', 'All day = Boss Battle is open all day on Boss Battle day. Or a time like 13:00-14:00 (or 1pm-2pm). Before then, students see a countdown.'],
+  ['Idea box', 'On', 'On = students can send you one idea a day (a new game, a shop item...). Ideas show up on the Ideas tab. Off = hide the Idea box.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -348,7 +351,7 @@ function readSettings_(ss) {
            top3: !/^(off|no|false|0)$/i.test(String(v[12]).trim()), hideTop3: text_(v[13], ''),
            codeChange: !/^(off|no|false|0)$/i.test(String(v[14]).trim()),
            bossTypes: text_(v[15], 'Mixed'), bossA: text_(v[16], 'Same'), bossB: text_(v[17], 'Same'), bossAdd: text_(v[18], 'Same'),
-           bossHours: text_(v[19], 'All day') };
+           bossHours: text_(v[19], 'All day'), ideaBox: !/^(off|no|false|0)$/i.test(String(v[20]).trim()) };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {
@@ -542,4 +545,28 @@ function setRosterCode_(ss, who, code) {
   for (var i = 0; i < names.length; i++) {
     if (normName_(names[i][0]) === normName_(who)) { sh.getRange(i + 2, 2).setNumberFormat('@').setValue(code); return; }
   }
+}
+
+/* ---------- Idea box: one idea per student per day, on the Ideas tab ---------- */
+function ideasTab_(ss) {
+  var sh = tab_(ss, TABS.ideas, ['Date', 'Student', 'Kind of idea', 'Idea', 'Your notes']);
+  try { sh.setColumnWidth(4, 420); sh.setColumnWidth(5, 220); } catch (e) {}
+  return sh;
+}
+function suggest_(ss, who, kind, idea) {
+  if (!readSettings_(ss).ideaBox) return { ok: false, error: 'off' };
+  idea = String(idea == null ? '' : idea).replace(/\s+/g, ' ').trim().slice(0, 300);
+  kind = String(kind == null ? '' : kind).trim().slice(0, 40) || 'Something else';
+  if (idea.length < 3) return { ok: false, error: 'too_short' };
+  var sh = ideasTab_(ss), tz = Session.getScriptTimeZone(), today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  var last = sh.getLastRow();
+  if (last >= 2) {
+    var rows = sh.getRange(2, 1, last - 1, 2).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      var d = rows[i][0] instanceof Date ? Utilities.formatDate(rows[i][0], tz, 'yyyy-MM-dd') : String(rows[i][0]).slice(0, 10);
+      if (d === today && normName_(rows[i][1]) === normName_(who)) return { ok: false, error: 'one_per_day' };
+    }
+  }
+  sh.getRange(last + 1, 1, 1, 4).setValues([[new Date(), who, kind, idea]]);
+  return { ok: true };
 }

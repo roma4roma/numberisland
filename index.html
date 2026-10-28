@@ -2227,8 +2227,9 @@ function padHTML(dot = false) {
 }
 function padBind(fields, onDone, opts = {}) {
   Pad.fields = fields; Pad.active = opts.start || 0; Pad.onDone = onDone; Pad.locked = false; Pad.submitOnly = !!opts.submitOnly; Pad.onChange = opts.onChange || null;
-  fields.forEach((f, i) => { f.value = f.value || ''; f.el.addEventListener('click', () => { if (Pad.locked) return; Pad.active = i; padRender(); }); });
-  $$('#pad .key').forEach(k => k.addEventListener('click', () => padPress(k.dataset.k)));
+  fields.forEach((f, i) => { f.value = f.value || ''; f.el.dataset.fi = i; if (!f.el.dataset.bound) { f.el.dataset.bound = '1'; f.el.addEventListener('click', () => { if (Pad.locked) return; const j = +f.el.dataset.fi; if (Pad.fields[j] && Pad.fields[j].el === f.el) { Pad.active = j; padRender(); } }); } });
+  // each key is wired up only once, even when the same pad is reused for many questions (Boss Battle, Race Day)
+  $$('#pad .key').forEach(k => { if (k.dataset.bound) return; k.dataset.bound = '1'; k.addEventListener('click', () => padPress(k.dataset.k)); });
   padRender();
 }
 function padClear() { Pad.fields = []; Pad.onDone = null; Pad.onChange = null; }

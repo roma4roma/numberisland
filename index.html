@@ -940,7 +940,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202610300553';
+const BUILD_ID = '202610300603';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -2228,6 +2228,11 @@ function renderGameGrid() {
     return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>${chTag}
         <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
   }).join('');
+  { // Race Day sits at the top on race day; every other day Boss Battle is first
+    const rc = $('#gameGrid .race-card'), bc = $('#gameGrid .boss-card'), r = raceInfo();
+    const raceToday = rc && r && today().getDay() === r.day;
+    if (bc && !raceToday) { $('#gameGrid').prepend(bc); if (rc) $('#gameGrid').append(rc); }
+  }
   $$('.game-card').forEach(b => b.addEventListener('click', () => {
     if (!isUnlocked(b.dataset.g)) { toast(`${GAME[b.dataset.g].name} is locked for now. ${TEACHER} will open it soon!`, false, true); sfx('bad'); return; }
     startGame(b.dataset.g);

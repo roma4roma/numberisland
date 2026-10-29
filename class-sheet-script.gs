@@ -24,7 +24,7 @@
  *   Save Data       The game's save files. Hidden. Please don't edit it.
  */
 
-var TABS = { roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions', ideas: 'Ideas', race: 'Race Day' };
+var TABS = { winners: 'Race Winners', roster: 'Roster', progress: 'Class Progress', help: 'Needs Help', activity: 'Activity', games: 'Games', boss: 'Boss Battles', settings: 'Settings', data: 'Save Data', reacts: 'Island Reactions', ideas: 'Ideas', race: 'Race Day' };
 var REACTIONS = ['⭐', '❤️', '🦝', '🔥', '🤩'];
 var BOSS_HP_PER_STUDENT = 100; // starting value; change it any time on the Settings tab
 
@@ -230,6 +230,19 @@ function writeActivity_(ss, who, list) {
     return [a.time ? new Date(a.time) : new Date(), who, a.game || '', a.result || '', a.stars || '', a.skill || '', a.level || ''];
   });
   if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, 7).setValues(rows);
+  trimActivity_(ss, sh);
+}
+/** Deletes Activity rows older than the "Keep activity for (days)" setting (oldest rows are at the top). */
+function trimActivity_(ss, sh) {
+  var days = readSettings_(ss).activityDays, last = sh.getLastRow();
+  if (!days || last < 2) return;
+  var cutoff = Date.now() - days * 86400000;
+  var first = sh.getRange(2, 1).getValue();
+  if (!(first instanceof Date) || first.getTime() >= cutoff) return;  // nothing old yet: cheap check
+  var col = sh.getRange(2, 1, last - 1, 1).getValues(), n = 0;
+  while (n < col.length && col[n][0] instanceof Date && col[n][0].getTime() < cutoff) n++;
+  if (n >= col.length) n = col.length - 1;                              // always keep the newest row
+  if (n > 0) sh.deleteRows(2, n);
 }
 
 /** Makes the Games tab and adds any games it doesn't list yet. */
@@ -322,7 +335,8 @@ var EXTRA_ROWS = [
   ['Race Day questions', 'Mixed', 'Mixed = ×, ÷, + and −. Or choose: × ÷  or  + −  or  × only  or  ÷ only.'],
   ['Race Day × and ÷: first number', 'Same', 'Same = use the × and ÷ numbers above. Auto = by each student\'s level. Or numbers like 2-9 or 11-20 just for Race Day.'],
   ['Race Day × and ÷: second number', 'Same', 'The other number in each Race Day fact.'],
-  ['Race Day + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 10-99 just for Race Day.']
+  ['Race Day + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 10-99 just for Race Day.'],
+  ['Keep activity for (days)', 7, 'Rows on the Activity tab older than this many days are deleted by themselves, so the tab stays short. 0 = keep everything.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -363,7 +377,8 @@ function readSettings_(ss) {
            bossTypes: text_(v[15], 'Mixed'), bossA: text_(v[16], 'Same'), bossB: text_(v[17], 'Same'), bossAdd: text_(v[18], 'Same'),
            bossHours: text_(v[19], 'All day'), ideaBox: !/^(off|no|false|0)$/i.test(String(v[20]).trim()),
            raceDay: text_(v[21], 'Thursday'), raceTime: text_(v[22], '14:20'), racePrize: Number(v[23]) >= 0 && String(v[23]).trim() !== '' ? Number(v[23]) : 200,
-           raceTypes: text_(v[24], 'Mixed'), raceA: text_(v[25], 'Same'), raceB: text_(v[26], 'Same'), raceAdd: text_(v[27], 'Same') };
+           raceTypes: text_(v[24], 'Mixed'), raceA: text_(v[25], 'Same'), raceB: text_(v[26], 'Same'), raceAdd: text_(v[27], 'Same'),
+           activityDays: String(v[28]).trim() === '' ? 7 : Math.max(0, Number(v[28]) || 0) };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {
@@ -620,12 +635,19 @@ function raceFinalize_(ss, R) {
     if (date > R.today || (date === R.today && R.open)) return;                     // still racing
     var eligible = list.filter(function (r) { return !hidden[normName_(r.name)]; });
     var best = Math.max.apply(null, eligible.map(function (r) { return r.score; }).concat([-1e9]));
+    var wins = [];
     list.forEach(function (r) {
       var win = eligible.indexOf(r) >= 0 && r.score === best && best > 0;
       r.result = win ? 'Winner 🏆' : '—';
-      if (win) r.prize = String(R.prize) + ' coins (waiting)';
+      if (win) { r.prize = String(R.prize) + ' coins (waiting)'; wins.push([date, r.name, r.score, R.prize + ' coins']); }
       sh.getRange(r.row, 5, 1, 2).setValues([[r.result, win ? r.prize : '']]);
+      if (win) sh.getRange(r.row, 1, 1, 6).setBackgrounds([['#FFF0B8', '#FFF0B8', '#FFF0B8', '#FFF0B8', '#FFF0B8', '#FFF0B8']]);
     });
+    var wt = tab_(ss, TABS.winners, ['Race date', 'Winner', 'Score', 'Prize']);
+    if (!wins.length) wins.push([date, '(no winner – nobody scored above 0)', '', '']);
+    var wl = wt.getLastRow() + 1;
+    wt.getRange(wl, 1, wins.length, 1).setNumberFormat('@');
+    wt.getRange(wl, 1, wins.length, 4).setValues(wins);
   });
   return rows;
 }

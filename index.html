@@ -152,6 +152,14 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .avatar-pick button[aria-pressed="true"] { background: var(--sun); transform: translateY(-3px); box-shadow: 0 3px 0 var(--ink); }
 .foot-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
 .note { color: var(--ink-soft); font-size: 14px; text-align: center; }
+#syncStatus { position: sticky; top: 6px; z-index: 30; width: fit-content; max-width: calc(100% - 24px); margin: 0 auto 10px; padding: 7px 16px; border-radius: 999px;
+  font-size: 15px; font-weight: 800; text-align: center; background: #E3F2FF; color: #1D4E89; border: 2px solid #9CCBF5; box-shadow: 0 3px 10px rgba(0,0,0,.12); transition: opacity .4s; }
+#syncStatus:empty { display: none; }
+#syncStatus[data-state="ok"] { background: #E2F7E9; color: #1E6B3A; border-color: #9EDDB3; }
+#syncStatus[data-state="offline"], #syncStatus[data-state="error"] { background: #FFF0D6; color: #8A4B00; border-color: #F5C277; }
+#syncStatus[data-state="update"] { background: #FFF5C2; color: #6B5200; border-color: #F2D35B; }
+#syncStatus[data-state="saving"] .spin { display: inline-block; animation: syncSpin 1s linear infinite; }
+@keyframes syncSpin { to { transform: rotate(360deg); } }
 
 /* ---------- Hub ---------- */
 .hub-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 6px 16px; }
@@ -816,6 +824,7 @@ img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125
 
     <!-- Hub -->
     <section id="scr-hub" hidden>
+      <p id="syncStatus" aria-live="polite"></p>
       <div class="hub-head">
         <button type="button" id="hubAvatar" class="avatar-btn" aria-label="Change your animal"></button>
         <div class="who">
@@ -842,7 +851,6 @@ img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125
         <button type="button" class="link-btn" id="soundToggle">Sound: on</button>
         <button type="button" class="link-btn" id="teacherLink2" hidden>Teacher</button>
       </div>
-      <p class="note" id="syncStatus" aria-live="polite"></p>
       <p class="credit" id="hubCredit"></p>
     </section>
 
@@ -930,6 +938,30 @@ img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125
    ========================================================= */
 const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
+/* Version check: the published build has its own id, and version.txt on the website holds the newest id.
+   When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
+const BUILD_ID = '202610300553';
+let lastVersionCheck = 0, newVersion = null;
+async function checkVersion(force) {
+  if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
+  if (!newVersion && (force || Date.now() - lastVersionCheck > 45000)) {
+    lastVersionCheck = Date.now();
+    try {
+      const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+      const v = r.ok ? (await r.text()).trim() : '';
+      let tries = 0; try { const k = JSON.parse(sessionStorage.getItem('ni.reload') || '{}'); tries = k.v === v ? k.n : 0; } catch (e) {}
+      if (/^\d{6,}$/.test(v) && v > BUILD_ID && tries < 2) newVersion = v; // at most 2 tries, so an old cached copy can't reload forever
+    } catch (e) {}
+  }
+  if (newVersion && (currentScreen === 'hub' || currentScreen === 'who')) {
+    const el = $('#syncStatus'); if (el) { el.dataset.state = 'update'; el.innerHTML = '✨ A new version of the game is here. Updating…'; }
+    try { if (P()) syncNow(store.current); save(); } catch (e) {}
+    const v = newVersion; newVersion = 'reloading';
+    try { const k = JSON.parse(sessionStorage.getItem('ni.reload') || '{}'); sessionStorage.setItem('ni.reload', JSON.stringify({ v, n: (k.v === v ? k.n : 0) + 1 })); } catch (e) {}
+    setTimeout(() => location.replace(location.pathname + '?v=' + v), 1800);
+  }
+}
+setInterval(() => checkVersion(), 60000);
 
 
 /* Cartoon Mr. Romanek (drawn in code) */
@@ -1793,7 +1825,7 @@ function enforceHours() {
   $('#closedSwitch', m).addEventListener('click', () => { m.remove(); $('#switchPlayer').click(); });
 }
 setInterval(enforceHours, 30000);
-setInterval(() => { if (currentScreen === 'hub' && P()) renderGameGrid(); }, 60000);
+setInterval(() => { if (currentScreen === 'hub' && P()) { renderGameGrid(); refreshFromSheet(); } }, 60000);
 /* ---------- Students change their own secret code (the new code is written into the Roster) ---------- */
 function showCodeButton() {
   const b = $('#changeCode'), p = P(), on = sheetUrl() && p && p.sheetName && store.settings;
@@ -2063,9 +2095,12 @@ function syncBody(p, withActivity) {
 let syncTimer = null; const syncingIds = new Set();
 function setSyncStatus(state) {
   const el = $('#syncStatus'); if (!el) return;
-  el.textContent = !sheetUrl() || !P() || !P().sheetName ? '' :
-    state === 'saving' ? '☁️ Saving to your class…' : state === 'ok' ? '☁️ Saved to your class' :
-    state === 'offline' ? "☁️ Can't reach your class right now. Progress will save later." : state === 'error' ? `☁️ The class sheet had a problem saving. Tell ${TEACHER}.` : '';
+  if (el.dataset.state === 'update') return; // "new version" message wins
+  const t = () => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  el.dataset.state = state || '';
+  el.innerHTML = !sheetUrl() || !P() || !P().sheetName ? '' :
+    state === 'saving' ? '<span class="spin">🔄</span> Updating with your class…' : state === 'ok' ? `✅ Up to date <small>(${t()})</small>` :
+    state === 'offline' ? "⚠️ Can't reach your class right now. Progress will save later." : state === 'error' ? `⚠️ The class sheet had a problem saving. Tell ${TEACHER}.` : '';
 }
 function scheduleSync(ms = 6000) {
   const p = P(); if (!sheetUrl() || !p || !p.sheetName) return;
@@ -2145,10 +2180,12 @@ function openHub() {
   $('#hubXpText').textContent = `${li.into} / ${li.need} XP to level ${li.L + 1}`;
   $('#soundToggle').textContent = 'Sound: ' + (store.sound ? 'on' : 'off');
   updateCoinChips();
-  if (!p.sheetName) $('#syncStatus').textContent = sheetUrl() ? '' : '';
+  if (!p.sheetName) { $('#syncStatus').textContent = ''; }
   else if (!syncingIds.has(p.id)) setSyncStatus((p.syncedAt || 0) >= (p.updated || 0) - 2000 ? 'ok' : 'offline');
   renderGameGrid();
   show('hub');
+  refreshFromSheet(); // pick up games the teacher turned on/off (at most every 30 s)
+  checkVersion();
 }
 function renderGameGrid() {
   const p = P(); if (!p) return;
@@ -2202,7 +2239,12 @@ function applyLocks(map) {
   const before = JSON.stringify(store.locks || {});
   store.locks = map;
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
-  if (before !== JSON.stringify(map) && currentScreen === 'hub') renderGameGrid();
+  if (before !== JSON.stringify(map) && currentScreen === 'hub') {
+    renderGameGrid();
+    const was = JSON.parse(before);
+    const opened = GAMES.filter(g => !g.special && was[g.id] === false && map[g.id] === true).map(g => g.name);
+    if (opened.length) toast(`🎮 New game turned on: ${opened.join(', ')}!`, true, true);
+  }
 }
 $('#switchPlayer').addEventListener('click', () => { if (P()) syncNow(store.current); store.current = null; save(); renderWho(); });
 $('#changeCode').addEventListener('click', openChangeCode);

@@ -3275,23 +3275,32 @@ async function bossEnd(victory) {
   const g = gameStats('boss'); g.best = Math.max(g.best || 0, f.hits); g.stars = Math.max(g.stars || 0, stars);
   checkBadges({ finished: true, stars });
   logActivity('Boss Battle', `${f.hits} hits (${f.correct} right, ${f.wrong} missed)`, stars, null);
-  let st = f.base.local ? bossCached() : null;
+  const hpText = st => { const left = Math.max(0, st.max - st.total); return left === 0 ? 'None! You did it!' : `${fmt(left)} of ${fmt(st.max)} HP`; };
+  const finish = st => {
+    if (st.local) checkBossReward(st);
+    const beat = st.total >= st.max;
+    if (beat && !reduceMotion) for (let i = 0; i < 3; i++) setTimeout(() => cheer('', $('#gameWrap')), i * 300);
+    return beat;
+  };
+  // Show the results straight away; the class sheet can take a few seconds to answer.
+  const guess = f.base.local ? bossCached() : { ...f.base, total: bossTotalNow() };
+  const beat0 = f.base.local ? finish(guess) : guess.total >= guess.max;
+  showResults({
+    stars, title: beat0 ? `${B.name} is defeated! 🎉` : victory ? `${B.name} is defeated! 🎉` : "⏱ Time's up! Great attack!",
+    lines: [['Your hits this round', `⚔️ ${f.hits}`], ['Right answers', `${f.correct} of ${f.correct + f.wrong}`],
+            ['Boss health left', `<span id="bossLeftLine">${f.base.local ? hpText(guess) : hpText(guess) + ' <small>(updating…)</small>'}</span>`]],
+    again: () => startGame('boss')
+  });
+  bossFight = null;
   if (!f.base.local) {
     const send = f.unsent; f.unsent = 0;
     if (send && p.bossPend) p.bossPend.hits = Math.max(0, p.bossPend.hits - send);
     const fresh = await bossFetch(send);
     if (!fresh && send) { p.bossPend = p.bossPend || { week: weekInfo().id, hits: 0 }; p.bossPend.hits += send; save(); }
-    st = fresh || { ...f.base, total: bossTotalNow() };
+    const st = fresh || guess;
+    const el = $('#bossLeftLine'); if (el) el.innerHTML = hpText(st);
+    if (finish(st) && !beat0) { const t = $('#resultsBody h2'); if (t) t.textContent = `${B.name} is defeated! 🎉`; }
   }
-  if (st.local) checkBossReward(st);
-  const left = Math.max(0, st.max - st.total), beat = left === 0;
-  if (beat && !reduceMotion) for (let i = 0; i < 3; i++) setTimeout(() => cheer('', $('#gameWrap')), i * 300);
-  showResults({
-    stars, title: beat ? `${B.name} is defeated! 🎉` : 'Great attack!',
-    lines: [['Your hits this round', `⚔️ ${f.hits}`], ['Right answers', `${f.correct} of ${f.correct + f.wrong}`], ['Boss health left', beat ? 'None! You did it!' : `${fmt(left)} of ${fmt(st.max)} HP`]],
-    again: () => startGame('boss')
-  });
-  bossFight = null;
 }
 
 /* =========================================================
@@ -4065,7 +4074,7 @@ async function raceEnd() {
   const g = gameStats('race'); g.best = Math.max(g.best || 0, R.score); g.stars = Math.max(g.stars || 0, stars);
   checkBadges({ finished: true, stars });
   logActivity('Race Day', `${R.score} points (${R.right} right, ${R.wrong} wrong)`, stars, null);
-  $('#gameBody').innerHTML = `<div class="picker"><h3>🏁 Saving your race…</h3></div>`;
+  $('#gameBody').innerHTML = `<div class="picker"><h3>⏱ Time's up!</h3><p>Saving your race…</p></div>`;
   const res = await raceSend(R.score), info = raceInfo() || {};
   const best = info.mine ? info.mine.score : R.score, leader = (info.top || [])[0];
   showResults({ stars, title: res && res.error === 'closed' ? 'Time is up for today!' : leader && leader.name === P().sheetName ? "You're in first place! 🏆" : `You scored ${R.score}!`,

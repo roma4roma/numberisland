@@ -940,7 +940,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202610300603';
+const BUILD_ID = '202611021429';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -2165,6 +2165,7 @@ function refreshFromSheet(force) {
   const p = P(); if (!sheetUrl() || !p || !p.sheetName) return;
   if (!force && Date.now() - lastRefresh < 30000) return;
   lastRefresh = Date.now(); syncNow(p.id);
+  setTimeout(checkLastWeekBoss, 4000);
 }
 
 /* ---------- Hub ---------- */
@@ -3156,11 +3157,26 @@ function checkBossReward(st) {
   p.bossWins = p.bossWins || [];
   if (mine <= 0 || p.bossWins.includes(st.week)) return;
   p.bossWins.push(st.week);
-  const B = currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
+  const wn = parseInt(String(st.week).split('-W')[1], 10);
+  const B = wn ? BOSSES[wn % BOSSES.length] : currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
   if (!p.owned.includes(pet.id)) p.owned.push(pet.id);
   reward(150, 100); award('bossbeater');
   toast(`⚔️ Your class beat ${B.name}! You won the ${pet.name} ${pet.icon} and 150 coins!`, true);
   save(); scheduleSync(1500);
+}
+/* Catch-up: if the class beat last week's boss after this student's last visit, give the reward now (checked once a week). */
+async function checkLastWeekBoss() {
+  const p = P(); if (!sheetUrl() || !p || !p.sheetName) return;
+  const d = today(); d.setDate(d.getDate() - 7);
+  const w = weekInfo(d).id;
+  if (p.bossLastSeen === w || (p.bossWins || []).includes(w)) return;
+  try {
+    const r = await api({ action: 'boss', coinV: 2, name: p.sheetName, code: p.code || '', week: w, hits: 0 });
+    if (!r.ok || !r.boss || r.boss.week !== w || P() !== p) return;
+    p.bossLastSeen = w;
+    checkBossReward(r.boss);
+    save();
+  } catch (e) {}
 }
 async function bossFetch(extraHits = 0) {
   const p = P(), w = weekInfo().id;

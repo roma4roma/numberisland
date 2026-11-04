@@ -2203,13 +2203,13 @@ function renderGameGrid() {
         return `<button type="button" class="game-card boss-card preview" data-g="boss">
           <span class="gicon boss-shadow">${nb.face}</span>
           <span class="gtext"><span class="eyebrow-light">${I.eyebrow}</span><span class="gname">${I.headline}</span>
-          <span class="gblurb">Practice your facts so you're ready. Beat it together to win the ${SHOP.pet.find(x => x.id === nb.reward).name} ${SHOP.pet.find(x => x.id === nb.reward).icon}</span></span>
+          <span class="gblurb">Practice your facts so you're ready. Beat it together to win the ${SHOP.pet.find(x => x.id === nb.reward).name} ${SHOP.pet.find(x => x.id === nb.reward).icon}${bossNeed() > 1 ? ` (${bossNeed()} hits each)` : ''}</span></span>
           <span class="countdown">${I.chip}</span></button>`;
       }
       return `<button type="button" class="game-card boss-card ${open ? '' : 'locked'}" data-g="boss"${open ? '' : ' aria-label="Boss Battle, locked"'}>
         <span class="gicon">${open ? B.face : '🔒'}</span>
         <span class="gtext"><span class="gname">Boss Battle: ${B.name}</span>
-        <span class="gblurb">${open ? (left ? `${TEACHER}'s class has knocked off ${fmt(bs.total)} of ${fmt(bs.max)} HP. Every right answer hits it!` : 'Defeated this week! 🎉 A new boss comes next week.') : `Opens when ${TEACHER} starts the battle.`}</span>
+        <span class="gblurb">${open ? (left ? `${TEACHER}'s class has knocked off ${fmt(bs.total)} of ${fmt(bs.max)} HP. Every right answer hits it!${bossNeed() > 1 ? ` Your hits: ${fmt(myBossHits(bs))} / ${bossNeed()}` : ''}` : myBossHits(bs) < bossNeed() && !(P().bossWins || []).includes(bs.week) ? `Defeated! 🎉 Get ${fmt(bossNeed() - myBossHits(bs))} more hits to win the prize.` : 'Defeated this week! 🎉 A new boss comes next week.') : `Opens when ${TEACHER} starts the battle.`}</span>
         <span class="hpbar small"><i style="width:${Math.round(left / bs.max * 100)}%"></i></span></span></button>`;
     }
     const chTag = ch && ch.id === g.id ? '<span class="ch-tag">🎯 2× coins</span>' : '';
@@ -3141,14 +3141,31 @@ function bossCached() {
 }
 function applyBossStatus(st) {
   if (!st || st.week !== weekInfo().id) return;
+  const before = JSON.stringify(store.bossStatus || {});
   store.bossStatus = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   checkBossReward(st);
+  if (currentScreen === 'hub' && before !== JSON.stringify(st)) renderGameGrid();
+}
+/* Hits each student needs in a week to win the boss prize (Settings: "Boss hits needed for the prize"). */
+function bossNeed() { const n = store.settings && store.settings.bossNeed; return n == null || n === '' ? 1 : Math.max(1, Number(n) || 0); }
+function myBossHits(st) {
+  const p = P(); if (!p) return 0;
+  const here = (p.bossHits || {})[st.week] || 0;
+  if (st.local) return here;
+  return Math.max(here, (st.mine || 0) + ((p.bossPend && p.bossPend.week === st.week) ? p.bossPend.hits : 0));
+}
+function bossPrizeLine(st, pet) {
+  const need = bossNeed(), mine = myBossHits(st), won = (P().bossWins || []).includes(st.week);
+  if (won) return `✅ You won the <b>${pet.name}</b> ${pet.icon} this week!`;
+  if (mine >= need) return `✅ You've done your part! When your class beats it, you win the <b>${pet.name}</b> ${pet.icon} + 🪙 150`;
+  return need > 1 ? `${pet.icon} Get <b>${need} hits</b> this week to win the <b>${pet.name}</b> + 🪙 150 when your class beats it. You have <b>${fmt(mine)}</b>, ${fmt(need - mine)} to go!`
+                  : `${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150`;
 }
 function checkBossReward(st) {
   const p = P(); if (!p || st.total < st.max) return;
-  const mine = st.local ? ((p.bossHits || {})[st.week] || 0) : st.mine + ((p.bossPend && p.bossPend.week === st.week) ? p.bossPend.hits : 0);
+  const mine = myBossHits(st);
   p.bossWins = p.bossWins || [];
-  if (mine <= 0 || p.bossWins.includes(st.week)) return;
+  if (mine <= 0 || mine < bossNeed() || p.bossWins.includes(st.week)) return;
   p.bossWins.push(st.week);
   const wn = parseInt(String(st.week).split('-W')[1], 10);
   const B = wn ? BOSSES[wn % BOSSES.length] : currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
@@ -3207,7 +3224,7 @@ function bossPreview() {
     <div class="countdown big">${I.chip} to go</div>
     ${weekend && last.total ? `<p class="story">${last.total >= last.max ? `Your class beat ${lastBoss.name} this week! 🎉` : `${lastBoss.name} got away this week with ${fmt(Math.max(0, last.max - last.total))} HP left.`}</p>` : ''}
     <p class="story">On ${bossDayName()}, every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit!</p>
-    <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
+    <div class="boss-prize">${pet.icon} Beat it together and everyone with ${bossNeed() > 1 ? `at least <b>${bossNeed()} hits</b>` : 'a hit'} wins the <b>${pet.name}</b> + 🪙 150</div>
     ${prep.length ? `<p class="note" style="margin:4px 0 0">Get ready! Faster facts mean more hits:</p>
     <div class="foot-row" style="margin-top:0">${prep.map(g => `<button type="button" class="btn small plain" data-prep="${g.id}">${g.icon} ${g.name}</button>`).join('')}</div>` : ''}
   </div>`;
@@ -3223,12 +3240,12 @@ async function bossIntro() {
       <div class="boss-face idle">${B.face}</div>
       <h3>${B.name}</h3>
       ${hpBarHTML(st)}
-      <p class="story">${done ? `Your class beat ${B.name} this week! 🎉 You can keep practicing for coins. A new boss arrives next week.` :
+      <p class="story">${done ? (myBossHits(st) < bossNeed() && !(P().bossWins || []).includes(st.week) ? `Your class beat ${B.name} this week! 🎉 Keep attacking to reach ${bossNeed()} hits and win the prize.` : `Your class beat ${B.name} this week! 🎉 You can keep practicing for coins. A new boss arrives next week.`) :
         `Every right answer from anyone in your class hits ${B.name}. Three in a row is a power hit that does double damage!`}</p>
-      <div class="boss-stats"><span>Your hits this week: <b>${fmt(((P().bossHits || {})[st.week]) || st.mine || 0)}</b></span>${st.helpers ? `<span>Classmates helping: <b>${st.helpers}</b></span>` : ''}</div>
-      <div class="boss-prize">${pet.icon} Beat it together and everyone who helped wins the <b>${pet.name}</b> + 🪙 150</div>
+      <div class="boss-stats"><span>Your hits this week: <b>${fmt(myBossHits(st))}${bossNeed() > 1 ? ` / ${bossNeed()}` : ''}</b></span>${st.helpers ? `<span>Classmates helping: <b>${st.helpers}</b></span>` : ''}</div>
+      <div class="boss-prize">${bossPrizeLine(st, pet)}</div>
       ${bossKinds() || bossOwnNumbers() ? `<p class="note">🎯 ${TEACHER} picked this week's battle questions${bossKinds() ? ': <b>' + [...bossKinds()].map(k => ({ mult: '×', div: '÷', add: '+', sub: '−', t4tens: 'tens × tens' })[k]).join('  ') + '</b>' : ''}.</p>` : ''}
-      <button type="button" class="btn coral" id="bossGo" style="font-size:24px">⚔️ ${done ? 'Practice attack' : 'Attack!'} (${BOSS_ROUND_SECS} seconds)</button>
+      <button type="button" class="btn coral" id="bossGo" style="font-size:24px">⚔️ ${done ? (myBossHits(st) < bossNeed() && !(P().bossWins || []).includes(st.week) ? 'Attack for the prize!' : 'Practice attack') : 'Attack!'} (${BOSS_ROUND_SECS} seconds)</button>
     </div>`;
     $('#bossGo').addEventListener('click', bossRound);
   };
@@ -3331,6 +3348,7 @@ async function bossEnd(victory) {
   const g = gameStats('boss'); g.best = Math.max(g.best || 0, f.hits); g.stars = Math.max(g.stars || 0, stars);
   checkBadges({ finished: true, stars });
   logActivity('Boss Battle', `${f.hits} hits (${f.correct} right, ${f.wrong} missed)`, stars, null);
+  const needText = st => { const m = myBossHits(st), n = bossNeed(); return m >= n ? `${fmt(m)} ✅ (prize goal: ${n})` : `${fmt(m)} of ${n} for the prize`; };
   const hpText = st => { const left = Math.max(0, st.max - st.total); return left === 0 ? 'None! You did it!' : `${fmt(left)} of ${fmt(st.max)} HP`; };
   const finish = st => {
     if (st.local) checkBossReward(st);
@@ -3344,7 +3362,8 @@ async function bossEnd(victory) {
   showResults({
     stars, title: beat0 ? `${B.name} is defeated! 🎉` : victory ? `${B.name} is defeated! 🎉` : "⏱ Time's up! Great attack!",
     lines: [['Your hits this round', `⚔️ ${f.hits}`], ['Right answers', `${f.correct} of ${f.correct + f.wrong}`],
-            ['Boss health left', `<span id="bossLeftLine">${f.base.local ? hpText(guess) : hpText(guess) + ' <small>(updating…)</small>'}</span>`]],
+            ['Boss health left', `<span id="bossLeftLine">${f.base.local ? hpText(guess) : hpText(guess) + ' <small>(updating…)</small>'}</span>`],
+            ...(bossNeed() > 1 ? [['Your hits this week', `<span id="bossNeedLine">${needText(guess)}</span>`]] : [])],
     again: () => startGame('boss')
   });
   bossFight = null;
@@ -3355,6 +3374,7 @@ async function bossEnd(victory) {
     if (!fresh && send) { p.bossPend = p.bossPend || { week: weekInfo().id, hits: 0 }; p.bossPend.hits += send; save(); }
     const st = fresh || guess;
     const el = $('#bossLeftLine'); if (el) el.innerHTML = hpText(st);
+    const nl = $('#bossNeedLine'); if (nl) nl.innerHTML = needText(st);
     if (finish(st) && !beat0) { const t = $('#resultsBody h2'); if (t) t.textContent = `${B.name} is defeated! 🎉`; }
   }
 }

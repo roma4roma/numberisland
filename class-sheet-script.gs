@@ -336,7 +336,8 @@ var EXTRA_ROWS = [
   ['Race Day × and ÷: first number', 'Same', 'Same = use the × and ÷ numbers above. Auto = by each student\'s level. Or numbers like 2-9 or 11-20 just for Race Day.'],
   ['Race Day × and ÷: second number', 'Same', 'The other number in each Race Day fact.'],
   ['Race Day + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 10-99 just for Race Day.'],
-  ['Keep activity for (days)', 7, 'Rows on the Activity tab older than this many days are deleted by themselves, so the tab stays short. 0 = keep everything.']
+  ['Keep activity for (days)', 7, 'Rows on the Activity tab older than this many days are deleted by themselves, so the tab stays short. 0 = keep everything.'],
+  ['Boss hits needed for the prize', 20, 'Each student needs at least this many hits in the week to win the boss pet and coins when the class beats the boss. 0 = any hit counts. Students can keep attacking after the boss is beaten to reach it.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -378,7 +379,8 @@ function readSettings_(ss) {
            bossHours: text_(v[19], 'All day'), ideaBox: !/^(off|no|false|0)$/i.test(String(v[20]).trim()),
            raceDay: text_(v[21], 'Thursday'), raceTime: text_(v[22], '14:20'), racePrize: Number(v[23]) >= 0 && String(v[23]).trim() !== '' ? Number(v[23]) : 200,
            raceTypes: text_(v[24], 'Mixed'), raceA: text_(v[25], 'Same'), raceB: text_(v[26], 'Same'), raceAdd: text_(v[27], 'Same'),
-           activityDays: String(v[28]).trim() === '' ? 7 : Math.max(0, Number(v[28]) || 0) };
+           activityDays: String(v[28]).trim() === '' ? 7 : Math.max(0, Number(v[28]) || 0),
+           bossNeed: String(v[29]).trim() === '' ? 20 : Math.max(0, Math.round(Number(v[29]) || 0)) };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {

@@ -1051,7 +1051,7 @@ function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(
    iPads, Samsung and other Androids each draw emoji differently. The game swaps every emoji
    for Google's emoji picture (stored with the game in the emoji/ folder), so all tablets match.
    If a picture can't load, the tablet's own emoji shows instead. */
-const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg","📈":"1F4C8.svg","🏝️":"1F3DD.svg","🏝":"1F3DD.svg","🏅":"1F3C5.svg","💡":"1F4A1.svg","🔑":"1F511.svg","🚗":"1F697.svg","🏃":"1F3C3.svg","⚽":"26BD.svg","🐚":"1F41A.svg","🌻":"1F33B.svg","🗼":"1F5FC.svg","🧱":"1F9F1.svg","🎯":"1F3AF.svg","🧗":"1F9D7.svg","💰":"1F4B0.svg","📜":"1F4DC.svg","🌲":"1F332.svg","🥧":"1F967.svg","🍳":"1F373.svg","📏":"1F4CF.svg","⚓":"2693.svg","⛰️":"26F0.svg","⛰":"26F0.svg","🧩":"1F9E9.svg","📐":"1F4D0.svg","🔷":"1F537.svg","🏁":"1F3C1.svg","⚔️":"2694.svg","⚔":"2694.svg","🦊":"1F98A.svg","🐼":"1F43C.svg","🐯":"1F42F.svg","🐸":"1F438.svg","🐨":"1F428.svg","🐙":"1F419.svg","🦉":"1F989.svg","🐢":"1F422.svg","🐰":"1F430.svg","🦁":"1F981.svg","🐧":"1F427.svg","🐬":"1F42C.svg","🐻":"1F43B.svg","🐵":"1F435.svg","🐷":"1F437.svg","🐮":"1F42E.svg","🐺":"1F43A.svg","🦒":"1F992.svg","🦝":"1F99D.svg","🧢":"1F9E2.svg","🎀":"1F380.svg","🌸":"1F338.svg","👒":"1F452.svg","🎩":"1F3A9.svg","⛑️":"26D1.svg","⛑":"26D1.svg","🎓":"1F393.svg","👑":"1F451.svg","🌟":"1F31F.svg","💎":"1F48E.svg","🐣":"1F423.svg","🐶":"1F436.svg","🐱":"1F431.svg","🦀":"1F980.svg","🐠":"1F420.svg","🐝":"1F41D.svg","🦜":"1F99C.svg","🦋":"1F98B.svg","🦩":"1F9A9.svg","🦄":"1F984.svg","🦖":"1F996.svg","🦚":"1F99A.svg","🐉":"1F409.svg","✨":"2728.svg","⭐":"2B50.svg","💖":"1F496.svg","💕":"1F495.svg","🎈":"1F388.svg","🎉":"1F389.svg","🎊":"1F38A.svg","🎵":"1F3B5.svg","🎶":"1F3B6.svg","🎷":"1F3B7.svg","🍕":"1F355.svg","🍩":"1F369.svg","🧁":"1F9C1.svg","🦕":"1F995.svg","🌿":"1F33F.svg","🎆":"1F386.svg","🎇":"1F387.svg","💥":"1F4A5.svg","💠":"1F4A0.svg","🥅":"1F945.svg","🌙":"1F319.svg","🚕":"1F695.svg","🚜":"1F69C.svg","🚙":"1F699.svg","🚓":"1F693.svg","🚒":"1F692.svg","🏎️":"1F3CE.svg","🏎":"1F3CE.svg","🛸":"1F6F8.svg","🚀":"1F680.svg","🌺":"1F33A.svg","🌴":"1F334.svg","⛱️":"26F1.svg","⛱":"26F1.svg","🏕️":"1F3D5.svg","🏕":"1F3D5.svg","⛵":"26F5.svg","🛖":"1F6D6.svg","🗿":"1F5FF.svg","🐳":"1F433.svg","🌋":"1F30B.svg","🚁":"1F681.svg","🎡":"1F3A1.svg","🏰":"1F3F0.svg","🪨":"1FAA8.svg","🌵":"1F335.svg","🍄":"1F344.svg","🌳":"1F333.svg","🐒":"1F412.svg","🦭":"1F9AD.svg","🛝":"1F6DD.svg","🦙":"1F999.svg","⛲":"26F2.svg","🏡":"1F3E1.svg","🚂":"1F682.svg","🐘":"1F418.svg","🏪":"1F3EA.svg","🎠":"1F3A0.svg","🏫":"1F3EB.svg","🏆":"1F3C6.svg","🏯":"1F3EF.svg","🏟️":"1F3DF.svg","🏟":"1F3DF.svg","🛶":"1F6F6.svg","🚤":"1F6A4.svg","🛳️":"1F6F3.svg","🛳":"1F6F3.svg","☁️":"2601.svg","☁":"2601.svg","🪁":"1FA81.svg","🪂":"1FA82.svg","✈️":"2708.svg","✈":"2708.svg","🌈":"1F308.svg","🌕":"1F315.svg","🎃":"1F383.svg","❄️":"2744.svg","❄":"2744.svg","🧧":"1F9E7.svg","🏖️":"1F3D6.svg","🏖":"1F3D6.svg","🍁":"1F341.svg","🌷":"1F337.svg","🐇":"1F407.svg","🦇":"1F987.svg","👻":"1F47B.svg","⛄":"26C4.svg","🦌":"1F98C.svg","🐐":"1F410.svg","🐞":"1F41E.svg","🦑":"1F991.svg","🦈":"1F988.svg","🐲":"1F432.svg","🦞":"1F99E.svg","🐊":"1F40A.svg","🐡":"1F421.svg","🍂":"1F342.svg","🎁":"1F381.svg","🏮":"1F3EE.svg","🌊":"1F30A.svg","🏄":"1F3C4.svg","☀️":"2600.svg","☀":"2600.svg","🏚️":"1F3DA.svg","🏚":"1F3DA.svg","🎄":"1F384.svg","🔥":"1F525.svg","💯":"1F4AF.svg","🧭":"1F9ED.svg","🦘":"1F998.svg","🧠":"1F9E0.svg","🏦":"1F3E6.svg","🗃️":"1F5C3.svg","🗃":"1F5C3.svg","📅":"1F4C5.svg","🗓️":"1F5D3.svg","🗓":"1F5D3.svg","💫":"1F4AB.svg","🌠":"1F320.svg","⚡":"26A1.svg","🏔️":"1F3D4.svg","🏔":"1F3D4.svg","🪐":"1FA90.svg","🏵️":"1F3F5.svg","🏵":"1F3F5.svg","🥇":"1F947.svg","💌":"1F48C.svg","🛡️":"1F6E1.svg","🛡":"1F6E1.svg","⬆️":"2B06.svg","⬆":"2B06.svg","🎮":"1F3AE.svg","🙌":"1F64C.svg","🔒":"1F512.svg","🔁":"1F501.svg","🥈":"1F948.svg","🥉":"1F949.svg","🙂":"1F642.svg","❤️":"2764.svg","❤":"2764.svg","🤍":"1F90D.svg","💨":"1F4A8.svg","🦅":"1F985.svg","🧤":"1F9E4.svg","✋":"270B.svg","🗑️":"1F5D1.svg","🗑":"1F5D1.svg","🤩":"1F929.svg","📋":"1F4CB.svg"};
+const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg","📈":"1F4C8.svg","🏝️":"1F3DD.svg","🏝":"1F3DD.svg","🏅":"1F3C5.svg","💡":"1F4A1.svg","🔑":"1F511.svg","✨":"2728.svg","🚗":"1F697.svg","🏃":"1F3C3.svg","⚽":"26BD.svg","🐚":"1F41A.svg","🌻":"1F33B.svg","🗼":"1F5FC.svg","🧱":"1F9F1.svg","🎯":"1F3AF.svg","🧗":"1F9D7.svg","💰":"1F4B0.svg","📜":"1F4DC.svg","🌲":"1F332.svg","🥧":"1F967.svg","🍳":"1F373.svg","📏":"1F4CF.svg","⚓":"2693.svg","⛰️":"26F0.svg","⛰":"26F0.svg","🧩":"1F9E9.svg","📐":"1F4D0.svg","🔷":"1F537.svg","🏁":"1F3C1.svg","⚔️":"2694.svg","⚔":"2694.svg","🦊":"1F98A.svg","🐼":"1F43C.svg","🐯":"1F42F.svg","🐸":"1F438.svg","🐨":"1F428.svg","🐙":"1F419.svg","🦉":"1F989.svg","🐢":"1F422.svg","🐰":"1F430.svg","🦁":"1F981.svg","🐧":"1F427.svg","🐬":"1F42C.svg","🐻":"1F43B.svg","🐵":"1F435.svg","🐷":"1F437.svg","🐮":"1F42E.svg","🐺":"1F43A.svg","🦒":"1F992.svg","🦝":"1F99D.svg","🧢":"1F9E2.svg","🎀":"1F380.svg","🌸":"1F338.svg","👒":"1F452.svg","🎩":"1F3A9.svg","⛑️":"26D1.svg","⛑":"26D1.svg","🎓":"1F393.svg","👑":"1F451.svg","🌟":"1F31F.svg","💎":"1F48E.svg","🐣":"1F423.svg","🐶":"1F436.svg","🐱":"1F431.svg","🦀":"1F980.svg","🐠":"1F420.svg","🐝":"1F41D.svg","🦜":"1F99C.svg","🦋":"1F98B.svg","🦩":"1F9A9.svg","🦄":"1F984.svg","🦖":"1F996.svg","🦚":"1F99A.svg","🐉":"1F409.svg","⭐":"2B50.svg","💖":"1F496.svg","💕":"1F495.svg","🎈":"1F388.svg","🎉":"1F389.svg","🎊":"1F38A.svg","🎵":"1F3B5.svg","🎶":"1F3B6.svg","🎷":"1F3B7.svg","🍕":"1F355.svg","🍩":"1F369.svg","🧁":"1F9C1.svg","🦕":"1F995.svg","🌿":"1F33F.svg","🎆":"1F386.svg","🎇":"1F387.svg","💥":"1F4A5.svg","💠":"1F4A0.svg","🥅":"1F945.svg","🌙":"1F319.svg","🚕":"1F695.svg","🚜":"1F69C.svg","🚙":"1F699.svg","🚓":"1F693.svg","🚒":"1F692.svg","🏎️":"1F3CE.svg","🏎":"1F3CE.svg","🛸":"1F6F8.svg","🚀":"1F680.svg","🌺":"1F33A.svg","🌴":"1F334.svg","⛱️":"26F1.svg","⛱":"26F1.svg","🏕️":"1F3D5.svg","🏕":"1F3D5.svg","⛵":"26F5.svg","🛖":"1F6D6.svg","🗿":"1F5FF.svg","🐳":"1F433.svg","🌋":"1F30B.svg","🚁":"1F681.svg","🎡":"1F3A1.svg","🏰":"1F3F0.svg","🪨":"1FAA8.svg","🌵":"1F335.svg","🍄":"1F344.svg","🌳":"1F333.svg","🐒":"1F412.svg","🦭":"1F9AD.svg","🛝":"1F6DD.svg","🦙":"1F999.svg","⛲":"26F2.svg","🏡":"1F3E1.svg","🚂":"1F682.svg","🐘":"1F418.svg","🏪":"1F3EA.svg","🎠":"1F3A0.svg","🏫":"1F3EB.svg","🏆":"1F3C6.svg","🏯":"1F3EF.svg","🏟️":"1F3DF.svg","🏟":"1F3DF.svg","🛶":"1F6F6.svg","🚤":"1F6A4.svg","🛳️":"1F6F3.svg","🛳":"1F6F3.svg","☁️":"2601.svg","☁":"2601.svg","🪁":"1FA81.svg","🪂":"1FA82.svg","✈️":"2708.svg","✈":"2708.svg","🌈":"1F308.svg","🌕":"1F315.svg","🎃":"1F383.svg","❄️":"2744.svg","❄":"2744.svg","🧧":"1F9E7.svg","🏖️":"1F3D6.svg","🏖":"1F3D6.svg","🍁":"1F341.svg","🌷":"1F337.svg","🐇":"1F407.svg","🦇":"1F987.svg","👻":"1F47B.svg","⛄":"26C4.svg","🦌":"1F98C.svg","🐐":"1F410.svg","🐞":"1F41E.svg","🦑":"1F991.svg","🦈":"1F988.svg","🐲":"1F432.svg","🦞":"1F99E.svg","🐊":"1F40A.svg","🐡":"1F421.svg","🐅":"1F405.svg","🥚":"1F95A.svg","🍂":"1F342.svg","🎁":"1F381.svg","🏮":"1F3EE.svg","🌊":"1F30A.svg","🏄":"1F3C4.svg","☀️":"2600.svg","☀":"2600.svg","🏚️":"1F3DA.svg","🏚":"1F3DA.svg","🎄":"1F384.svg","🔥":"1F525.svg","💯":"1F4AF.svg","🧭":"1F9ED.svg","🦘":"1F998.svg","🧠":"1F9E0.svg","🏦":"1F3E6.svg","🗃️":"1F5C3.svg","🗃":"1F5C3.svg","📅":"1F4C5.svg","🗓️":"1F5D3.svg","🗓":"1F5D3.svg","💫":"1F4AB.svg","🌠":"1F320.svg","⚡":"26A1.svg","🏔️":"1F3D4.svg","🏔":"1F3D4.svg","🪐":"1FA90.svg","🏵️":"1F3F5.svg","🏵":"1F3F5.svg","🥇":"1F947.svg","💌":"1F48C.svg","🛡️":"1F6E1.svg","🛡":"1F6E1.svg","⬆️":"2B06.svg","⬆":"2B06.svg","🎮":"1F3AE.svg","🙌":"1F64C.svg","🔄":"1F504.svg","✅":"2705.svg","⚠️":"26A0.svg","⚠":"26A0.svg","🔒":"1F512.svg","🔁":"1F501.svg","🥈":"1F948.svg","🥉":"1F949.svg","🙂":"1F642.svg","❤️":"2764.svg","❤":"2764.svg","🤍":"1F90D.svg","💨":"1F4A8.svg","🦅":"1F985.svg","🧤":"1F9E4.svg","✋":"270B.svg","🗑️":"1F5D1.svg","🗑":"1F5D1.svg","🤩":"1F929.svg","📋":"1F4CB.svg"};
 const EMOJI_RE = new RegExp(Object.keys(EMOJI_FILES).sort((a, b) => b.length - a.length).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
 const EMOJI_ANY = new RegExp(EMOJI_RE.source, 'u');
 const EMOJI_SKIP = 'script,style,textarea,input,title,svg,option,.no-emo';
@@ -1391,7 +1391,10 @@ const SEASON_ITEMS = {
     { id: 'dragonling', icon: '🐲', name: 'Dragonling', price: 0, reward: true },
     { id: 'lobster', icon: '🦞', name: 'Lobster knight', price: 0, reward: true },
     { id: 'croc', icon: '🐊', name: 'Little croc', price: 0, reward: true },
-    { id: 'puffer', icon: '🐡', name: 'Puffer pal', price: 0, reward: true }
+    { id: 'puffer', icon: '🐡', name: 'Puffer pal', price: 0, reward: true },
+    { id: 'tigercub', icon: '🐅', name: 'Tiger cub', price: 0, reward: true },
+    { id: 'turtleegg', icon: '🥚', name: 'Turtle egg', price: 0, reward: true },
+    { id: 'muffin', icon: '🧁', name: 'Muffin buddy', price: 0, reward: true }
   ],
   bg: [
     { id: 'harvestbg', name: 'Harvest', price: 180, css: 'linear-gradient(160deg,#FFE8B0,#E8743B)', season: 'harvest' },
@@ -1433,6 +1436,19 @@ const BOSSES = [
   { face: '🐊', name: 'Swamp Croc', reward: 'croc' },
   { face: '🐡', name: 'Puffer Titan', reward: 'puffer' }
 ];
+// From the week of Nov 2, 2026 the class's new bosses join the rotation (before that, the old 6-boss order).
+const NEW_BOSSES = {
+  tiger: { face: '🐯', name: 'Tiger Master', reward: 'tigercub' },
+  turtle: { face: '🐢', name: 'Turbo Turtle', reward: 'turtleegg' },
+  muffin: { face: '🧁', name: 'Mega Muffin', reward: 'muffin' }
+};
+const BOSS_ORDER = [BOSSES[3], NEW_BOSSES.tiger, BOSSES[4], NEW_BOSSES.muffin, BOSSES[5], NEW_BOSSES.turtle, BOSSES[0], BOSSES[1], BOSSES[2]];
+const BOSS_ORDER_START = new Date(2026, 10, 2); // a Monday: Lobster King week
+function bossOfWeekId(id) { // '2026-W45' -> that week's boss
+  const m = String(id).match(/^(\d{4})-W(\d{1,2})$/); if (!m) return currentBoss();
+  const jan4 = new Date(+m[1], 0, 4), mon = new Date(jan4); mon.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (+m[2] - 1) * 7 + 4);
+  return currentBoss(mon);
+}
 function today() { try { const o = localStorage.getItem('numberIsland.today'); if (o) return new Date(o + 'T12:00:00'); } catch (e) {} return new Date(); }
 function activeSeason(d = today()) {
   const md = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -1450,7 +1466,11 @@ function weekInfo(d = today()) { // ISO week, e.g. 2026-W43
   const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)), n = Math.ceil(((t - y0) / 86400000 + 1) / 7);
   return { id: `${t.getUTCFullYear()}-W${String(n).padStart(2, '0')}`, n };
 }
-function currentBoss(d = today()) { return BOSSES[weekInfo(d).n % BOSSES.length]; }
+function currentBoss(d = today()) {
+  const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+  const k = Math.round((mon - BOSS_ORDER_START) / (7 * 86400000));
+  return k < 0 ? BOSSES[weekInfo(d).n % BOSSES.length] : BOSS_ORDER[k % BOSS_ORDER.length];
+}
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 function bossDayIndex() {
   const d = String((store.settings && store.settings.bossDay) || 'Friday').trim().toLowerCase();
@@ -3167,8 +3187,7 @@ function checkBossReward(st) {
   p.bossWins = p.bossWins || [];
   if (mine <= 0 || mine < bossNeed() || p.bossWins.includes(st.week)) return;
   p.bossWins.push(st.week);
-  const wn = parseInt(String(st.week).split('-W')[1], 10);
-  const B = wn ? BOSSES[wn % BOSSES.length] : currentBoss(), pet = SHOP.pet.find(x => x.id === B.reward);
+  const B = bossOfWeekId(st.week), pet = SHOP.pet.find(x => x.id === B.reward);
   if (!p.owned.includes(pet.id)) p.owned.push(pet.id);
   reward(150, 100); award('bossbeater');
   toast(`⚔️ Your class beat ${B.name}! You won the ${pet.name} ${pet.icon} and 150 coins!`, true);

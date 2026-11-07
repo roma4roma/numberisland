@@ -114,6 +114,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 .logo span { color: var(--coral); }
 .brand-pic { flex: none; }
 .teacher { display: block; flex: none; }
+.teacher.ico { display: inline-block; vertical-align: -.12em; }
 .bubble { position: relative; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 6px 14px; font-weight: 700; font-size: 16px; text-align: left; }
 .bubble small { display: block; font-weight: 600; font-size: 13px; color: var(--sea); }
 .bubble::before { content: ""; position: absolute; left: -11px; top: 50%; transform: translateY(-50%); border: 8px solid transparent; border-right-color: var(--ink); border-left: 0; }
@@ -940,7 +941,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202611051128';
+const BUILD_ID = '202611071512';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -1054,6 +1055,15 @@ function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(
 }
   return draw;
 })();
+/* Mr. Romanek as a shop/boss picture: the same cartoon, sized like an emoji (1em) so it fits wherever an icon goes.
+   A fresh drawing (new ids) is made every time an icon is read, so patterns never break when the same picture appears twice. */
+function romIcon(pose = 'chibi', style = '') {
+  return teacherSVG(pose, 100).replace('width="100" height="100"', 'width="1em" height="1em"').replace('class="teacher"', 'class="teacher ico"' + (style ? ` style="${style}"` : ''));
+}
+function romGlassesIcon() { // his round-ish glasses, drawn to match the cartoon
+  const id = Math.random().toString(36).slice(2, 7);
+  return `<svg class="teacher ico" viewBox="0 0 120 60" width="1.6em" height="0.8em" role="img" aria-label="Mr. Romanek's glasses"><g fill="#CFE8FF" fill-opacity=".55" stroke="#1E2A33" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><rect x="8" y="12" width="40" height="34" rx="11"/><rect x="72" y="12" width="40" height="34" rx="11"/><path d="M48 26 Q60 18 72 26" fill="none"/><path d="M8 24 L2 20 M112 24 L118 20" fill="none"/></g><path d="M16 22 Q22 18 30 20" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/><path d="M80 22 Q86 18 94 20" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/></svg>`;
+}
 /* ---------- Same emoji pictures on every tablet ----------
    iPads, Samsung and other Androids each draw emoji differently. The game swaps every emoji
    for Google's emoji picture (stored with the game in the emoji/ folder), so all tablets match.
@@ -1204,6 +1214,7 @@ const SHOP = {
     { id: 'tophat', icon: '🎩', name: 'Top hat', price: 60 },
     { id: 'rescue', icon: '⛑️', name: 'Rescue helmet', price: 90 },
     { id: 'grad', icon: '🎓', name: 'Grad cap', price: 120 },
+    { id: 'romglasses', get icon() { return romGlassesIcon(); }, name: `${TEACHER}'s glasses`, price: 250 },
     { id: 'crown', icon: '👑', name: 'Crown', price: 400, minLevel: 5 },
     { id: 'star', icon: '🌟', name: 'Star', price: 750, minLevel: 7 },
     { id: 'gem', icon: '💎', name: 'Diamond', price: 1500, minLevel: 9 },
@@ -1224,7 +1235,8 @@ const SHOP = {
     { id: 'peacock', icon: '🦚', name: 'Peacock', price: 650, minLevel: 6 },
     { id: 'dragon', icon: '🐉', name: 'Dragon', price: 1200, minLevel: 8 },
     { id: 'raccoon', icon: '🦝', name: 'Raccoon', price: 2500, minLevel: 9, raccoon: true },
-    { id: 'soccerball', icon: '⚽', name: 'Soccer ball', price: 150, soccer: true }
+    { id: 'soccerball', icon: '⚽', name: 'Soccer ball', price: 150, soccer: true },
+    { id: 'miniromanek', get icon() { return romIcon('chibi'); }, name: `Mini ${TEACHER}`, price: 400 }
   ],
   bg: [
     { id: 'sky', name: 'Sky', price: 0, css: 'linear-gradient(160deg,#C9F1FF,#7FD3EE)' },
@@ -1239,6 +1251,7 @@ const SHOP = {
     { id: 'rainbow', name: 'Rainbow', price: 900, css: 'conic-gradient(#FF6B57,#FFC93C,#23A866,#2C8FD6,#9B5DE5,#FF6B57)', minLevel: 7 },
     { id: 'gold', name: 'Gold', price: 1500, css: 'linear-gradient(160deg,#FFF6B8,#F0B400)', minLevel: 8 },
     { id: 'soccerbg', name: 'Soccer field', price: 250, css: 'repeating-linear-gradient(90deg,#3FA34D 0 14px,#4DB85A 14px 28px)', soccer: true },
+    { id: 'romshirt', name: `${TEACHER}'s shirt`, price: 300, css: 'radial-gradient(circle,#A9C9F5 0 2.2px,transparent 2.8px) 0 0/16px 16px,#4F86D9' },
     { id: 'raccoonbg', name: 'Raccoon mask', price: 2000, css: 'linear-gradient(180deg,#E4E6EB 0 32%,#3A3D46 32% 56%,#E4E6EB 56% 100%)', minLevel: 9, raccoon: true }
   ],
   frame: [
@@ -1260,6 +1273,7 @@ const SHOP = {
     { id: 'fireworks', name: 'Fireworks', price: 500, fx: ['🎆', '🎇', '💥'], minLevel: 4 },
     { id: 'gems', name: 'Gems', price: 1000, fx: ['💎', '💠', '👑'], minLevel: 7 },
     { id: 'goalfx', name: 'GOAL!', price: 400, fx: ['⚽', '🥅', '🎉'], minLevel: 3, soccer: true },
+    { id: 'romfx', name: `${TEACHER} rain`, price: 300, fx: ['📐', '📏', '🎓'] },
     { id: 'raccoonfx', name: 'Raccoon party', price: 1800, fx: ['🦝', '🌙', '✨'], minLevel: 8, raccoon: true }
   ],
   ride: [
@@ -1284,6 +1298,7 @@ const SHOP = {
     { id: 'captain', name: 'Captain Calculator', price: 900, minLevel: 6 },
     { id: 'legend', name: 'Living Legend', price: 2000, minLevel: 9 },
     { id: 'champion', name: `${TEACHER}'s Champion`, price: 3000, minLevel: 10 },
+    { id: 'romsidekick', name: `${TEACHER}'s Sidekick`, price: 500 },
     { id: 'goldenboot', name: 'Golden Boot', price: 1200, minLevel: 6, soccer: true },
     { id: 'raccoonroyal', name: 'Raccoon Royalty', price: 3000, minLevel: 10, raccoon: true }
   ],
@@ -1297,6 +1312,7 @@ const SHOP = {
     { id: 'sailboat', icon: '⛵', name: 'Sailboat', price: 300, x: 90, y: 6, z: 40 },
     { id: 'hut', icon: '🛖', name: 'Hut', price: 400, x: 70, y: 40, z: 46 },
     { id: 'statue', icon: '🗿', name: 'Stone statue', price: 600, x: 27, y: 50, z: 40, minLevel: 4 },
+    { id: 'romstatue', get icon() { return romIcon('chibi', 'filter:grayscale(1) contrast(1.15)'); }, name: `${TEACHER} statue`, price: 900, zone: 'land', z: 52 },
     { id: 'whale', icon: '🐳', name: 'Whale', price: 800, x: 7, y: 4, z: 42, minLevel: 5 },
     { id: 'volcano', icon: '🌋', name: 'Volcano', price: 1000, x: 47, y: 54, z: 64, minLevel: 5 },
     { id: 'helicopter', icon: '🚁', name: 'Helicopter', price: 1200, x: 76, y: 80, z: 34, minLevel: 6 },
@@ -1401,7 +1417,8 @@ const SEASON_ITEMS = {
     { id: 'puffer', icon: '🐡', name: 'Puffer pal', price: 0, reward: true },
     { id: 'tigercub', icon: '🐅', name: 'Tiger cub', price: 0, reward: true },
     { id: 'turtleegg', icon: '🥚', name: 'Turtle egg', price: 0, reward: true },
-    { id: 'muffin', icon: '🧁', name: 'Muffin buddy', price: 0, reward: true }
+    { id: 'muffin', icon: '🧁', name: 'Muffin buddy', price: 0, reward: true },
+    { id: 'romthumb', get icon() { return romIcon('thumbs'); }, name: `Thumbs-up ${TEACHER}`, price: 0, reward: true }
   ],
   bg: [
     { id: 'harvestbg', name: 'Harvest', price: 180, css: 'linear-gradient(160deg,#FFE8B0,#E8743B)', season: 'harvest' },
@@ -1447,9 +1464,10 @@ const BOSSES = [
 const NEW_BOSSES = {
   tiger: { face: '🐯', name: 'Tiger Master', reward: 'tigercub' },
   turtle: { face: '🐢', name: 'Turbo Turtle', reward: 'turtleegg' },
-  muffin: { face: '🧁', name: 'Mega Muffin', reward: 'muffin' }
+  muffin: { face: '🧁', name: 'Mega Muffin', reward: 'muffin' },
+  romanek: { get face() { return romIcon('wink'); }, name: `Mega ${TEACHER}`, reward: 'romthumb' }
 };
-const BOSS_ORDER = [BOSSES[3], NEW_BOSSES.tiger, BOSSES[4], NEW_BOSSES.muffin, BOSSES[5], NEW_BOSSES.turtle, BOSSES[0], BOSSES[1], BOSSES[2]];
+const BOSS_ORDER = [BOSSES[3], NEW_BOSSES.tiger, NEW_BOSSES.romanek, BOSSES[4], NEW_BOSSES.muffin, BOSSES[5], NEW_BOSSES.turtle, BOSSES[0], BOSSES[1], BOSSES[2]];
 const BOSS_ORDER_START = new Date(2026, 10, 2); // a Monday: Lobster King week
 function bossOfWeekId(id) { // '2026-W45' -> that week's boss
   const m = String(id).match(/^(\d{4})-W(\d{1,2})$/); if (!m) return currentBoss();
@@ -3214,7 +3232,7 @@ function checkBossReward(st) {
   const B = bossOfWeekId(st.week), pet = SHOP.pet.find(x => x.id === B.reward);
   if (!p.owned.includes(pet.id)) p.owned.push(pet.id);
   reward(150, 100); award('bossbeater');
-  toast(`⚔️ Your class beat ${B.name}! You won the ${pet.name} ${pet.icon} and 150 coins!`, true);
+  toast(`⚔️ Your class beat ${B.name}! You won the ${pet.name}${/^</.test(pet.icon) ? '' : ' ' + pet.icon} and 150 coins!`, true);
   save(); scheduleSync(1500);
 }
 /* Catch-up: if the class beat last week's boss after this student's last visit, give the reward now (checked once a week). */

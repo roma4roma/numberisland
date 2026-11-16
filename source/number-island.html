@@ -423,6 +423,7 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .track .sun { position: absolute; right: 8%; top: 12%; width: 46px; height: 46px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 8px rgba(255,201,60,.35); }
 .runner { position: absolute; left: 10%; bottom: 74px; font-size: 48px; line-height: 1; z-index: 3; transform: scaleX(-1); }
 .runner.hop { animation: hop .75s cubic-bezier(.3,.7,.4,1); }
+.runner.noflip { transform: none; } /* these pictures already face the way the runner goes */
 @keyframes hop { 0% { translate: 0 0; } 50% { translate: 0 -118px; } 100% { translate: 0 0; } }
 .track::before { /* night sky, fades in and out */
   content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
@@ -4338,6 +4339,7 @@ function soccerEnd() {
 
 /* ---------- Fact Runner ---------- */
 let runnerFace = '🦊';
+const RUNNER_NOFLIP = ['🦝', '🐧']; // already face right, so they aren't mirrored
 function runnerPicker() {
   round = null;
   runnerFace = P().avatar;
@@ -4354,7 +4356,7 @@ function runnerStart() {
   $('#gameBody').innerHTML = `<div class="arcade">
       <div class="ahud"><span id="aPoints">Points 0</span><span id="aCombo"></span><span class="hearts" id="aHearts"></span></div>
       <div class="aq" id="aQ">Get ready…</div>
-      <div class="track" id="track"><div class="sun"></div><div class="runner" id="runner">${runnerFace}</div></div>
+      <div class="track" id="track"><div class="sun"></div><div class="runner${RUNNER_NOFLIP.includes(runnerFace) ? ' noflip' : ''}" id="runner">${runnerFace}</div></div>
       <div class="steer" style="grid-template-columns:1fr"><button type="button" class="btn plain" id="jumpBtn">⤴ Jump</button></div>
       <div class="ahint">Wrong answer coming? Jump! Right answer? Run into it.</div>
     </div>`;

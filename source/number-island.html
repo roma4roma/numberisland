@@ -1529,7 +1529,7 @@ const SEASON_ITEMS = {
 Object.entries(SEASON_ITEMS).forEach(([cat, items]) => SHOP[cat].push(...items));
 /* Times Table Sprint rewards: won by reaching Sprint goals (sprint = how many goals in all), never bought. */
 const SPRINT_ITEMS = {
-  title: [{ id: 'factsprinter', name: 'Fact Sprinter', price: 0, sprint: 2 }, { id: 'ttchampion', name: 'Times Table Champion', price: 0, sprint: 18 }, { id: 'ttlegend', name: 'Times Table Legend', price: 0, sprint: 27 }],
+  title: [{ id: 'factsprinter', name: 'Fact Sprinter', price: 0, sprint: 2 }, { id: 'ttchampion', name: 'Times Table Champion', price: 0, sprint: 18 }, { id: 'ttlegend', name: 'Times Table Legend', price: 0, sprint: 30 }],
   pet: [{ id: 'cheetah', icon: '🐆', name: 'Cheetah cub', price: 0, sprint: 5 }, { id: 'speedeagle', icon: '🦅', name: 'Speedy eagle', price: 0, sprint: 22 }],
   effect: [{ id: 'lightningfx', name: 'Lightning', price: 0, fx: ['⚡', '⏱️', '✨'], sprint: 8 }],
   hat: [{ id: 'stopwatchhat', icon: '⏱️', name: 'Stopwatch', price: 0, sprint: 11 }],
@@ -4345,10 +4345,10 @@ async function raceEnd() {
 
 /* ---------- Times Table Sprint ----------
    Multiplication 0–12 against the clock (1, 2 or 5 minutes). Students race their OWN best: no leaderboard.
-   Each length has 9 goals; every goal reached pays coins, and the total number of goals unlocks Sprint reward items.
+   Each length has 10 goals; every goal reached pays coins, and the total number of goals unlocks Sprint reward items.
    Every fact is tracked so the times table chart fills in green as facts are mastered (right 3+ times, mostly fast, 80%+). */
 const SPRINT_LENGTHS = [1, 2, 5];
-const SPRINT_GOALS = { 1: [5, 8, 12, 15, 19, 23, 28, 34, 40], 2: [10, 16, 24, 30, 38, 46, 56, 68, 80], 5: [25, 40, 60, 75, 95, 115, 140, 170, 200] };
+const SPRINT_GOALS = { 1: [5, 8, 12, 15, 19, 23, 28, 34, 40, 50], 2: [10, 16, 24, 30, 38, 46, 56, 68, 80, 100], 5: [25, 40, 60, 75, 95, 115, 140, 170, 200, 250] };
 const SPRINT_FAST_MS = 4000;
 let sprintRun = null;
 function sprintData(p = P()) { p.sprint = p.sprint || { best: {}, goals: {}, pbs: 0 }; return p.sprint; }
@@ -4369,7 +4369,7 @@ function ttChartHTML(p = P(), small = false) {
   }
   return h + '</div><div class="tt-key"><span class="tt-c mastered">✓</span> Mastered <span class="tt-c learning">·</span> Practicing <span class="tt-c new"></span> Not tried yet</div>';
 }
-const sprintGoalCoins = i => 30 + 20 * i; // goal 1 = 30 coins … goal 9 = 190 coins
+const sprintGoalCoins = i => 30 + 20 * i; // goal 1 = 30 coins … goal 10 = 210 coins
 function sprintNextGoal(m, best) { return SPRINT_GOALS[m].find(g => g > (best || 0)) || null; }
 function sprintNextItem(p = P()) {
   const done = sprintGoalsDone(p);
@@ -4381,7 +4381,7 @@ function sprintPicker() {
   $('#gameBody').innerHTML = `<div class="picker sprint-pick">
     <h3>⏱️ How long do you want to sprint?</h3>
     <div class="mode-grid">${SPRINT_LENGTHS.map(m => { const best = d.best[m] || 0, ng = sprintNextGoal(m, best);
-      return `<button type="button" class="mode-btn" data-m="${m}"><span class="big">${m} min</span>${best ? `Your best: <b>${best}</b>` : 'No score yet'}<small>${ng ? `Next goal: ${ng} → 🪙 ${sprintGoalCoins(SPRINT_GOALS[m].indexOf(ng))}` : 'All 9 goals reached! 🏆'} · ${d.goals[m] || 0}/9 goals</small></button>`; }).join('')}</div>
+      return `<button type="button" class="mode-btn" data-m="${m}"><span class="big">${m} min</span>${best ? `Your best: <b>${best}</b>` : 'No score yet'}<small>${ng ? `Next goal: ${ng} → 🪙 ${sprintGoalCoins(SPRINT_GOALS[m].indexOf(ng))}` : `All ${SPRINT_GOALS[m].length} goals reached! 🏆`} · ${d.goals[m] || 0}/${SPRINT_GOALS[m].length} goals</small></button>`; }).join('')}</div>
     <details class="tt-box"><summary>🎯 Goals and coins</summary><table class="sp-goals"><tr><th>Goal</th>${SPRINT_LENGTHS.map(m => `<th>${m} min</th>`).join('')}<th>Coins</th></tr>
       ${SPRINT_GOALS[1].map((_, i) => `<tr><td>${i + 1}</td>${SPRINT_LENGTHS.map(m => `<td class="${(d.best[m] || 0) >= SPRINT_GOALS[m][i] ? 'got' : ''}">${SPRINT_GOALS[m][i]}${(d.best[m] || 0) >= SPRINT_GOALS[m][i] ? ' ✓' : ''}</td>`).join('')}<td>🪙 ${sprintGoalCoins(i)}</td></tr>`).join('')}</table>
       <p class="note">You get the coins the first time you reach each goal. Each time length has its own goals.</p></details>

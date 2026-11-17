@@ -439,6 +439,9 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .sp-best { position: absolute; top: -4px; transform: translateX(-50%); font-size: 13px; font-weight: 800; background: #FFF5C2; border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; white-space: nowrap; }
 .tt-box { max-width: 560px; margin: 8px auto; text-align: left; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 8px 12px; }
 .tt-box summary { cursor: pointer; font-weight: 700; }
+.sp-goals { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; text-align: center; }
+.sp-goals th, .sp-goals td { padding: 4px; border-bottom: 1px solid #E3EEF7; }
+.sp-goals td.got { background: #DDF5E4; font-weight: 700; color: #1E6B3A; }
 .tt-chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 2px; margin-top: 8px; font-size: 12px; }
 .tt-chart span { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; min-width: 0; }
 .tt-h { font-weight: 800; color: var(--ink); }
@@ -4366,6 +4369,7 @@ function ttChartHTML(p = P(), small = false) {
   }
   return h + '</div><div class="tt-key"><span class="tt-c mastered">✓</span> Mastered <span class="tt-c learning">·</span> Practicing <span class="tt-c new"></span> Not tried yet</div>';
 }
+const sprintGoalCoins = i => 30 + 20 * i; // goal 1 = 30 coins … goal 9 = 190 coins
 function sprintNextGoal(m, best) { return SPRINT_GOALS[m].find(g => g > (best || 0)) || null; }
 function sprintNextItem(p = P()) {
   const done = sprintGoalsDone(p);
@@ -4377,7 +4381,10 @@ function sprintPicker() {
   $('#gameBody').innerHTML = `<div class="picker sprint-pick">
     <h3>⏱️ How long do you want to sprint?</h3>
     <div class="mode-grid">${SPRINT_LENGTHS.map(m => { const best = d.best[m] || 0, ng = sprintNextGoal(m, best);
-      return `<button type="button" class="mode-btn" data-m="${m}"><span class="big">${m} min</span>${best ? `Your best: <b>${best}</b>` : 'No score yet'}<small>${ng ? `Next goal: ${ng}` : 'All 9 goals reached! 🏆'} · ${d.goals[m] || 0}/9 goals</small></button>`; }).join('')}</div>
+      return `<button type="button" class="mode-btn" data-m="${m}"><span class="big">${m} min</span>${best ? `Your best: <b>${best}</b>` : 'No score yet'}<small>${ng ? `Next goal: ${ng} → 🪙 ${sprintGoalCoins(SPRINT_GOALS[m].indexOf(ng))}` : 'All 9 goals reached! 🏆'} · ${d.goals[m] || 0}/9 goals</small></button>`; }).join('')}</div>
+    <details class="tt-box"><summary>🎯 Goals and coins</summary><table class="sp-goals"><tr><th>Goal</th>${SPRINT_LENGTHS.map(m => `<th>${m} min</th>`).join('')}<th>Coins</th></tr>
+      ${SPRINT_GOALS[1].map((_, i) => `<tr><td>${i + 1}</td>${SPRINT_LENGTHS.map(m => `<td class="${(d.best[m] || 0) >= SPRINT_GOALS[m][i] ? 'got' : ''}">${SPRINT_GOALS[m][i]}${(d.best[m] || 0) >= SPRINT_GOALS[m][i] ? ' ✓' : ''}</td>`).join('')}<td>🪙 ${sprintGoalCoins(i)}</td></tr>`).join('')}</table>
+      <p class="note">You get the coins the first time you reach each goal. Each time length has its own goals.</p></details>
     <p class="note">Multiplication facts from 0 × 0 to 12 × 12. Answer as many as you can before time runs out.<br>This is <b>you against you</b>: beat your own best, reach goals and win prizes.</p>
     <div class="sprint-prog"><b>⏱️ ${done} of ${SPRINT_TOTAL} goals reached</b>${nx ? `<span>Next prize at ${nx.it.sprint} goals: ${nx.it.icon ? nx.it.icon + ' ' : ''}${esc(nx.it.name)}</span>` : '<span>You won every Sprint prize! 🏆</span>'}
       <div class="sprint-bar"><i style="width:${Math.round(done / SPRINT_TOTAL * 100)}%"></i></div></div>
@@ -4402,7 +4409,7 @@ function sprintStart(mins) {
   sprintRun = { mins, right: 0, wrong: 0, end: Date.now() + mins * 60000, over: false, q: null, best, m0: factsMastered() };
   const ng = sprintNextGoal(mins, best);
   $('#gameBody').innerHTML = `<div class="race-arena sprint-arena">
-      <div class="boss-top"><span class="chip" id="spTime">⏱ ${mins}:00</span><span class="chip">✔ <b id="spRight">0</b></span><span class="chip">Best ${best || '—'}${ng ? ` · goal ${ng}` : ''}</span></div>
+      <div class="boss-top"><span class="chip" id="spTime">⏱ ${mins}:00</span><span class="chip">✔ <b id="spRight">0</b></span><span class="chip" id="spGoal">Best ${best || '—'}${ng ? ` · goal ${ng} = 🪙 ${sprintGoalCoins(SPRINT_GOALS[mins].indexOf(ng))}` : ''}</span></div>
       <div class="sprint-meter" id="spMeter"><i id="spFill"></i>${best ? `<span class="sp-best" style="left:${Math.min(98, best / Math.max(best, ng || best) * 92)}%">⭐ ${best}</span>` : ''}</div>
       <div class="play with-pad"><div><div class="aq" id="spQ"></div><div class="answer-row"><div class="slot" id="spAns"></div></div><div class="race-flash" id="spFlash"></div></div>${padHTML()}</div>
     </div>`;
@@ -4432,7 +4439,11 @@ function sprintNext() {
     const fl = $('#spFlash');
     if (ok) {
       R.right++; sfx('ok'); fl.textContent = fast ? '⚡ +1' : '+1'; fl.className = 'race-flash good';
-      if (R.best && R.right === R.best + 1) { cheer('New best!', $('.sprint-arena')); toast('⭐ New personal best! Keep going!', true); } else cheer('', $('#spMeter'));
+      const gi = SPRINT_GOALS[R.mins].indexOf(R.right);
+      if (gi >= 0 && R.right > R.best) { // a goal reached for the first time: coins are added when the time is up
+        cheer('Goal!', $('.sprint-arena')); sfx('level'); toast(`🎯 Goal ${R.right} reached! +🪙 ${sprintGoalCoins(gi)}`, true);
+        const nx = SPRINT_GOALS[R.mins][gi + 1]; $('#spGoal').textContent = `Best ${R.best || '—'} · ${nx ? `next goal ${nx} = 🪙 ${sprintGoalCoins(gi + 1)}` : 'all goals done!'}`;
+      } else if (R.best && R.right === R.best + 1) { cheer('New best!', $('.sprint-arena')); toast('⭐ New personal best! Keep going!', true); } else cheer('', $('#spMeter'));
     } else { R.wrong++; sfx('bad'); fl.textContent = `${R.q.text} = ${fmt(R.q.answer)}`; fl.className = 'race-flash bad'; }
     $('#spRight').textContent = R.right;
     const top = Math.max(R.best || 0, sprintNextGoal(R.mins, R.best) || 0, R.right, 1);
@@ -4453,7 +4464,7 @@ function sprintEnd() {
   const doneBefore = sprintGoalsDone(p);
   if (now > before) {
     d.goals[m] = now;
-    let coins = 0; for (let i = before; i < now; i++) coins += 30 + 20 * i;
+    let coins = 0; for (let i = before; i < now; i++) coins += sprintGoalCoins(i);
     reward(coins, coins);
     session.notes.push(`🎯 Goal${now - before > 1 ? 's' : ''} reached: ${goals.slice(before, now).join(', ')} in ${m} min · +${coins} coins`);
     const doneNow = sprintGoalsDone(p);

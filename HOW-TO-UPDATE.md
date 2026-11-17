@@ -62,6 +62,9 @@ node test/mock-sheet-server.js class-sheet-script.gs     # fake sheet on port 87
   - Fact Runner: never reveal a missed answer; the question just comes back later.
   - Race Day: Thursdays, 2 minutes, +1 right / −1 wrong, best score of the day. Winners are decided at the results time (14:20) and everyone tied for first wins. The Race Day card is first on race day; on other days Boss Battle is first.
   - Boss Battle: Fridays (set in Settings). Helpers get that week's boss pet and 150 coins. Students who weren't online when the boss fell get it the next time they open the game, including from the previous week.
+- **Times Table Sprint:** 0–12 multiplication in 1, 2 or 5 minutes. It's a race against your own best only: no top 3 and no class comparisons. Goals per length pay coins; the total number of goals unlocks Sprint reward items (`sprint: N` in `SPRINT_ITEMS`). Facts are tracked in `p.tt` for the times-table chart.
+- **Pets grow:** each right answer while wearing a pet feeds it (Baby → Little → Grown → Big → Legendary). Pets owned before this feature started at Grown, so nobody's pet shrank.
+- **December is Christmas:** snow, lights, a snowy island and beach, a Santa hat on the cartoon Mr. Romanek, and Christmas shop items. No school Dec 18 – Jan 3.
 - **Behaviour:**
   - Device clock tampering is not a concern.
   - School hours are enforced with the device clock.

@@ -97,6 +97,13 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; letter-sp
 }
 .avatar .face { transform: translateY(4%); }
 .avatar .hat { position: absolute; top: calc(var(--s) * -.32); left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: calc(var(--s) * .46); }
+.avatar .pet.st-3 { filter: drop-shadow(0 0 4px #FFE680); }
+.avatar .pet.st-4 { filter: drop-shadow(0 0 6px #FFC93C) drop-shadow(0 0 2px #fff); }
+.avatar .pet .pet-crown { position: absolute; left: 50%; top: -.42em; transform: translateX(-50%); font-size: .5em; line-height: 1; }
+.pet-grow { display: grid; gap: 2px; width: 100%; font-size: 11px; line-height: 1.1; }
+.pet-grow small { color: var(--ink-soft); }
+.pg-bar { height: 7px; border-radius: 99px; background: #E3EEF7; border: 1.5px solid var(--ink); overflow: hidden; }
+.pg-bar i { display: block; height: 100%; background: linear-gradient(90deg, #FFC93C, #23A866); }
 .avatar .pet { position: absolute; right: calc(var(--s) * -.2); bottom: calc(var(--s) * -.08); font-size: calc(var(--s) * .38); }
 .avatar.ring-1 { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #9FB4C0; }
 .avatar.ring-2 { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--sun-deep); }
@@ -422,6 +429,50 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 }
 .track .sun { position: absolute; right: 8%; top: 12%; width: 46px; height: 46px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 8px rgba(255,201,60,.35); }
 .runner { position: absolute; left: 10%; bottom: 74px; font-size: 48px; line-height: 1; z-index: 3; transform: scaleX(-1); }
+.sprint-pick .mode-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sprint-prog { background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 10px 14px; display: grid; gap: 4px; max-width: 520px; margin: 10px auto; text-align: left; }
+.sprint-prog span { font-size: 14px; color: var(--ink-soft); }
+.sprint-bar, .sprint-meter { height: 14px; border-radius: 99px; background: #E3EEF7; border: 2px solid var(--ink); overflow: hidden; position: relative; }
+.sprint-bar i, .sprint-meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #58B4F0, #23A866); transition: width .3s; }
+.sprint-meter { height: 22px; margin: 6px 0 10px; overflow: visible; }
+.sprint-meter i { border-radius: 99px; }
+.sp-best { position: absolute; top: -4px; transform: translateX(-50%); font-size: 13px; font-weight: 800; background: #FFF5C2; border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; white-space: nowrap; }
+.tt-box { max-width: 560px; margin: 8px auto; text-align: left; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 8px 12px; }
+.tt-box summary { cursor: pointer; font-weight: 700; }
+.tt-chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 2px; margin-top: 8px; font-size: 12px; }
+.tt-chart span { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; min-width: 0; }
+.tt-h { font-weight: 800; color: var(--ink); }
+.tt-c { background: #EEF1F4; color: #8A96A3; font-size: 10px; }
+.tt-c.learning { background: #FFD9A8; color: #7A4A00; }
+.tt-c.mastered { background: #6FD08C; color: #0E4A22; font-weight: 700; }
+.tt-key { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; margin-top: 6px; }
+.tt-key .tt-c { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; }
+/* ---- December: snow, lights, snowy island and track ---- */
+#snowLayer { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 5;
+  background-image: radial-gradient(circle, #fff 0 2px, transparent 2.5px), radial-gradient(circle, rgba(255,255,255,.85) 0 1.5px, transparent 2px), radial-gradient(circle, rgba(255,255,255,.7) 0 3px, transparent 3.5px);
+  background-size: 120px 120px, 80px 80px, 200px 200px; background-position: 0 0, 40px 60px, 100px 30px;
+  animation: snowfall 14s linear infinite; filter: drop-shadow(0 0 1px rgba(80,120,160,.6)); }
+body.xmas:not(.in-game) #snowLayer { display: block; }
+@keyframes snowfall { to { background-position: 30px 120px, 60px 140px, 130px 230px; } }
+@media (prefers-reduced-motion: reduce) { #snowLayer { animation: none; } }
+body.xmas #scr-hub { position: relative; }
+body.xmas #scr-hub::before { content: ""; position: absolute; left: 0; right: 0; top: -6px; height: 16px; pointer-events: none;
+  background: radial-gradient(circle at 50% 70%, #FF4B4B 0 4px, transparent 5px) 0 0/48px 16px, radial-gradient(circle at 50% 70%, #FFD23C 0 4px, transparent 5px) 16px 0/48px 16px, radial-gradient(circle at 50% 70%, #3FD16A 0 4px, transparent 5px) 32px 0/48px 16px,
+    linear-gradient(#2B5C2E, #2B5C2E) 0 4px/100% 2px no-repeat; animation: twinkle 1.6s steps(2) infinite; }
+@keyframes twinkle { 50% { filter: brightness(1.5) saturate(1.3); } }
+.xmas-banner { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; padding: 10px 14px; border: 3px solid var(--ink); border-radius: 16px;
+  background: repeating-linear-gradient(135deg, #FFF 0 14px, #FFF1F1 14px 28px); font-size: 15px; font-weight: 600; box-shadow: 0 4px 0 var(--ink); }
+.xmas-banner > :first-child { font-size: 30px; }
+body.xmas .isle { background: linear-gradient(#CFE9F7 0 58%, #4FA7C2 58%); }
+body.xmas .isle-land { background: radial-gradient(ellipse at 50% 35%, #FFFFFF, #DCEBF5 70%); border-color: #A9C6DA; }
+body.xmas .isle::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 120;
+  background-image: radial-gradient(circle, #fff 0 2px, transparent 2.5px), radial-gradient(circle, rgba(255,255,255,.8) 0 1.5px, transparent 2px);
+  background-size: 70px 70px, 45px 45px; animation: snowfall 10s linear infinite; }
+body.xmas .track { background: linear-gradient(#BFE3F5 0 62%, #FFFFFF 62% 66%, #E3EFF7 66%); }
+body.xmas .track::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image: radial-gradient(circle, #fff 0 2px, transparent 2.5px), radial-gradient(circle, rgba(255,255,255,.8) 0 1.5px, transparent 2px);
+  background-size: 70px 70px, 45px 45px; animation: snowfall 9s linear infinite; }
+@media (prefers-reduced-motion: reduce) { body.xmas .isle::after, body.xmas .track::after, body.xmas #scr-hub::before { animation: none; } }
 .runner.hop { animation: hop .75s cubic-bezier(.3,.7,.4,1); }
 .runner.noflip { transform: none; } /* these pictures already face the way the runner goes */
 @keyframes hop { 0% { translate: 0 0; } 50% { translate: 0 -118px; } 100% { translate: 0 0; } }
@@ -1022,6 +1073,7 @@ function body(id) {
 
 function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(2, 7)) {
   let extra = '', h = head(), b = body(id), vb = '0 0 240 262', headT = '';
+  const santa = isXmas();
   if (pose === 'wave') {
     extra = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
       <path d="M196 214 C214 200 222 176 220 150 L200 148 C200 170 194 186 180 198 Z" fill="url(#sp${id})"/>
@@ -1044,11 +1096,19 @@ function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(
     b = `<g transform="translate(120 196) scale(.78) translate(-120 -182)">${body(id)}</g>`;
     vb = '0 0 240 262';
   }
-  return `<svg class="teacher" viewBox="${vb}" width="${size}" height="${size}" role="img" aria-label="Cartoon Mr. Romanek">${defs(id)}
-    ${b}${extra}<g ${headT}>${h}</g></svg>`;
+  return `<svg class="teacher" viewBox="${vb}" width="${size}" height="${size}" style="overflow:visible" role="img" aria-label="Cartoon Mr. Romanek">${defs(id)}
+    ${b}${extra}<g ${headT}>${h}${santa ? SANTA_HAT : ''}</g></svg>`;
 }
   return draw;
 })();
+/* December: Christmas look (snow, lights, Santa hat on the cartoon). */
+function isXmas(d = today()) { return d.getMonth() === 11; }
+const SANTA_HAT = `<g stroke="#1E2A33" stroke-width="5" stroke-linejoin="round">
+  <path d="M68 50 C74 22 112 6 150 10 C182 14 202 32 212 60 L198 64 C190 44 178 36 166 38 C172 42 174 46 174 50 Z" fill="#E8283C"/>
+  <path d="M60 46 Q120 26 182 46 L182 62 Q120 44 60 62 Z" fill="#fff"/>
+  <circle cx="208" cy="66" r="11" fill="#fff"/></g>
+  <path d="M84 40 C96 24 120 16 140 16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".35"/>`;
+function santaHatIcon() { return `<svg class="teacher ico" viewBox="50 0 175 80" width="1.4em" height=".7em" style="overflow:visible" role="img" aria-label="Santa hat">${SANTA_HAT}</svg>`; }
 /* Mr. Romanek as a shop/boss picture: the same cartoon, sized like an emoji (1em) so it fits wherever an icon goes.
    A fresh drawing (new ids) is made every time an icon is read, so patterns never break when the same picture appears twice. */
 function romIcon(pose = 'chibi', style = '') {
@@ -1062,7 +1122,7 @@ function romGlassesIcon() { // his round-ish glasses, drawn to match the cartoon
    iPads, Samsung and other Androids each draw emoji differently. The game swaps every emoji
    for Google's emoji picture (stored with the game in the emoji/ folder), so all tablets match.
    If a picture can't load, the tablet's own emoji shows instead. */
-const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg","📈":"1F4C8.svg","🏝️":"1F3DD.svg","🏝":"1F3DD.svg","🏅":"1F3C5.svg","💡":"1F4A1.svg","🔑":"1F511.svg","✨":"2728.svg","🚗":"1F697.svg","🏃":"1F3C3.svg","⚽":"26BD.svg","🐚":"1F41A.svg","🌻":"1F33B.svg","🗼":"1F5FC.svg","🧱":"1F9F1.svg","🎯":"1F3AF.svg","🧗":"1F9D7.svg","💰":"1F4B0.svg","📜":"1F4DC.svg","🌲":"1F332.svg","🥧":"1F967.svg","🍳":"1F373.svg","📏":"1F4CF.svg","⚓":"2693.svg","⛰️":"26F0.svg","⛰":"26F0.svg","🧩":"1F9E9.svg","📐":"1F4D0.svg","🔷":"1F537.svg","🏁":"1F3C1.svg","⚔️":"2694.svg","⚔":"2694.svg","🦊":"1F98A.svg","🐼":"1F43C.svg","🐯":"1F42F.svg","🐸":"1F438.svg","🐨":"1F428.svg","🐙":"1F419.svg","🦉":"1F989.svg","🐢":"1F422.svg","🐰":"1F430.svg","🦁":"1F981.svg","🐧":"1F427.svg","🐬":"1F42C.svg","🐻":"1F43B.svg","🐵":"1F435.svg","🐷":"1F437.svg","🐮":"1F42E.svg","🐺":"1F43A.svg","🦒":"1F992.svg","🦝":"1F99D.svg","🧢":"1F9E2.svg","🎀":"1F380.svg","🌸":"1F338.svg","👒":"1F452.svg","🎩":"1F3A9.svg","⛑️":"26D1.svg","⛑":"26D1.svg","🎓":"1F393.svg","👑":"1F451.svg","🌟":"1F31F.svg","💎":"1F48E.svg","🐣":"1F423.svg","🐶":"1F436.svg","🐱":"1F431.svg","🦀":"1F980.svg","🐠":"1F420.svg","🐝":"1F41D.svg","🦜":"1F99C.svg","🦋":"1F98B.svg","🦩":"1F9A9.svg","🦄":"1F984.svg","🦖":"1F996.svg","🦚":"1F99A.svg","🐉":"1F409.svg","⭐":"2B50.svg","💖":"1F496.svg","💕":"1F495.svg","🎈":"1F388.svg","🎉":"1F389.svg","🎊":"1F38A.svg","🎵":"1F3B5.svg","🎶":"1F3B6.svg","🎷":"1F3B7.svg","🍕":"1F355.svg","🍩":"1F369.svg","🧁":"1F9C1.svg","🦕":"1F995.svg","🌿":"1F33F.svg","🎆":"1F386.svg","🎇":"1F387.svg","💥":"1F4A5.svg","💠":"1F4A0.svg","🥅":"1F945.svg","🌙":"1F319.svg","🚕":"1F695.svg","🚜":"1F69C.svg","🚙":"1F699.svg","🚓":"1F693.svg","🚒":"1F692.svg","🏎️":"1F3CE.svg","🏎":"1F3CE.svg","🛸":"1F6F8.svg","🚀":"1F680.svg","🌺":"1F33A.svg","🌴":"1F334.svg","⛱️":"26F1.svg","⛱":"26F1.svg","🏕️":"1F3D5.svg","🏕":"1F3D5.svg","⛵":"26F5.svg","🛖":"1F6D6.svg","🗿":"1F5FF.svg","🐳":"1F433.svg","🌋":"1F30B.svg","🚁":"1F681.svg","🎡":"1F3A1.svg","🏰":"1F3F0.svg","🪨":"1FAA8.svg","🌵":"1F335.svg","🍄":"1F344.svg","🌳":"1F333.svg","🐒":"1F412.svg","🦭":"1F9AD.svg","🛝":"1F6DD.svg","🦙":"1F999.svg","⛲":"26F2.svg","🏡":"1F3E1.svg","🚂":"1F682.svg","🐘":"1F418.svg","🏪":"1F3EA.svg","🎠":"1F3A0.svg","🏫":"1F3EB.svg","🏆":"1F3C6.svg","🏯":"1F3EF.svg","🏟️":"1F3DF.svg","🏟":"1F3DF.svg","🛶":"1F6F6.svg","🚤":"1F6A4.svg","🛳️":"1F6F3.svg","🛳":"1F6F3.svg","☁️":"2601.svg","☁":"2601.svg","🪁":"1FA81.svg","🪂":"1FA82.svg","✈️":"2708.svg","✈":"2708.svg","🌈":"1F308.svg","🌕":"1F315.svg","🎃":"1F383.svg","❄️":"2744.svg","❄":"2744.svg","🧧":"1F9E7.svg","🏖️":"1F3D6.svg","🏖":"1F3D6.svg","🍁":"1F341.svg","🌷":"1F337.svg","🐇":"1F407.svg","🦇":"1F987.svg","👻":"1F47B.svg","⛄":"26C4.svg","🦌":"1F98C.svg","🐐":"1F410.svg","🐞":"1F41E.svg","🦑":"1F991.svg","🦈":"1F988.svg","🐲":"1F432.svg","🦞":"1F99E.svg","🐊":"1F40A.svg","🐡":"1F421.svg","🐅":"1F405.svg","🥚":"1F95A.svg","🍂":"1F342.svg","🎁":"1F381.svg","🏮":"1F3EE.svg","🌊":"1F30A.svg","🏄":"1F3C4.svg","☀️":"2600.svg","☀":"2600.svg","🏚️":"1F3DA.svg","🏚":"1F3DA.svg","🎄":"1F384.svg","🔥":"1F525.svg","💯":"1F4AF.svg","🧭":"1F9ED.svg","🦘":"1F998.svg","🧠":"1F9E0.svg","🏦":"1F3E6.svg","🗃️":"1F5C3.svg","🗃":"1F5C3.svg","📅":"1F4C5.svg","🗓️":"1F5D3.svg","🗓":"1F5D3.svg","💫":"1F4AB.svg","🌠":"1F320.svg","⚡":"26A1.svg","🏔️":"1F3D4.svg","🏔":"1F3D4.svg","🪐":"1FA90.svg","🏵️":"1F3F5.svg","🏵":"1F3F5.svg","🥇":"1F947.svg","💌":"1F48C.svg","🛡️":"1F6E1.svg","🛡":"1F6E1.svg","⬆️":"2B06.svg","⬆":"2B06.svg","🎮":"1F3AE.svg","🙌":"1F64C.svg","🔄":"1F504.svg","✅":"2705.svg","⚠️":"26A0.svg","⚠":"26A0.svg","🔒":"1F512.svg","🔁":"1F501.svg","🥈":"1F948.svg","🥉":"1F949.svg","🙂":"1F642.svg","❤️":"2764.svg","❤":"2764.svg","🤍":"1F90D.svg","💨":"1F4A8.svg","🦅":"1F985.svg","🧤":"1F9E4.svg","✋":"270B.svg","🗑️":"1F5D1.svg","🗑":"1F5D1.svg","🤩":"1F929.svg","📋":"1F4CB.svg"};
+const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg","📈":"1F4C8.svg","🏝️":"1F3DD.svg","🏝":"1F3DD.svg","🏅":"1F3C5.svg","💡":"1F4A1.svg","🔑":"1F511.svg","✨":"2728.svg","🚗":"1F697.svg","🏃":"1F3C3.svg","⚽":"26BD.svg","🐚":"1F41A.svg","🌻":"1F33B.svg","🗼":"1F5FC.svg","🧱":"1F9F1.svg","🎯":"1F3AF.svg","🧗":"1F9D7.svg","💰":"1F4B0.svg","📜":"1F4DC.svg","🌲":"1F332.svg","🥧":"1F967.svg","🍳":"1F373.svg","📏":"1F4CF.svg","⚓":"2693.svg","⛰️":"26F0.svg","⛰":"26F0.svg","🧩":"1F9E9.svg","📐":"1F4D0.svg","🔷":"1F537.svg","⏱️":"23F1.svg","⏱":"23F1.svg","🏁":"1F3C1.svg","⚔️":"2694.svg","⚔":"2694.svg","🦊":"1F98A.svg","🐼":"1F43C.svg","🐯":"1F42F.svg","🐸":"1F438.svg","🐨":"1F428.svg","🐙":"1F419.svg","🦉":"1F989.svg","🐢":"1F422.svg","🐰":"1F430.svg","🦁":"1F981.svg","🐧":"1F427.svg","🐬":"1F42C.svg","🐻":"1F43B.svg","🐵":"1F435.svg","🐷":"1F437.svg","🐮":"1F42E.svg","🐺":"1F43A.svg","🦒":"1F992.svg","🦝":"1F99D.svg","🧢":"1F9E2.svg","🎀":"1F380.svg","🌸":"1F338.svg","👒":"1F452.svg","🎩":"1F3A9.svg","⛑️":"26D1.svg","⛑":"26D1.svg","🎓":"1F393.svg","👑":"1F451.svg","🌟":"1F31F.svg","💎":"1F48E.svg","🐣":"1F423.svg","🐶":"1F436.svg","🐱":"1F431.svg","🦀":"1F980.svg","🐠":"1F420.svg","🐝":"1F41D.svg","🦜":"1F99C.svg","🦋":"1F98B.svg","🦩":"1F9A9.svg","🦄":"1F984.svg","🦖":"1F996.svg","🦚":"1F99A.svg","🐉":"1F409.svg","⭐":"2B50.svg","💖":"1F496.svg","💕":"1F495.svg","🎈":"1F388.svg","🎉":"1F389.svg","🎊":"1F38A.svg","🎵":"1F3B5.svg","🎶":"1F3B6.svg","🎷":"1F3B7.svg","🍕":"1F355.svg","🍩":"1F369.svg","🧁":"1F9C1.svg","🦕":"1F995.svg","🌿":"1F33F.svg","🎆":"1F386.svg","🎇":"1F387.svg","💥":"1F4A5.svg","💠":"1F4A0.svg","🥅":"1F945.svg","🌙":"1F319.svg","🚕":"1F695.svg","🚜":"1F69C.svg","🚙":"1F699.svg","🚓":"1F693.svg","🚒":"1F692.svg","🏎️":"1F3CE.svg","🏎":"1F3CE.svg","🛸":"1F6F8.svg","🚀":"1F680.svg","🌺":"1F33A.svg","🌴":"1F334.svg","⛱️":"26F1.svg","⛱":"26F1.svg","🏕️":"1F3D5.svg","🏕":"1F3D5.svg","⛵":"26F5.svg","🛖":"1F6D6.svg","🗿":"1F5FF.svg","🐳":"1F433.svg","🌋":"1F30B.svg","🚁":"1F681.svg","🎡":"1F3A1.svg","🏰":"1F3F0.svg","🪨":"1FAA8.svg","🌵":"1F335.svg","🍄":"1F344.svg","🌳":"1F333.svg","🐒":"1F412.svg","🦭":"1F9AD.svg","🛝":"1F6DD.svg","🦙":"1F999.svg","⛲":"26F2.svg","🏡":"1F3E1.svg","🚂":"1F682.svg","🐘":"1F418.svg","🏪":"1F3EA.svg","🎠":"1F3A0.svg","🏫":"1F3EB.svg","🏆":"1F3C6.svg","🏯":"1F3EF.svg","🏟️":"1F3DF.svg","🏟":"1F3DF.svg","🛶":"1F6F6.svg","🚤":"1F6A4.svg","🛳️":"1F6F3.svg","🛳":"1F6F3.svg","☁️":"2601.svg","☁":"2601.svg","🪁":"1FA81.svg","🪂":"1FA82.svg","✈️":"2708.svg","✈":"2708.svg","🌈":"1F308.svg","🌕":"1F315.svg","🎃":"1F383.svg","🎄":"1F384.svg","🧧":"1F9E7.svg","🏖️":"1F3D6.svg","🏖":"1F3D6.svg","🍁":"1F341.svg","❄️":"2744.svg","❄":"2744.svg","🧣":"1F9E3.svg","🌷":"1F337.svg","🐇":"1F407.svg","🦇":"1F987.svg","👻":"1F47B.svg","⛄":"26C4.svg","🦌":"1F98C.svg","🐻‍❄️":"1F43B-200D-2744-FE0F.svg","🐻‍❄":"1F43B-200D-2744-FE0F.svg","🧝":"1F9DD.svg","🐐":"1F410.svg","🐞":"1F41E.svg","🦑":"1F991.svg","🦈":"1F988.svg","🐲":"1F432.svg","🦞":"1F99E.svg","🐊":"1F40A.svg","🐡":"1F421.svg","🐅":"1F405.svg","🥚":"1F95A.svg","🍂":"1F342.svg","🎁":"1F381.svg","🔔":"1F514.svg","🍬":"1F36C.svg","🏮":"1F3EE.svg","🌊":"1F30A.svg","🏄":"1F3C4.svg","☀️":"2600.svg","☀":"2600.svg","🏚️":"1F3DA.svg","🏚":"1F3DA.svg","☃️":"2603.svg","☃":"2603.svg","🛷":"1F6F7.svg","🎅":"1F385.svg","🐆":"1F406.svg","🦅":"1F985.svg","⚡":"26A1.svg","✖️":"2716.svg","✖":"2716.svg","🧠":"1F9E0.svg","🔥":"1F525.svg","💯":"1F4AF.svg","🧭":"1F9ED.svg","🦘":"1F998.svg","🏦":"1F3E6.svg","🗃️":"1F5C3.svg","🗃":"1F5C3.svg","📅":"1F4C5.svg","🗓️":"1F5D3.svg","🗓":"1F5D3.svg","💫":"1F4AB.svg","🌠":"1F320.svg","🏔️":"1F3D4.svg","🏔":"1F3D4.svg","🪐":"1FA90.svg","🏵️":"1F3F5.svg","🏵":"1F3F5.svg","🥇":"1F947.svg","💌":"1F48C.svg","🛡️":"1F6E1.svg","🛡":"1F6E1.svg","⬆️":"2B06.svg","⬆":"2B06.svg","🎮":"1F3AE.svg","🙌":"1F64C.svg","🐾":"1F43E.svg","🔄":"1F504.svg","✅":"2705.svg","⚠️":"26A0.svg","⚠":"26A0.svg","🔒":"1F512.svg","🔁":"1F501.svg","🥈":"1F948.svg","🥉":"1F949.svg","🙂":"1F642.svg","❤️":"2764.svg","❤":"2764.svg","🤍":"1F90D.svg","💨":"1F4A8.svg","📊":"1F4CA.svg","🧤":"1F9E4.svg","✋":"270B.svg","🗑️":"1F5D1.svg","🗑":"1F5D1.svg","🤩":"1F929.svg","📋":"1F4CB.svg"};
 const EMOJI_RE = new RegExp(Object.keys(EMOJI_FILES).sort((a, b) => b.length - a.length).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
 const EMOJI_ANY = new RegExp(EMOJI_RE.source, 'u');
 const EMOJI_SKIP = 'script,style,textarea,input,title,svg,option,.no-emo';
@@ -1192,6 +1252,7 @@ const GAMES = [
   { id: 'patterns',    name: 'Pattern Path',     icon: '🧩', blurb: 'Find the rule and the next number.', skill: 'patterns', bg: '#FFF0B8', practices: 'Topic 14: number patterns and rules', later: true },
   { id: 'angles',      name: 'Angle Arcade',     icon: '📐', blurb: 'Kinds of angles, protractors, missing angles.', skill: 'angles', bg: '#FFE1DB', practices: 'Topic 15: angles and angle measurement', later: true },
   { id: 'shapes',      name: 'Shape Safari',     icon: '🔷', blurb: 'Lines, triangles, quadrilaterals, symmetry.', skill: 'shapes', bg: '#CBE8FF', practices: 'Topic 16: lines, angles and shapes', later: true },
+  { id: 'sprint',   name: 'Times Table Sprint', icon: '⏱️', blurb: 'Pick 1, 2 or 5 minutes and beat your own best!', skill: 'mult', bg: '#E3F2FF', feature: true, practices: 'Multiplication facts 0–12, timed. Students race their own best score (no leaderboard).' },
   { id: 'race',     name: 'Race Day',           icon: '🏁', blurb: 'A 2-minute race once a week. Best score of the day wins coins!', skill: null, bg: '#FFE1DB', special: true, practices: 'Weekly 2-minute facts race (+1 right, −1 wrong); the teacher picks the questions' },
   { id: 'boss',     name: 'Boss Battle',        icon: '⚔️', blurb: 'Team up with your class to beat this week\'s boss!', skill: null, bg: '#2A1F6B', wide: true, practices: 'Whole-class team-up on mixed facts (great for Fun Friday)' }
 ];
@@ -1376,12 +1437,16 @@ const SHOP_TABS = [
   { id: 'title', label: 'Titles', wear: true }, { id: 'island', label: 'My Island', place: true }
 ];
 SHOP.animal = AVATARS.map((a, i) => ({ id: 'animal' + i, icon: a, name: ANIMAL_NAMES[i], price: 0 }));
+const PET_STAGES = [
+  { name: 'Baby', at: 0, scale: .72 }, { name: 'Little', at: 40, scale: .86 }, { name: 'Grown', at: 150, scale: 1 },
+  { name: 'Big', at: 500, scale: 1.16 }, { name: 'Legendary', at: 1200, scale: 1.3 }
+];
 
 /* Seasonal items: in the shop only between these dates (month-day), kept forever once bought. */
 const SEASONS = [
   { id: 'harvest',   name: 'Harvest Moon',   icon: '🌕', from: '09-10', to: '10-12' },
   { id: 'halloween', name: 'Halloween',      icon: '🎃', from: '10-13', to: '11-07' },
-  { id: 'winter',    name: 'Winter Wonder',  icon: '❄️', from: '12-01', to: '01-12' },
+  { id: 'winter',    name: 'Christmas',      icon: '🎄', from: '12-01', to: '01-12' },
   { id: 'lunar',     name: 'Lunar New Year', icon: '🧧', from: '01-20', to: '02-20' },
   { id: 'spring',    name: 'Spring Blossom', icon: '🌸', from: '03-20', to: '04-30' },
   { id: 'summer',    name: 'Summer Splash',  icon: '🏖️', from: '06-10', to: '08-31' }
@@ -1391,6 +1456,8 @@ const SEASON_ITEMS = {
     { id: 'maple', icon: '🍁', name: 'Maple leaf', price: 120, season: 'harvest' },
     { id: 'pumpkin', icon: '🎃', name: 'Pumpkin', price: 150, season: 'halloween' },
     { id: 'snowflake', icon: '❄️', name: 'Snowflake', price: 150, season: 'winter' },
+    { id: 'santahat', get icon() { return santaHatIcon(); }, name: 'Santa hat', price: 250, season: 'winter' },
+    { id: 'scarf', icon: '🧣', name: 'Cozy scarf', price: 180, season: 'winter' },
     { id: 'tulip', icon: '🌷', name: 'Tulip', price: 120, season: 'spring' }
   ],
   pet: [
@@ -1399,6 +1466,9 @@ const SEASON_ITEMS = {
     { id: 'ghost', icon: '👻', name: 'Ghost', price: 220, season: 'halloween' },
     { id: 'snowman', icon: '⛄', name: 'Snowman', price: 200, season: 'winter' },
     { id: 'reindeer', icon: '🦌', name: 'Reindeer', price: 320, season: 'winter' },
+    { id: 'polarbear', icon: '🐻‍❄️', name: 'Polar bear cub', price: 450, season: 'winter' },
+    { id: 'elf', icon: '🧝', name: 'Helper elf', price: 400, season: 'winter' },
+    { id: 'penguinpal', icon: '🐧', name: 'Penguin pal', price: 280, season: 'winter' },
     { id: 'goat', icon: '🐐', name: 'Lucky goat', price: 220, season: 'lunar' },
     { id: 'ladybug', icon: '🐞', name: 'Ladybug', price: 120, season: 'spring' },
     { id: 'dolphinpal', icon: '🐬', name: 'Dolphin pal', price: 250, season: 'summer' },
@@ -1418,6 +1488,8 @@ const SEASON_ITEMS = {
     { id: 'harvestbg', name: 'Harvest', price: 180, css: 'linear-gradient(160deg,#FFE8B0,#E8743B)', season: 'harvest' },
     { id: 'spooky', name: 'Spooky', price: 180, css: 'linear-gradient(160deg,#3B1F5C,#FF7A1A)', season: 'halloween' },
     { id: 'snowy', name: 'Snowy', price: 150, css: 'radial-gradient(circle at 30% 30%,#FFFFFF,#BFE3FF 70%)', season: 'winter' },
+    { id: 'candycane', name: 'Candy cane', price: 220, css: 'repeating-linear-gradient(135deg,#E8283C 0 9px,#FFFFFF 9px 18px)', season: 'winter' },
+    { id: 'xmaslights', name: 'Twinkle lights', price: 300, css: 'radial-gradient(circle,#FF5A5A 0 2.5px,transparent 3px) 0 0/18px 18px,radial-gradient(circle,#FFD23C 0 2.5px,transparent 3px) 9px 9px/18px 18px,radial-gradient(circle,#4CD964 0 2px,transparent 2.5px) 9px 0/18px 18px,#1B3A5C', season: 'winter' },
     { id: 'lucky', name: 'Lucky red', price: 180, css: 'linear-gradient(160deg,#FF4D4D,#FFC93C)', season: 'lunar' },
     { id: 'blossom', name: 'Blossom', price: 150, css: 'linear-gradient(160deg,#FFE4F1,#FF9CC8)', season: 'spring' },
     { id: 'tropical', name: 'Tropical', price: 180, css: 'linear-gradient(160deg,#7FF0D8,#00A6C8)', season: 'summer' }
@@ -1426,6 +1498,8 @@ const SEASON_ITEMS = {
     { id: 'harvestfx', name: 'Harvest', price: 250, fx: ['🌕', '🍂', '🍁'], season: 'harvest' },
     { id: 'spookyfx', name: 'Spooky', price: 250, fx: ['🎃', '👻', '🦇'], season: 'halloween' },
     { id: 'snowfx', name: 'Snowfall', price: 250, fx: ['❄️', '⛄', '🎁'], season: 'winter' },
+    { id: 'jinglefx', name: 'Jingle bells', price: 300, fx: ['🔔', '🎄', '🌟'], season: 'winter' },
+    { id: 'giftfx', name: 'Gift rain', price: 350, fx: ['🎁', '🍬', '⭐'], season: 'winter' },
     { id: 'fortune', name: 'Good fortune', price: 250, fx: ['🧧', '🏮', '🎆'], season: 'lunar' },
     { id: 'blossomfx', name: 'Blossoms', price: 250, fx: ['🌸', '🌷', '🦋'], season: 'spring' },
     { id: 'splash', name: 'Splash', price: 250, fx: ['🌊', '🏄', '☀️'], season: 'summer' }
@@ -1434,16 +1508,32 @@ const SEASON_ITEMS = {
     { id: 'moon', icon: '🌕', name: 'Full moon', price: 300, x: 32, y: 80, z: 34, season: 'harvest' },
     { id: 'haunted', icon: '🏚️', name: 'Haunted house', price: 600, x: 52, y: 40, z: 42, season: 'halloween' },
     { id: 'xmastree', icon: '🎄', name: 'Holiday tree', price: 400, x: 10, y: 30, z: 40, season: 'winter' },
+    { id: 'giftpile', icon: '🎁', name: 'Gift pile', price: 250, x: 18, y: 26, z: 30, season: 'winter' },
+    { id: 'snowmanisle', icon: '☃️', name: 'Snowman', price: 300, x: 80, y: 34, z: 40, season: 'winter' },
+    { id: 'sled', icon: '🛷', name: 'Sled', price: 350, x: 62, y: 24, z: 34, season: 'winter' },
+    { id: 'santa', icon: '🎅', name: 'Santa visit', price: 800, x: 40, y: 36, z: 44, season: 'winter' },
     { id: 'lanterns', icon: '🏮', name: 'Lanterns', price: 350, x: 20, y: 78, z: 30, season: 'lunar' },
     { id: 'tulips', icon: '🌷', name: 'Tulip bed', price: 200, x: 66, y: 18, z: 26, season: 'spring' },
     { id: 'surfer', icon: '🏄', name: 'Surfer', price: 400, x: 50, y: 4, z: 36, season: 'summer' }
   ],
   title: [
     { id: 'luckystar', name: 'Lucky Star', price: 200, season: 'lunar' },
-    { id: 'spookster', name: 'Spookster', price: 200, season: 'halloween' }
+    { id: 'spookster', name: 'Spookster', price: 200, season: 'halloween' },
+    { id: 'holidayhero', name: 'Holiday Hero', price: 250, season: 'winter' },
+    { id: 'snowchamp', name: 'Snow Champion', price: 400, season: 'winter' }
   ]
 };
 Object.entries(SEASON_ITEMS).forEach(([cat, items]) => SHOP[cat].push(...items));
+/* Times Table Sprint rewards: won by reaching Sprint goals (sprint = how many goals in all), never bought. */
+const SPRINT_ITEMS = {
+  title: [{ id: 'factsprinter', name: 'Fact Sprinter', price: 0, sprint: 2 }, { id: 'ttchampion', name: 'Times Table Champion', price: 0, sprint: 18 }, { id: 'ttlegend', name: 'Times Table Legend', price: 0, sprint: 27 }],
+  pet: [{ id: 'cheetah', icon: '🐆', name: 'Cheetah cub', price: 0, sprint: 5 }, { id: 'speedeagle', icon: '🦅', name: 'Speedy eagle', price: 0, sprint: 22 }],
+  effect: [{ id: 'lightningfx', name: 'Lightning', price: 0, fx: ['⚡', '⏱️', '✨'], sprint: 8 }],
+  hat: [{ id: 'stopwatchhat', icon: '⏱️', name: 'Stopwatch', price: 0, sprint: 11 }],
+  bg: [{ id: 'speedbg', name: 'Speed stripes', price: 0, css: 'repeating-linear-gradient(115deg,#2C8FD6 0 10px,#58B4F0 10px 20px)', sprint: 14 }],
+  island: [{ id: 'trophy', icon: '🏆', name: 'Sprint trophy', price: 0, x: 60, y: 46, z: 40, sprint: 25 }]
+};
+Object.entries(SPRINT_ITEMS).forEach(([cat, items]) => SHOP[cat].push(...items));
 // Levels now stretch over the whole year, so shop level locks are spread out to match (level 9 -> 18, 13 -> 26).
 Object.values(SHOP).flat().forEach(it => { if (it.minLevel) it.minLevel *= 2; });
 const BOSSES = [
@@ -1570,6 +1660,10 @@ const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
 const BADGES = [
+  { id: 'sprintgoal', icon: '⏱️', name: 'Off the Blocks',  desc: 'Reach your first Times Table Sprint goal' },
+  { id: 'beatbest',   icon: '📈', name: 'Beat Your Best',  desc: 'Beat your own Sprint best 5 times' },
+  { id: 'tthalf',     icon: '✖️', name: 'Halfway Hero',    desc: 'Master 85 of the 169 times table facts' },
+  { id: 'ttmaster',   icon: '🧠', name: 'Times Table Master', desc: 'Master all 169 times table facts (0–12)' },
   { id: 'first',     icon: '🐚', name: 'First Shell',     desc: 'Finish your first game' },
   { id: 'perfect',   icon: '⭐', name: 'Perfect Round',   desc: 'Earn 3 stars in a game' },
   { id: 'streak10',  icon: '🔥', name: 'On Fire',         desc: 'Get 10 right in a row' },
@@ -1661,6 +1755,7 @@ function ensureProfile(p) { // fills gaps if the data shape grows later
     if (p.islandPos) Object.keys(p.islandPos).forEach(k => { if (k === o || k.startsWith(o + '#')) { p.islandPos[n + k.slice(o.length)] = p.islandPos[k]; delete p.islandPos[k]; } });
   });
   if (!p.wear.bg) p.wear.bg = 'sky'; if (!p.wear.effect) p.wear.effect = 'stars'; if (!p.wear.ride) p.wear.ride = 'car';
+  if (!p.petGrow) { p.petGrow = {}; SHOP.pet.forEach(it => { if (p.owned.includes(it.id)) p.petGrow[it.id] = PET_STAGES[2].at; }); }
 }
 
 /* =========================================================
@@ -1719,6 +1814,7 @@ function record(skill, ok) {
       if (session) session.notes.push(`${SKILLS[skill].name} went up to level ${s.level}`);
     }
     reward(2, 10);
+    growPet(p);
   } else {
     s.streak = 0; s.miss++; p.streak = 0;
     if (s.miss >= 2 && s.level > 1) { s.level--; s.miss = 0; } // quietly eases off after two misses
@@ -1962,11 +2058,35 @@ function openChangeCode() {
 function show(name) {
   SCREENS.forEach(s => { $('#scr-' + s).hidden = s !== name; });
   currentScreen = name;
+  document.body.classList.toggle('xmas', isXmas());
+  document.body.classList.toggle('in-game', name === 'game');
+  if (isXmas() && !$('#snowLayer')) { const sn = document.createElement('div'); sn.id = 'snowLayer'; sn.setAttribute('aria-hidden', 'true'); document.body.appendChild(sn); }
   if (name === 'hub') showCodeButton();
   if (name !== 'game') setTimeout(enforceHours, 0);
   try { window.scrollTo(0, 0); } catch (e) {}
 }
 
+/* Pets grow: every right answer while wearing a pet feeds it. New pets start as babies;
+   pets owned before this existed start Grown, so nothing shrinks. */
+function petPoints(p, id) { return (p.petGrow || {})[id] || 0; }
+function petStage(p, id) { const n = petPoints(p, id); let i = 0; PET_STAGES.forEach((S, k) => { if (n >= S.at) i = k; }); return i; }
+function growPet(p) {
+  const id = p.wear && p.wear.pet; if (!id) return;
+  p.petGrow = p.petGrow || {};
+  const before = petStage(p, id);
+  p.petGrow[id] = petPoints(p, id) + 1;
+  const after = petStage(p, id);
+  if (after > before) {
+    const pet = SHOP.pet.find(x => x.id === id), S = PET_STAGES[after];
+    toast(`🐾 Your ${pet ? pet.name : 'pet'} grew! It's ${S.name === 'Legendary' ? 'LEGENDARY 👑' : S.name} now!`, true); sfx('level');
+    if (session) session.notes.push(`🐾 Your ${pet ? pet.name : 'pet'} grew to ${S.name}!`);
+  }
+}
+function petGrowHTML(p, id) { // stage name + bar to the next stage
+  const i = petStage(p, id), n = petPoints(p, id), S = PET_STAGES[i], N = PET_STAGES[i + 1];
+  if (!N) return `<span class="pet-grow"><b>👑 Legendary</b><span class="pg-bar"><i style="width:100%"></i></span></span>`;
+  return `<span class="pet-grow"><b>${S.name}</b><span class="pg-bar"><i style="width:${Math.round((n - S.at) / (N.at - S.at) * 100)}%"></i></span><small>${N.at - n} to ${N.name}</small></span>`;
+}
 function avatarHTML(p, size = 64) {
   const bg = SHOP.bg.find(b => b.id === (p.wear && p.wear.bg)) || SHOP.bg[0];
   const hat = p.wear && p.wear.hat ? SHOP.hat.find(h => h.id === p.wear.hat) : null;
@@ -1974,7 +2094,7 @@ function avatarHTML(p, size = 64) {
   const L = levelInfo(p.xp || 0).L;
   const ring = p.wear && p.wear.frame ? 'frame-' + p.wear.frame : L >= 20 ? 'ring-3' : L >= 12 ? 'ring-2' : L >= 5 ? 'ring-1' : '';
   return `<div class="avatar ${ring}" style="--s:${size}px;background:${bg.css}" aria-hidden="true">
-    <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? `<span class="pet">${pet.icon}</span>` : ''}</div>`;
+    <span class="face">${p.avatar}</span>${hat ? `<span class="hat">${hat.icon}</span>` : ''}${pet ? (() => { const st = petStage(p, pet.id); return `<span class="pet st-${st}" style="font-size:calc(var(--s) * ${(.38 * PET_STAGES[st].scale).toFixed(3)})">${st === 4 ? '<span class="pet-crown">👑</span>' : ''}${pet.icon}</span>`; })() : ''}</div>`;
 }
 function titleOf(p) { const t = p.wear && p.wear.title && SHOP.title.find(x => x.id === p.wear.title); return t ? t.name : ''; }
 function starsHTML(n) { return `<span class="stars" aria-label="${n} of 3 stars">${[1, 2, 3].map(i => i <= n ? '★' : '<span class="off">★</span>').join('')}</span>`; }
@@ -2278,6 +2398,10 @@ function renderGameGrid() {
     return `<button type="button" class="${cls}" data-g="${g.id}" style="--card-bg:${g.bg}"${label}>${chTag}
         <span class="gicon">${open ? g.icon : '🔒'}</span><span class="gname">${g.name}</span><span class="gblurb">${g.blurb}</span>${foot}</button>`;
   }).join('');
+  if (isXmas()) {
+    const d = today(), days = Math.round((new Date(d.getFullYear(), 11, 25) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    $('#gameGrid').insertAdjacentHTML('afterbegin', `<div class="xmas-banner">🎄 <span><b>Merry Christmas from ${TEACHER}!</b> ${days > 0 ? `${days} day${days === 1 ? '' : 's'} until Christmas.` : days === 0 ? "It's Christmas Day!" : 'Happy holidays!'} Christmas items are in the shop. 🎁</span></div>`);
+  }
   { // Race Day sits at the top on race day; every other day Boss Battle is first
     const rc = $('#gameGrid .race-card'), bc = $('#gameGrid .boss-card'), r = raceInfo();
     const raceToday = rc && r && today().getDay() === r.day;
@@ -2572,6 +2696,7 @@ function startGame(id) {
   if (id === 'driver') return driverPicker();
   if (id === 'soccer') return soccerPicker();
   if (id === 'race') return raceIntro();
+  if (id === 'sprint') return sprintPicker();
   if (id === 'runner') return runnerPicker();
   if (id === 'memory') return memoryStart();
   if (id === 'boss') return bossIntro();
@@ -2648,7 +2773,7 @@ function hiddenFromTop3(name) {
 }
 function boardsOn() { return !!(sheetUrl() && store.boards && !store.boards.off && store.settings && store.settings.top3 !== false); }
 function noteWeekBest(p) { // returns { key, score, better }
-  const g = session && session.game; if (!g || g === 'boss' || g === 'race') return null;
+  const g = session && session.game; if (!g || g === 'boss' || g === 'race' || g === 'sprint') return null;
   const key = session.scoreKey || g, score = session.score != null ? session.score : (session.bestRun || 0);
   if (!(score > 0)) return null;
   const w = weekInfo().id; if (!p.weekBest || p.weekBest.week !== w) p.weekBest = { week: w, s: {} };
@@ -2725,7 +2850,7 @@ function showResults({ stars, title, lines, again, next, back }) {
   sfx('coin');
   show('results');
 }
-$('#leaveGame').addEventListener('click', () => { if (raceRun) { raceRun.over = true; raceRun = null; padClear(); } if (bossFight) { bossFight.over = true; bossFight = null; padClear(); if (P() && P().sheetName) syncNow(store.current); } if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
+$('#leaveGame').addEventListener('click', () => { if (sprintRun) { sprintRun.over = true; sprintRun = null; padClear(); } if (raceRun) { raceRun.over = true; raceRun = null; padClear(); } if (bossFight) { bossFight.over = true; bossFight = null; padClear(); if (P() && P().sheetName) syncNow(store.current); } if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
 
 const ROUND_GAMES = {};
 
@@ -4215,6 +4340,148 @@ async function raceEnd() {
     again: () => startGame('race') });
 }
 
+/* ---------- Times Table Sprint ----------
+   Multiplication 0–12 against the clock (1, 2 or 5 minutes). Students race their OWN best: no leaderboard.
+   Each length has 9 goals; every goal reached pays coins, and the total number of goals unlocks Sprint reward items.
+   Every fact is tracked so the times table chart fills in green as facts are mastered (right 3+ times, mostly fast, 80%+). */
+const SPRINT_LENGTHS = [1, 2, 5];
+const SPRINT_GOALS = { 1: [10, 15, 20, 25, 30, 35, 40, 45, 50], 2: [20, 30, 40, 50, 60, 70, 80, 90, 100], 5: [40, 60, 80, 100, 125, 150, 175, 200, 250] };
+const SPRINT_FAST_MS = 4000;
+let sprintRun = null;
+function sprintData(p = P()) { p.sprint = p.sprint || { best: {}, goals: {}, pbs: 0 }; return p.sprint; }
+function sprintGoalsDone(p = P()) { const d = sprintData(p); return SPRINT_LENGTHS.reduce((n, m) => n + (d.goals[m] || 0), 0); }
+const SPRINT_TOTAL = SPRINT_LENGTHS.reduce((n, m) => n + SPRINT_GOALS[m].length, 0);
+function factState(p, a, b) { // 'new' | 'learning' | 'mastered'
+  const f = (p.tt || {})[a + 'x' + b]; if (!f) return 'new';
+  const [r, w, fast] = f;
+  return r >= 3 && fast >= 2 && r / (r + w) >= .8 ? 'mastered' : 'learning';
+}
+function factsMastered(p = P()) { let n = 0; for (let a = 0; a <= 12; a++) for (let b = 0; b <= 12; b++) if (factState(p, a, b) === 'mastered') n++; return n; }
+function ttChartHTML(p = P(), small = false) {
+  let h = '<div class="tt-chart' + (small ? ' small' : '') + '" role="img" aria-label="Times table chart: ' + factsMastered(p) + ' of 169 facts mastered"><span class="tt-h">×</span>';
+  for (let b = 0; b <= 12; b++) h += `<span class="tt-h">${b}</span>`;
+  for (let a = 0; a <= 12; a++) {
+    h += `<span class="tt-h">${a}</span>`;
+    for (let b = 0; b <= 12; b++) { const st = factState(p, a, b); h += `<span class="tt-c ${st}" title="${a} × ${b} = ${a * b}">${st === 'new' ? '' : a * b}</span>`; }
+  }
+  return h + '</div><div class="tt-key"><span class="tt-c mastered">✓</span> Mastered <span class="tt-c learning">·</span> Practicing <span class="tt-c new"></span> Not tried yet</div>';
+}
+function sprintNextGoal(m, best) { return SPRINT_GOALS[m].find(g => g > (best || 0)) || null; }
+function sprintNextItem(p = P()) {
+  const done = sprintGoalsDone(p);
+  return Object.entries(SPRINT_ITEMS).flatMap(([cat, items]) => items.map(it => ({ it, cat }))).filter(x => x.it.sprint > done).sort((x, y) => x.it.sprint - y.it.sprint)[0] || null;
+}
+function sprintPicker() {
+  round = null; sprintRun = null;
+  const p = P(), d = sprintData(p), done = sprintGoalsDone(p), nx = sprintNextItem(p), mastered = factsMastered(p);
+  $('#gameBody').innerHTML = `<div class="picker sprint-pick">
+    <h3>⏱️ How long do you want to sprint?</h3>
+    <div class="mode-grid">${SPRINT_LENGTHS.map(m => { const best = d.best[m] || 0, ng = sprintNextGoal(m, best);
+      return `<button type="button" class="mode-btn" data-m="${m}"><span class="big">${m} min</span>${best ? `Your best: <b>${best}</b>` : 'No score yet'}<small>${ng ? `Next goal: ${ng}` : 'All 9 goals reached! 🏆'} · ${d.goals[m] || 0}/9 goals</small></button>`; }).join('')}</div>
+    <p class="note">Multiplication facts from 0 × 0 to 12 × 12. Answer as many as you can before time runs out.<br>This is <b>you against you</b>: beat your own best, reach goals and win prizes.</p>
+    <div class="sprint-prog"><b>⏱️ ${done} of ${SPRINT_TOTAL} goals reached</b>${nx ? `<span>Next prize at ${nx.it.sprint} goals: ${nx.it.icon ? nx.it.icon + ' ' : ''}${esc(nx.it.name)}</span>` : '<span>You won every Sprint prize! 🏆</span>'}
+      <div class="sprint-bar"><i style="width:${Math.round(done / SPRINT_TOTAL * 100)}%"></i></div></div>
+    <details class="tt-box"><summary>📊 My times table chart · <b>${mastered} / 169</b> mastered</summary>${ttChartHTML(p)}<p class="note">A fact turns green when you've got it right at least 3 times, mostly quickly.</p></details>
+  </div>`;
+  $$('.sprint-pick .mode-btn').forEach(b => b.addEventListener('click', () => sprintStart(+b.dataset.m)));
+}
+function sprintPickFact(p, last) {
+  const pool = [];
+  for (let a = 0; a <= 12; a++) for (let b = 0; b <= 12; b++) {
+    if (last && last.a === a && last.b === b) continue;
+    const st = factState(p, a, b), easy = a < 2 || b < 2;
+    pool.push({ a, b, w: (st === 'learning' ? 4 : st === 'new' ? 3 : 1) * (easy ? .35 : 1) });
+  }
+  let r = Math.random() * pool.reduce((n, x) => n + x.w, 0);
+  for (const x of pool) { r -= x.w; if (r <= 0) return x; }
+  return pool[0];
+}
+function sprintStart(mins) {
+  session = { notes: [], badges: [], coins0: P().coins, xp0: P().xp, t0: Date.now(), game: 'sprint' };
+  const best = sprintData().best[mins] || 0;
+  sprintRun = { mins, right: 0, wrong: 0, end: Date.now() + mins * 60000, over: false, q: null, best, m0: factsMastered() };
+  const ng = sprintNextGoal(mins, best);
+  $('#gameBody').innerHTML = `<div class="race-arena sprint-arena">
+      <div class="boss-top"><span class="chip" id="spTime">⏱ ${mins}:00</span><span class="chip">✔ <b id="spRight">0</b></span><span class="chip">Best ${best || '—'}${ng ? ` · goal ${ng}` : ''}</span></div>
+      <div class="sprint-meter" id="spMeter"><i id="spFill"></i>${best ? `<span class="sp-best" style="left:${Math.min(98, best / Math.max(best, ng || best) * 92)}%">⭐ ${best}</span>` : ''}</div>
+      <div class="play with-pad"><div><div class="aq" id="spQ"></div><div class="answer-row"><div class="slot" id="spAns"></div></div><div class="race-flash" id="spFlash"></div></div>${padHTML()}</div>
+    </div>`;
+  sprintNext();
+  const tick = () => {
+    if (!sprintRun || sprintRun.over) return;
+    const left = Math.max(0, Math.ceil((sprintRun.end - Date.now()) / 1000));
+    $('#spTime').textContent = `⏱ ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`; $('#spTime').classList.toggle('hurry', left <= 10);
+    if (left <= 0) return sprintEnd();
+    later(tick, 250);
+  };
+  later(tick, 250);
+}
+function sprintNext() {
+  const R = sprintRun; if (!R || R.over) return;
+  const p = P(), f = sprintPickFact(p, R.q);
+  R.q = { skill: 'mult', a: f.a, b: f.b, answer: f.a * f.b, text: `${f.a} × ${f.b}`, shown: Date.now() };
+  $('#spQ').textContent = `${f.a} × ${f.b} = ?`;
+  padBind([{ el: $('#spAns'), max: 3, placeholder: '?' }], () => {
+    const v = Pad.fields[0].value; if (v === '' || !sprintRun || sprintRun.over) return;
+    Pad.locked = true;
+    const ok = +v === R.q.answer, fast = Date.now() - R.q.shown <= SPRINT_FAST_MS;
+    p.tt = p.tt || {}; const k = R.q.a + 'x' + R.q.b, rec = p.tt[k] || [0, 0, 0];
+    if (ok) { rec[0]++; if (fast) rec[2]++; } else rec[1]++;
+    p.tt[k] = rec;
+    record('mult', ok); noteFact(R.q, 'mult', ok);
+    const fl = $('#spFlash');
+    if (ok) {
+      R.right++; sfx('ok'); fl.textContent = fast ? '⚡ +1' : '+1'; fl.className = 'race-flash good';
+      if (R.best && R.right === R.best + 1) { cheer('New best!', $('.sprint-arena')); toast('⭐ New personal best! Keep going!', true); } else cheer('', $('#spMeter'));
+    } else { R.wrong++; sfx('bad'); fl.textContent = `${R.q.text} = ${fmt(R.q.answer)}`; fl.className = 'race-flash bad'; }
+    $('#spRight').textContent = R.right;
+    const top = Math.max(R.best || 0, sprintNextGoal(R.mins, R.best) || 0, R.right, 1);
+    $('#spFill').style.width = Math.min(100, R.right / top * 92) + '%';
+    later(() => { if (sprintRun === R && !R.over) { fl.textContent = ''; fl.className = 'race-flash'; sprintNext(); } }, ok ? 200 : 1100);
+  });
+}
+function sprintEnd() {
+  const R = sprintRun; if (!R || R.over) return; R.over = true; sprintRun = null; padClear();
+  const p = P(), d = sprintData(p), m = R.mins, oldBest = d.best[m] || 0, newBest = R.right > oldBest;
+  const lines = [['Right answers', `${R.right}${R.wrong ? ` (${R.wrong} to practice)` : ''}`]];
+  if (newBest) {
+    d.best[m] = R.right;
+    if (oldBest) { d.pbs = (d.pbs || 0) + 1; reward(20, 20); session.notes.push(`⭐ New personal best for ${m} min: ${oldBest} → ${R.right}`); }
+  }
+  lines.push([`Your best (${m} min)`, `${d.best[m] || R.right}${newBest && oldBest ? ' ⭐ NEW!' : ''}`]);
+  const goals = SPRINT_GOALS[m], before = d.goals[m] || 0, now = goals.filter(g => g <= (d.best[m] || 0)).length;
+  const doneBefore = sprintGoalsDone(p);
+  if (now > before) {
+    d.goals[m] = now;
+    let coins = 0; for (let i = before; i < now; i++) coins += 30 + 20 * i;
+    reward(coins, coins);
+    session.notes.push(`🎯 Goal${now - before > 1 ? 's' : ''} reached: ${goals.slice(before, now).join(', ')} in ${m} min · +${coins} coins`);
+    const doneNow = sprintGoalsDone(p);
+    Object.entries(SPRINT_ITEMS).forEach(([cat, items]) => items.forEach(it => {
+      if (it.sprint > doneBefore && it.sprint <= doneNow && !p.owned.includes(it.id)) {
+        p.owned.push(it.id); session.notes.push(`🎁 You won: ${it.icon ? it.icon + ' ' : ''}${it.name}! Find it in the shop.`);
+        toast(`🎁 Sprint prize: ${it.name}!`, true);
+      }
+    }));
+  }
+  const ng = sprintNextGoal(m, d.best[m]);
+  lines.push(['Next goal', ng ? `${ng} in ${m} min` : 'All goals reached! 🏆']);
+  const mNow = factsMastered(p);
+  lines.push(['Facts mastered', `${mNow} / 169${mNow > R.m0 ? ` (+${mNow - R.m0} today!)` : ''}`]);
+  const stars = newBest || now > before ? 3 : R.right >= oldBest * .8 ? 2 : 1;
+  reward(stars * 5, 10 + stars * 10);
+  const g = gameStats('sprint'); g.best = Math.max(g.best || 0, R.right); g.stars = Math.max(g.stars || 0, stars);
+  if (sprintGoalsDone(p) >= 1) award('sprintgoal');
+  if ((d.pbs || 0) >= 5) award('beatbest');
+  if (mNow >= 85) award('tthalf');
+  if (mNow >= 169) award('ttmaster');
+  checkBadges({ finished: true, stars });
+  logActivity('Times Table Sprint', `${R.right} right in ${m} min${newBest && oldBest ? ' (new best!)' : ''}`, stars, 'mult');
+  save(); scheduleSync(1500);
+  showResults({ stars, title: newBest && oldBest ? `New personal best! ${R.right} ⭐` : now > before ? 'Goal reached! 🎯' : `You got ${R.right}!`,
+    lines, again: () => sprintStart(m), back: { label: '⏱️ Pick a time', fn: () => startGame('sprint') } });
+}
+
 /* ---------- Penalty Shootout (soccer) ----------
    10 penalty kicks. Each kick: a fact, four answers in the corners of the goal. Tap the right one to score.
    The shot clock runs down; the goalie shuffles around at random (no hints) and grabs the ball when time is up. Quick answers score more. */
@@ -4642,6 +4909,7 @@ function openShop(tab) {
   const entries = shopEntries(shopTab, p);
   const owned = entries.filter(e => p.owned.includes(e.it.id)).length;
   const help = T.season ? `Only here for ${seasonDaysLeft(T.season)} more day${seasonDaysLeft(T.season) === 1 ? '' : 's'}! Anything you buy is yours to keep.` :
+    shopTab === 'pet' ? 'Tap one you own to put it on or take it off. Pets grow when you wear them and get answers right: Baby → Little → Grown → Big → Legendary 👑' :
     T.free ? "Change your animal any time. It's free! Your hats, pets and everything else stay on." : T.place ? 'Everything you buy goes on your island. Collect them all!' : T.one ? 'Tap one you own to use it.' : 'Tap one you own to put it on or take it off.';
   $('#shopTop').innerHTML = shopTab === 'island' ? islandHTML(p, true) + islandSocialHTML(p) :
     `${avatarHTML(p, 110)}<div class="shop-side"><b>${esc(p.name)}</b>${titleOf(p) ? `<span class="title-pill">${esc(titleOf(p))}</span>` : ''}
@@ -4653,10 +4921,10 @@ function openShop(tab) {
     const has = p.owned.includes(it.id), using = !C.place && p.wear[cat] === it.id, locked = it.minLevel && L < it.minLevel;
     const cnt = C.place ? islandCount(p, it.id) : 0;
     const label = C.place ? (has ? (cnt >= ISLAND_MAX_EACH ? `Own ${cnt} (max)` : `Own ${cnt} · +1 for 🪙 ${fmt(it.price)}`) : null) : using ? (C.one ? 'Using ✓' : 'Wearing ✓') : has ? (C.one ? 'Use' : 'Wear') : null;
-    const price = label || (it.reward ? '🏆 Boss reward' : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
-    const rar = !has && (it.reward ? ['Boss reward', 'r-boss'] : it.raccoon ? ['🦝 Raccoon', 'r-raccoon'] : it.soccer ? ['⚽ Soccer', 'r-soccer'] : it.season ? ['Seasonal', 'r-season'] : RARITY(it.price));
-    return `<button type="button" class="item ${using || (C.place && has) ? 'wearing' : ''} ${(locked || it.reward) && !has ? 'locked' : ''} ${it.raccoon ? 'raccoon-item' : ''}" data-id="${it.id}" data-cat="${cat}">
-      ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(cat, it, p)}<span>${it.name}</span><span class="price">${price}</span></button>`;
+    const price = label || (it.sprint ? `⏱️ ${it.sprint} Sprint goals` : it.reward ? '🏆 Boss reward' : locked ? `🔒 Level ${it.minLevel}` : it.price ? `🪙 ${fmt(it.price)}` : 'Free');
+    const rar = !has && (it.sprint ? ['Sprint reward', 'r-boss'] : it.reward ? ['Boss reward', 'r-boss'] : it.raccoon ? ['🦝 Raccoon', 'r-raccoon'] : it.soccer ? ['⚽ Soccer', 'r-soccer'] : it.season ? ['Seasonal', 'r-season'] : RARITY(it.price));
+    return `<button type="button" class="item ${using || (C.place && has) ? 'wearing' : ''} ${(locked || it.reward || it.sprint) && !has ? 'locked' : ''} ${it.raccoon ? 'raccoon-item' : ''}" data-id="${it.id}" data-cat="${cat}">
+      ${rar ? `<span class="rarity ${rar[1]}">${rar[0]}</span>` : ''}${itemVisual(cat, it, p)}<span>${it.name}</span>${cat === 'pet' && has ? petGrowHTML(p, it.id) : ''}<span class="price">${price}</span></button>`;
   }).join('');
   $$('#shopGrid .item').forEach(b => b.addEventListener('click', () => shopClick(b.dataset.id, b.dataset.cat)));
   if (shopTab === 'island') { bindIsland(); const vb = $('#visitIslands'); if (vb) vb.addEventListener('click', openVisits); if (!islandEdit) refreshFromSheet(); } else islandEdit = false;
@@ -4675,7 +4943,8 @@ function shopClick(id, cat) {
   } else if (p.owned.includes(id)) {
     if (C.one) p.wear[cat] = id; else p.wear[cat] = p.wear[cat] === id ? null : id;
     sfx('tap');
-  } else if (it.reward) { toast('Beat a weekly Boss Battle with your class to win this one!'); return; }
+  } else if (it.sprint) { toast(`Reach ${it.sprint} goals in Times Table Sprint to win this one! You have ${sprintGoalsDone(p)}.`); return; }
+  else if (it.reward) { toast('Beat a weekly Boss Battle with your class to win this one!'); return; }
   else if (it.minLevel && L < it.minLevel) { toast(`Reach level ${it.minLevel} to unlock the ${it.name}.`); return; }
   else if (p.coins < it.price) { toast(`You need ${fmt(it.price - p.coins)} more coins. Keep practicing to earn them!`); return; }
   else {

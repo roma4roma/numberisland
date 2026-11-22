@@ -4554,7 +4554,7 @@ function classIntro() {
     <div class="class-intro-scene">${classroomSVG('')}<div class="class-teacher" style="left:52%">${teacherSVG('walk', 150)}</div></div>
     <h3>👀 Don't Get Caught!</h3>
     <p class="story">You're at your desk and ${TEACHER} is teaching. Answer his questions as fast as you can.<br>
-      But watch out: when he turns around to write on the board, silly ideas will pop up on your desk…<br><b>Don't do them!</b> Wait until he turns back. Get caught 3 times and you're out!</p>
+      But watch out: when he turns around to write on the board, silly ideas will pop up on your desk…<br><b>Don't do them!</b> Wait until he turns back.<br>A wrong answer or getting caught is a strike. <b>3 strikes and you're out!</b></p>
     <p class="note">${left === Infinity ? 'You can play as many times as you like.' : left > 0 ? `You can play <b>${left}</b> more time${left === 1 ? '' : 's'} today (${max} a day).` : `You've played ${max} time${max === 1 ? '' : 's'} today. Come back tomorrow! 🌙`}</p>
     ${left > 0 ? `<button class="btn primary big" id="classGo" type="button">🔔 Start class</button>` : ''}
   </div>`;
@@ -4606,10 +4606,16 @@ function classAsk() {
     const ok = +v === R.q.answer;
     record(R.q.skill, ok); noteFact(R.q, R.q.skill, ok);
     if (ok) { R.right++; R.combo++; R.points += 1 + (R.combo >= 5 ? 1 : 0); sfx('ok'); cheer('', $('#clStage')); b.innerHTML = pick(['Great! 👍', 'Correct!', 'Nice work!', 'Yes! ⭐', 'Excellent!']); }
-    else { R.wrong++; R.combo = 0; sfx('bad'); b.innerHTML = `Not quite: ${esc(R.q.text)} = ${fmt(R.q.answer)}`; }
+    else { // a wrong answer is a strike too
+      R.wrong++; R.combo = 0; R.strikes++; sfx('bad'); b.className = 'class-bubble show bad';
+      b.innerHTML = `Not quite: ${esc(R.q.text)} = ${fmt(R.q.answer)} ❌ Strike ${R.strikes}!`;
+      $('#clHearts').textContent = '❤️'.repeat(3 - R.strikes) + '🖤'.repeat(R.strikes);
+      $('#clStage').classList.add('shake'); later(() => $('#clStage') && $('#clStage').classList.remove('shake'), 500);
+    }
     $('#clPts').textContent = `⭐ ${R.points}`;
     later(() => {
       if (!classRun || R.over) return;
+      if (R.strikes >= 3) return classEnd('out');
       if (Date.now() >= R.end) return classEnd('bell');
       R.untilTurn--;
       if (R.untilTurn <= 0) classTurn(); else classAsk();
@@ -4663,6 +4669,7 @@ function classEnd(why) {
   const p = P();
   session.score = R.points; session.scoreKey = 'classroom';
   const stars = why === 'out' ? (R.points >= 15 ? 2 : 1) : R.strikes === 0 ? 3 : 2;
+  const caught = R.strikes - R.wrong;
   reward(stars * 5 + R.focused * 3, 10 + stars * 10);
   const g = gameStats('classroom'); g.best = Math.max(g.best || 0, R.points); g.stars = Math.max(g.stars || 0, stars);
   if (R.focused >= 10) award('focused');
@@ -4671,8 +4678,8 @@ function classEnd(why) {
   logActivity("Don't Get Caught!", `${R.points} points · ${R.right} right · focused ${R.focused}× · ${R.strikes} strike${R.strikes === 1 ? '' : 's'}`, stars, 'mult');
   save(); scheduleSync(1500);
   const left = classPlaysLeft(p);
-  showResults({ stars, title: why === 'out' ? 'Caught 3 times! 😅' : R.strikes === 0 ? `Perfect student! 😇` : '🔔 Class is over!',
-    lines: [['Points', `⭐ ${R.points}`], ['Right answers', `${R.right} of ${R.right + R.wrong}`], ['Stayed focused', `${R.focused} time${R.focused === 1 ? '' : 's'}`], ['Strikes', `${R.strikes} of 3`],
+  showResults({ stars, title: why === 'out' ? "3 strikes, you're out! 😅" : R.strikes === 0 ? `Perfect student! 😇` : '🔔 Class is over!',
+    lines: [['Points', `⭐ ${R.points}`], ['Right answers', `${R.right} of ${R.right + R.wrong}`], ['Stayed focused', `${R.focused} time${R.focused === 1 ? '' : 's'}`], ['Strikes', `${R.strikes} of 3 (${R.wrong} wrong, ${caught} caught)`],
       ['Plays left today', left === Infinity ? 'No limit' : String(left)]],
     again: () => (classPlaysLeft(P()) > 0 ? classStart() : startGame('classroom')), back: { label: '👀 Back to class', fn: () => startGame('classroom') } });
 }

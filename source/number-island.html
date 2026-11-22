@@ -478,6 +478,40 @@ body.xmas .track::after { content: ""; position: absolute; inset: 0; pointer-eve
 @media (prefers-reduced-motion: reduce) { body.xmas .isle::after, body.xmas .track::after, body.xmas #scr-hub::before { animation: none; } }
 .item svg.i67 { width: 1.3em; height: 1em; }
 .spark.fx67 { font-family: 'Arial Black', Impact, sans-serif; font-weight: 900; font-size: 30px; -webkit-text-stroke: 1.5px #1E2A33; paint-order: stroke fill; }
+/* ---- Don't Get Caught! ---- */
+.class-intro-scene, .class-stage { position: relative; width: 100%; aspect-ratio: 1000 / 620; border: 3px solid var(--ink); border-radius: 18px; overflow: hidden; background: #A6DCE2; }
+.class-intro-scene { max-width: 520px; margin: 0 auto 10px; }
+.class-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.class-teacher { position: absolute; bottom: 22.5%; height: 52%; transform: translateX(-50%); transition: left 3s ease-in-out; z-index: 2; }
+.class-teacher svg { height: 100%; width: auto; }
+.class-teacher.flip svg { transform: scaleX(-1); }
+.class-teacher.walking svg { animation: clBob .55s ease-in-out infinite alternate; }
+.class-teacher.walking .leg-l { transform-box: view-box; transform-origin: 90px 296px; animation: clLeg .55s ease-in-out infinite alternate; }
+.class-teacher.walking .leg-r { transform-box: view-box; transform-origin: 150px 296px; animation: clLeg .55s ease-in-out infinite alternate-reverse; }
+@keyframes clBob { to { translate: 0 -3%; } }
+@keyframes clLeg { from { transform: rotate(7deg); } to { transform: rotate(-7deg); } }
+.class-teacher.spin svg { animation: clSpin .45s ease-out; }
+@keyframes clSpin { from { transform: rotateY(180deg) scale(.95); } to { transform: none; } }
+.class-bubble { position: absolute; top: 2%; left: 50%; transform: translateX(-50%) scale(.6); opacity: 0; transition: .25s; z-index: 4; background: #fff; border: 3px solid var(--ink); border-radius: 18px;
+  padding: 6px 14px; font-size: clamp(17px, 3vw, 28px); font-weight: 800; white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 4px 0 var(--ink); }
+.class-bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
+.class-bubble.good { background: #E2F7E9; } .class-bubble.bad { background: #FFE3E3; font-size: clamp(14px, 2.4vw, 20px); white-space: normal; }
+.class-desk { position: absolute; left: 18%; right: 18%; bottom: 2%; display: flex; gap: 2%; justify-content: center; z-index: 5; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.class-desk.show { opacity: 1; pointer-events: auto; }
+.silly { flex: 1 1 0; max-width: 200px; display: grid; gap: 2px; justify-items: center; background: #FFF7D6; border: 3px solid var(--ink); border-radius: 14px; padding: 6px 4px; font: inherit; font-weight: 800;
+  font-size: clamp(11px, 1.7vw, 15px); box-shadow: 0 4px 0 var(--ink); cursor: pointer; animation: clWiggle .5s ease-in-out infinite alternate; animation-delay: var(--d); }
+.silly .si { font-size: clamp(22px, 4vw, 34px); line-height: 1; }
+.silly small { color: #C9302C; font-weight: 700; }
+@keyframes clWiggle { from { transform: rotate(-4deg); } to { transform: rotate(4deg) translateY(-3px); } }
+.class-banner { position: absolute; top: 3%; left: 50%; transform: translateX(-50%); z-index: 4; background: #1E2A33; color: #fff; border-radius: 99px; padding: 6px 14px; font-weight: 700; opacity: 0; transition: .2s; white-space: nowrap; font-size: clamp(12px, 2vw, 16px); }
+.class-banner.show { opacity: 1; }
+.class-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.class-pad { display: grid; gap: 8px; }
+.class-stage.shake { animation: clShake .4s; }
+@keyframes clShake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.chip.hearts { letter-spacing: 2px; }
+@media (max-width: 760px) { .class-main { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .class-teacher, .class-teacher svg, .silly, .class-teacher .leg-l, .class-teacher .leg-r { animation: none !important; transition: none !important; } }
 .runner.hop { animation: hop .75s cubic-bezier(.3,.7,.4,1); }
 .runner.noflip { transform: none; } /* these pictures already face the way the runner goes */
 @keyframes hop { 0% { translate: 0 0; } 50% { translate: 0 -118px; } 100% { translate: 0 0; } }
@@ -1035,7 +1069,10 @@ function defs(id) {
 
 /* head centred on (120,100) */
 function head({ smile = 'big', wink = false } = {}) {
-  const mouth = smile === 'big'
+  const mouth = smile === 'stern'
+    ? `<path d="M102 146 L138 146" fill="none" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>
+       <path d="M76 76 L106 88 M164 76 L134 88" fill="none" stroke="#6B4A2E" stroke-width="7" stroke-linecap="round"/>`
+    : smile === 'big'
     ? `<path d="M94 140 Q120 170 146 140 Z" fill="#7A2E2E" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
        <path d="M98 141 L142 141 Q140 149 120 150 Q100 149 98 141 Z" fill="#fff"/>`
     : `<path d="M98 142 Q120 160 142 142" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
@@ -1076,9 +1113,58 @@ function body(id) {
   </g>`;
 }
 
+/* Full-body parts for the classroom game: legs that can walk, arms, and a back view. */
+const PANTS = '#3A4150';
+function legs() {
+  return `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round">
+    <path d="M60 296 L180 296 L180 310 L60 310 Z" fill="${PANTS}"/>
+    <g class="leg leg-l"><path d="M62 290 L70 398 L112 398 L118 290 Z" fill="${PANTS}"/><path d="M64 396 L114 396 Q120 396 120 404 L120 410 L56 410 Q56 396 64 396 Z" fill="#26292F"/></g>
+    <g class="leg leg-r"><path d="M122 290 L128 398 L170 398 L178 290 Z" fill="${PANTS}"/><path d="M126 396 L176 396 Q184 396 184 410 L120 410 L120 404 Q120 396 126 396 Z" fill="#26292F"/></g>
+  </g>`;
+}
+function arms(id, raiseRight = false) {
+  const left = `<g class="arm arm-l"><path d="M50 206 C34 230 28 270 30 318 L52 320 C52 282 58 248 70 226 Z" fill="url(#sp${id})"/><circle cx="41" cy="330" r="13" fill="${SKIN}"/></g>`;
+  const right = raiseRight
+    ? `<g class="arm arm-r"><path d="M190 206 C214 186 224 150 226 104 L204 100 C202 140 194 170 172 188 Z" fill="url(#sp${id})"/><circle cx="216" cy="92" r="13" fill="${SKIN}"/><rect x="210" y="58" width="12" height="30" rx="4" fill="#E8283C"/></g>`
+    : `<g class="arm arm-r"><path d="M190 206 C206 230 212 270 210 318 L188 320 C188 282 182 248 170 226 Z" fill="url(#sp${id})"/><circle cx="199" cy="330" r="13" fill="${SKIN}"/></g>`;
+  return `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round">${left}${right}</g>`;
+}
+function bodyBack(id) {
+  return `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round">
+    <path d="M104 166 L104 186 L136 186 L136 166 Z" fill="${SKIN_D}"/>
+    <path d="M28 262 C28 214 56 190 100 182 L140 182 C184 190 212 214 212 262 Z" fill="url(#sp${id})"/>
+    <path d="M96 182 Q120 196 144 182 L142 192 Q120 204 98 192 Z" fill="url(#sp${id})"/>
+  </g>
+  <path d="M120 200 L120 258" stroke="${SHIRT_D}" stroke-width="3" opacity=".5"/>`;
+}
+function torso(id, back) { // shirt from the chest down to the belt
+  return `<path d="M33 232 C36 262 48 284 58 300 L182 300 C192 284 204 262 207 232 Z" fill="url(#sp${id})"/>
+  <g fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"><path d="M30 238 C36 264 48 286 58 300"/><path d="M210 238 C204 264 192 286 182 300"/></g>
+  <path d="M58 296 L182 296 L182 306 L58 306 Z" fill="#26292F" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
+  ${back ? `<path d="M120 200 L120 294" stroke="${SHIRT_D}" stroke-width="3" opacity=".5"/>` : ''}`;
+}
+function tieLow(id) {
+  return `<path d="M108 226 L132 226 L137 284 L120 296 L103 284 Z" fill="url(#tp${id})" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>`;
+}
+function headBack() {
+  return `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round">
+    <ellipse cx="58" cy="108" rx="12" ry="17" fill="${SKIN}"/><ellipse cx="182" cy="108" rx="12" ry="17" fill="${SKIN}"/>
+    <path d="M120 30 C160 30 184 58 184 100 C184 146 158 178 120 178 C82 178 56 146 56 100 C56 58 80 30 120 30 Z" fill="${SKIN}"/>
+  </g>
+  <path d="M60 116 C70 160 96 176 120 176 C144 176 170 160 180 116 C168 140 150 150 120 150 C90 150 72 140 60 116 Z" fill="${STUB}" opacity=".35"/>
+  <ellipse cx="104" cy="58" rx="24" ry="10" fill="#fff" opacity=".5" transform="rotate(-18 104 58)"/>
+  <path d="M46 100 L62 96 M194 100 L178 96" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+}
 function draw(pose = 'smile', size = 200, id = Math.random().toString(36).slice(2, 7)) {
   let extra = '', h = head(), b = body(id), vb = '0 0 240 262', headT = '';
   const santa = isXmas();
+  if (pose === 'walk' || pose === 'stern' || pose === 'back') { // full body, for the classroom game
+    const back = pose === 'back';
+    h = back ? headBack() : head({ smile: pose === 'stern' ? 'stern' : 'big' });
+    const hat = santa ? SANTA_HAT : '';
+    return `<svg class="teacher full ${pose}" viewBox="-10 0 260 420" width="${size}" height="${size * 420 / 260}" style="overflow:visible" role="img" aria-label="Cartoon Mr. Romanek">${defs(id)}
+      ${legs()}${arms(id, back)}${back ? bodyBack(id) : body(id)}${torso(id, back)}${back ? '' : tieLow(id)}<g>${h}${hat}</g></svg>`;
+  }
   if (pose === 'wave') {
     extra = `<g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
       <path d="M196 214 C214 200 222 176 220 150 L200 148 C200 170 194 186 180 198 Z" fill="url(#sp${id})"/>
@@ -1132,7 +1218,7 @@ function romGlassesIcon() { // his round-ish glasses, drawn to match the cartoon
    iPads, Samsung and other Androids each draw emoji differently. The game swaps every emoji
    for Google's emoji picture (stored with the game in the emoji/ folder), so all tablets match.
    If a picture can't load, the tablet's own emoji shows instead. */
-const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg","📈":"1F4C8.svg","🏝️":"1F3DD.svg","🏝":"1F3DD.svg","🏅":"1F3C5.svg","💡":"1F4A1.svg","🔑":"1F511.svg","✨":"2728.svg","🚗":"1F697.svg","🏃":"1F3C3.svg","⚽":"26BD.svg","🐚":"1F41A.svg","🌻":"1F33B.svg","🗼":"1F5FC.svg","🧱":"1F9F1.svg","🎯":"1F3AF.svg","🧗":"1F9D7.svg","💰":"1F4B0.svg","📜":"1F4DC.svg","🌲":"1F332.svg","🥧":"1F967.svg","🍳":"1F373.svg","📏":"1F4CF.svg","⚓":"2693.svg","⛰️":"26F0.svg","⛰":"26F0.svg","🧩":"1F9E9.svg","📐":"1F4D0.svg","🔷":"1F537.svg","⏱️":"23F1.svg","⏱":"23F1.svg","🏁":"1F3C1.svg","⚔️":"2694.svg","⚔":"2694.svg","🦊":"1F98A.svg","🐼":"1F43C.svg","🐯":"1F42F.svg","🐸":"1F438.svg","🐨":"1F428.svg","🐙":"1F419.svg","🦉":"1F989.svg","🐢":"1F422.svg","🐰":"1F430.svg","🦁":"1F981.svg","🐧":"1F427.svg","🐬":"1F42C.svg","🐻":"1F43B.svg","🐵":"1F435.svg","🐷":"1F437.svg","🐮":"1F42E.svg","🐺":"1F43A.svg","🦒":"1F992.svg","🦝":"1F99D.svg","🧢":"1F9E2.svg","🎀":"1F380.svg","🌸":"1F338.svg","👒":"1F452.svg","🎩":"1F3A9.svg","⛑️":"26D1.svg","⛑":"26D1.svg","🎓":"1F393.svg","👑":"1F451.svg","🌟":"1F31F.svg","💎":"1F48E.svg","🐣":"1F423.svg","🐶":"1F436.svg","🐱":"1F431.svg","🦀":"1F980.svg","🐠":"1F420.svg","🐝":"1F41D.svg","🦜":"1F99C.svg","🦋":"1F98B.svg","🦩":"1F9A9.svg","🦄":"1F984.svg","🦖":"1F996.svg","🦚":"1F99A.svg","🐉":"1F409.svg","⭐":"2B50.svg","💖":"1F496.svg","💕":"1F495.svg","🎈":"1F388.svg","🎉":"1F389.svg","🎊":"1F38A.svg","🎵":"1F3B5.svg","🎶":"1F3B6.svg","🎷":"1F3B7.svg","🍕":"1F355.svg","🍩":"1F369.svg","🧁":"1F9C1.svg","🦕":"1F995.svg","🌿":"1F33F.svg","🎆":"1F386.svg","🎇":"1F387.svg","💥":"1F4A5.svg","💠":"1F4A0.svg","🥅":"1F945.svg","🌙":"1F319.svg","🚕":"1F695.svg","🚜":"1F69C.svg","🚙":"1F699.svg","🚓":"1F693.svg","🚒":"1F692.svg","🏎️":"1F3CE.svg","🏎":"1F3CE.svg","🛸":"1F6F8.svg","🚀":"1F680.svg","🌺":"1F33A.svg","🌴":"1F334.svg","⛱️":"26F1.svg","⛱":"26F1.svg","🏕️":"1F3D5.svg","🏕":"1F3D5.svg","⛵":"26F5.svg","🛖":"1F6D6.svg","🗿":"1F5FF.svg","🐳":"1F433.svg","🌋":"1F30B.svg","🚁":"1F681.svg","🎡":"1F3A1.svg","🏰":"1F3F0.svg","🪨":"1FAA8.svg","🌵":"1F335.svg","🍄":"1F344.svg","🌳":"1F333.svg","🐒":"1F412.svg","🦭":"1F9AD.svg","🛝":"1F6DD.svg","🦙":"1F999.svg","⛲":"26F2.svg","🏡":"1F3E1.svg","🚂":"1F682.svg","🐘":"1F418.svg","🏪":"1F3EA.svg","🎠":"1F3A0.svg","🏫":"1F3EB.svg","🏆":"1F3C6.svg","🏯":"1F3EF.svg","🏟️":"1F3DF.svg","🏟":"1F3DF.svg","🛶":"1F6F6.svg","🚤":"1F6A4.svg","🛳️":"1F6F3.svg","🛳":"1F6F3.svg","☁️":"2601.svg","☁":"2601.svg","🪁":"1FA81.svg","🪂":"1FA82.svg","✈️":"2708.svg","✈":"2708.svg","🌈":"1F308.svg","🌕":"1F315.svg","🎃":"1F383.svg","🎄":"1F384.svg","🧧":"1F9E7.svg","🏖️":"1F3D6.svg","🏖":"1F3D6.svg","🍁":"1F341.svg","❄️":"2744.svg","❄":"2744.svg","🧣":"1F9E3.svg","🌷":"1F337.svg","🐇":"1F407.svg","🦇":"1F987.svg","👻":"1F47B.svg","⛄":"26C4.svg","🦌":"1F98C.svg","🐻‍❄️":"1F43B-200D-2744-FE0F.svg","🐻‍❄":"1F43B-200D-2744-FE0F.svg","🧝":"1F9DD.svg","🐐":"1F410.svg","🐞":"1F41E.svg","🦑":"1F991.svg","🦈":"1F988.svg","🐲":"1F432.svg","🦞":"1F99E.svg","🐊":"1F40A.svg","🐡":"1F421.svg","🐅":"1F405.svg","🥚":"1F95A.svg","🍂":"1F342.svg","🎁":"1F381.svg","🔔":"1F514.svg","🍬":"1F36C.svg","🏮":"1F3EE.svg","🌊":"1F30A.svg","🏄":"1F3C4.svg","☀️":"2600.svg","☀":"2600.svg","🏚️":"1F3DA.svg","🏚":"1F3DA.svg","☃️":"2603.svg","☃":"2603.svg","🛷":"1F6F7.svg","🎅":"1F385.svg","🐆":"1F406.svg","🦅":"1F985.svg","⚡":"26A1.svg","✖️":"2716.svg","✖":"2716.svg","🧠":"1F9E0.svg","🔥":"1F525.svg","💯":"1F4AF.svg","🧭":"1F9ED.svg","🦘":"1F998.svg","🏦":"1F3E6.svg","🗃️":"1F5C3.svg","🗃":"1F5C3.svg","📅":"1F4C5.svg","🗓️":"1F5D3.svg","🗓":"1F5D3.svg","💫":"1F4AB.svg","🌠":"1F320.svg","🏔️":"1F3D4.svg","🏔":"1F3D4.svg","🪐":"1FA90.svg","🏵️":"1F3F5.svg","🏵":"1F3F5.svg","🥇":"1F947.svg","💌":"1F48C.svg","🛡️":"1F6E1.svg","🛡":"1F6E1.svg","⬆️":"2B06.svg","⬆":"2B06.svg","🎮":"1F3AE.svg","🙌":"1F64C.svg","🐾":"1F43E.svg","🔄":"1F504.svg","✅":"2705.svg","⚠️":"26A0.svg","⚠":"26A0.svg","🔒":"1F512.svg","🔁":"1F501.svg","🥈":"1F948.svg","🥉":"1F949.svg","🙂":"1F642.svg","❤️":"2764.svg","❤":"2764.svg","🤍":"1F90D.svg","💨":"1F4A8.svg","📊":"1F4CA.svg","🧤":"1F9E4.svg","✋":"270B.svg","🗑️":"1F5D1.svg","🗑":"1F5D1.svg","🤩":"1F929.svg","📋":"1F4CB.svg"};
+const EMOJI_FILES = {"🪙":"1FA99.svg","🛍️":"1F6CD.svg","🛍":"1F6CD.svg","📈":"1F4C8.svg","🏝️":"1F3DD.svg","🏝":"1F3DD.svg","🏅":"1F3C5.svg","💡":"1F4A1.svg","🔑":"1F511.svg","✨":"2728.svg","🚗":"1F697.svg","🏃":"1F3C3.svg","⚽":"26BD.svg","🐚":"1F41A.svg","🌻":"1F33B.svg","🗼":"1F5FC.svg","🧱":"1F9F1.svg","🎯":"1F3AF.svg","🧗":"1F9D7.svg","💰":"1F4B0.svg","📜":"1F4DC.svg","🌲":"1F332.svg","🥧":"1F967.svg","🍳":"1F373.svg","📏":"1F4CF.svg","⚓":"2693.svg","⛰️":"26F0.svg","⛰":"26F0.svg","🧩":"1F9E9.svg","📐":"1F4D0.svg","🔷":"1F537.svg","👀":"1F440.svg","⏱️":"23F1.svg","⏱":"23F1.svg","🏁":"1F3C1.svg","⚔️":"2694.svg","⚔":"2694.svg","🦊":"1F98A.svg","🐼":"1F43C.svg","🐯":"1F42F.svg","🐸":"1F438.svg","🐨":"1F428.svg","🐙":"1F419.svg","🦉":"1F989.svg","🐢":"1F422.svg","🐰":"1F430.svg","🦁":"1F981.svg","🐧":"1F427.svg","🐬":"1F42C.svg","🐻":"1F43B.svg","🐵":"1F435.svg","🐷":"1F437.svg","🐮":"1F42E.svg","🐺":"1F43A.svg","🦒":"1F992.svg","🦝":"1F99D.svg","🧢":"1F9E2.svg","🎀":"1F380.svg","🌸":"1F338.svg","👒":"1F452.svg","🎩":"1F3A9.svg","⛑️":"26D1.svg","⛑":"26D1.svg","🎓":"1F393.svg","👑":"1F451.svg","🌟":"1F31F.svg","💎":"1F48E.svg","🐣":"1F423.svg","🐶":"1F436.svg","🐱":"1F431.svg","🦀":"1F980.svg","🐠":"1F420.svg","🐝":"1F41D.svg","🦜":"1F99C.svg","🦋":"1F98B.svg","🦩":"1F9A9.svg","🦄":"1F984.svg","🦖":"1F996.svg","🦚":"1F99A.svg","🐉":"1F409.svg","⭐":"2B50.svg","💖":"1F496.svg","💕":"1F495.svg","🎈":"1F388.svg","🎉":"1F389.svg","🎊":"1F38A.svg","🎵":"1F3B5.svg","🎶":"1F3B6.svg","🎷":"1F3B7.svg","🍕":"1F355.svg","🍩":"1F369.svg","🧁":"1F9C1.svg","🦕":"1F995.svg","🌿":"1F33F.svg","🎆":"1F386.svg","🎇":"1F387.svg","💥":"1F4A5.svg","💠":"1F4A0.svg","🥅":"1F945.svg","🌙":"1F319.svg","🚕":"1F695.svg","🚜":"1F69C.svg","🚙":"1F699.svg","🚓":"1F693.svg","🚒":"1F692.svg","🏎️":"1F3CE.svg","🏎":"1F3CE.svg","🛸":"1F6F8.svg","🚀":"1F680.svg","🌺":"1F33A.svg","🌴":"1F334.svg","⛱️":"26F1.svg","⛱":"26F1.svg","🏕️":"1F3D5.svg","🏕":"1F3D5.svg","⛵":"26F5.svg","🛖":"1F6D6.svg","🗿":"1F5FF.svg","🐳":"1F433.svg","🌋":"1F30B.svg","🚁":"1F681.svg","🎡":"1F3A1.svg","🏰":"1F3F0.svg","🪨":"1FAA8.svg","🌵":"1F335.svg","🍄":"1F344.svg","🌳":"1F333.svg","🐒":"1F412.svg","🦭":"1F9AD.svg","🛝":"1F6DD.svg","🦙":"1F999.svg","⛲":"26F2.svg","🏡":"1F3E1.svg","🚂":"1F682.svg","🐘":"1F418.svg","🏪":"1F3EA.svg","🎠":"1F3A0.svg","🏫":"1F3EB.svg","🏆":"1F3C6.svg","🏯":"1F3EF.svg","🏟️":"1F3DF.svg","🏟":"1F3DF.svg","🛶":"1F6F6.svg","🚤":"1F6A4.svg","🛳️":"1F6F3.svg","🛳":"1F6F3.svg","☁️":"2601.svg","☁":"2601.svg","🪁":"1FA81.svg","🪂":"1FA82.svg","✈️":"2708.svg","✈":"2708.svg","🌈":"1F308.svg","🌕":"1F315.svg","🎃":"1F383.svg","🎄":"1F384.svg","🧧":"1F9E7.svg","🏖️":"1F3D6.svg","🏖":"1F3D6.svg","🍁":"1F341.svg","❄️":"2744.svg","❄":"2744.svg","🧣":"1F9E3.svg","🌷":"1F337.svg","🐇":"1F407.svg","🦇":"1F987.svg","👻":"1F47B.svg","⛄":"26C4.svg","🦌":"1F98C.svg","🐻‍❄️":"1F43B-200D-2744-FE0F.svg","🐻‍❄":"1F43B-200D-2744-FE0F.svg","🧝":"1F9DD.svg","🐐":"1F410.svg","🐞":"1F41E.svg","🦑":"1F991.svg","🦈":"1F988.svg","🐲":"1F432.svg","🦞":"1F99E.svg","🐊":"1F40A.svg","🐡":"1F421.svg","🐅":"1F405.svg","🥚":"1F95A.svg","🍂":"1F342.svg","🎁":"1F381.svg","🔔":"1F514.svg","🍬":"1F36C.svg","🏮":"1F3EE.svg","🌊":"1F30A.svg","🏄":"1F3C4.svg","☀️":"2600.svg","☀":"2600.svg","🏚️":"1F3DA.svg","🏚":"1F3DA.svg","☃️":"2603.svg","☃":"2603.svg","🛷":"1F6F7.svg","🎅":"1F385.svg","🐆":"1F406.svg","🦅":"1F985.svg","⚡":"26A1.svg","😇":"1F607.svg","🍎":"1F34E.svg","✖️":"2716.svg","✖":"2716.svg","🧠":"1F9E0.svg","🔥":"1F525.svg","💯":"1F4AF.svg","🧭":"1F9ED.svg","🦘":"1F998.svg","🏦":"1F3E6.svg","🗃️":"1F5C3.svg","🗃":"1F5C3.svg","📅":"1F4C5.svg","🗓️":"1F5D3.svg","🗓":"1F5D3.svg","💫":"1F4AB.svg","🌠":"1F320.svg","🏔️":"1F3D4.svg","🏔":"1F3D4.svg","🪐":"1FA90.svg","🏵️":"1F3F5.svg","🏵":"1F3F5.svg","🥇":"1F947.svg","💌":"1F48C.svg","🛡️":"1F6E1.svg","🛡":"1F6E1.svg","⬆️":"2B06.svg","⬆":"2B06.svg","🎮":"1F3AE.svg","🙌":"1F64C.svg","🐾":"1F43E.svg","🔄":"1F504.svg","✅":"2705.svg","⚠️":"26A0.svg","⚠":"26A0.svg","🔒":"1F512.svg","🔁":"1F501.svg","🥈":"1F948.svg","🥉":"1F949.svg","🙂":"1F642.svg","❤️":"2764.svg","❤":"2764.svg","🤍":"1F90D.svg","💨":"1F4A8.svg","💬":"1F4AC.svg","📢":"1F4E2.svg","✏️":"270F.svg","✏":"270F.svg","🙃":"1F643.svg","😴":"1F634.svg","🪑":"1FA91.svg","🤸":"1F938.svg","📝":"1F4DD.svg","🦶":"1F9B6.svg","😜":"1F61C.svg","🤫":"1F92B.svg","😏":"1F60F.svg","😈":"1F608.svg","👍":"1F44D.svg","😊":"1F60A.svg","🖤":"1F5A4.svg","😅":"1F605.svg","📊":"1F4CA.svg","🧤":"1F9E4.svg","✋":"270B.svg","🗑️":"1F5D1.svg","🗑":"1F5D1.svg","🤩":"1F929.svg","📋":"1F4CB.svg"};
 const EMOJI_RE = new RegExp(Object.keys(EMOJI_FILES).sort((a, b) => b.length - a.length).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
 const EMOJI_ANY = new RegExp(EMOJI_RE.source, 'u');
 const EMOJI_SKIP = 'script,style,textarea,input,title,svg,option,.no-emo';
@@ -1262,6 +1348,7 @@ const GAMES = [
   { id: 'patterns',    name: 'Pattern Path',     icon: '🧩', blurb: 'Find the rule and the next number.', skill: 'patterns', bg: '#FFF0B8', practices: 'Topic 14: number patterns and rules', later: true },
   { id: 'angles',      name: 'Angle Arcade',     icon: '📐', blurb: 'Kinds of angles, protractors, missing angles.', skill: 'angles', bg: '#FFE1DB', practices: 'Topic 15: angles and angle measurement', later: true },
   { id: 'shapes',      name: 'Shape Safari',     icon: '🔷', blurb: 'Lines, triangles, quadrilaterals, symmetry.', skill: 'shapes', bg: '#CBE8FF', practices: 'Topic 16: lines, angles and shapes', later: true },
+  { id: 'classroom', name: "Don't Get Caught!", icon: '👀', blurb: `Answer ${TEACHER}'s questions… and don't goof off when he turns around!`, skill: 'mult', bg: '#DFF4F6', feature: true, practices: 'Mixed questions (× ÷ + −). Three strikes for goofing off. Plays per day set on the Settings tab.' },
   { id: 'sprint',   name: 'Times Table Sprint', icon: '⏱️', blurb: 'Pick 1, 2 or 5 minutes and beat your own best!', skill: 'mult', bg: '#E3F2FF', feature: true, practices: 'Multiplication facts 0–12, timed. Students race their own best score (no leaderboard).' },
   { id: 'race',     name: 'Race Day',           icon: '🏁', blurb: 'A 2-minute race once a week. Best score of the day wins coins!', skill: null, bg: '#FFE1DB', special: true, practices: 'Weekly 2-minute facts race (+1 right, −1 wrong); the teacher picks the questions' },
   { id: 'boss',     name: 'Boss Battle',        icon: '⚔️', blurb: 'Team up with your class to beat this week\'s boss!', skill: null, bg: '#2A1F6B', wide: true, practices: 'Whole-class team-up on mixed facts (great for Fun Friday)' }
@@ -1672,6 +1759,8 @@ const RARITY = price => price === 0 ? null : price <= 60 ? ['Common', 'r-common'
 const RANKS = ['Beachcomber', 'Shell Collector', 'Tide Explorer', 'Reef Ranger', 'Island Scout', 'Wave Rider', 'Navigator', 'First Mate', 'Captain', 'Island Legend'];
 
 const BADGES = [
+  { id: 'focused',    icon: '😇', name: 'Eyes Front',      desc: "Don't Get Caught!: stay focused 10 times in one class" },
+  { id: 'teacherpet', icon: '🍎', name: "Teacher's Pet",   desc: "Don't Get Caught!: finish a whole class with no strikes" },
   { id: 'sprintgoal', icon: '⏱️', name: 'Off the Blocks',  desc: 'Reach your first Times Table Sprint goal' },
   { id: 'beatbest',   icon: '📈', name: 'Beat Your Best',  desc: 'Beat your own Sprint best 5 times' },
   { id: 'tthalf',     icon: '✖️', name: 'Halfway Hero',    desc: 'Master 85 of the 169 times table facts' },
@@ -2711,6 +2800,7 @@ function startGame(id) {
   if (id === 'soccer') return soccerPicker();
   if (id === 'race') return raceIntro();
   if (id === 'sprint') return sprintPicker();
+  if (id === 'classroom') return classIntro();
   if (id === 'runner') return runnerPicker();
   if (id === 'memory') return memoryStart();
   if (id === 'boss') return bossIntro();
@@ -2864,7 +2954,7 @@ function showResults({ stars, title, lines, again, next, back }) {
   sfx('coin');
   show('results');
 }
-$('#leaveGame').addEventListener('click', () => { if (sprintRun) { sprintRun.over = true; sprintRun = null; padClear(); } if (raceRun) { raceRun.over = true; raceRun = null; padClear(); } if (bossFight) { bossFight.over = true; bossFight = null; padClear(); if (P() && P().sheetName) syncNow(store.current); } if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
+$('#leaveGame').addEventListener('click', () => { if (classRun) { classRun.over = true; classRun = null; padClear(); } if (sprintRun) { sprintRun.over = true; sprintRun = null; padClear(); } if (raceRun) { raceRun.over = true; raceRun = null; padClear(); } if (bossFight) { bossFight.over = true; bossFight = null; padClear(); if (P() && P().sheetName) syncNow(store.current); } if (round && round.back && currentScreen === 'game') { clearTimers(); padClear(); round.back.fn(); } else openHub(); });
 
 const ROUND_GAMES = {};
 
@@ -4352,6 +4442,239 @@ async function raceEnd() {
             ['Leader', leader ? `${leader.name} · ${leader.score}` : '—'], ['Results at', `${info.time || ''} · winner gets 🪙 ${fmt(info.prizeCoins || 0)}`]]
       .concat(res ? [] : [['Note', "Couldn't reach the class sheet. Your score will be sent when you're back online."]]),
     again: () => startGame('race') });
+}
+
+/* ---------- Don't Get Caught! (classroom) ----------
+   The student's view from their desk. Mr. Romanek walks back and forth asking random questions.
+   Now and then he turns to write on the board and silly choices pop up on the desk: the right move is to do NOTHING.
+   Tap one and he spins round: a strike. Three strikes, or the bell after 3 minutes, ends the class.
+   Settings: "Classroom game plays per day" (default 2, 0 = no limit) and "Classroom game questions" (Mixed, or × ÷ + −). */
+const CLASS_SECS = 180;
+const SILLY = [
+  ['💬', 'Whisper to a friend', 'Is there something you want to share with the whole class?'],
+  ['📢', 'Shout out', 'Inside voice, please!'],
+  ['✏️', 'Draw on your desk', 'Desks are not for drawing!'],
+  ['✈️', 'Throw a paper airplane', 'No flying in my classroom!'],
+  ['🦝', 'Play with the raccoon', 'The raccoon can wait until recess!'],
+  ['🍬', 'Sneak a snack', 'Snack time is later!'],
+  ['🙃', 'Make a funny face', 'I can see you in the window reflection!'],
+  ['😴', 'Take a little nap', 'Wake up, it’s math time!'],
+  ['🎵', 'Hum a song', 'Who is humming?'],
+  ['🪑', 'Tip back on your chair', 'Four chair legs on the floor!'],
+  ['🤸', 'Do a cartwheel', 'Cartwheels are for recess!'],
+  ['📝', 'Pass a secret note', 'I’ll take that note, thank you!'],
+  ['🎈', 'Blow a bubble', 'No gum in class!'],
+  ['🦶', 'Kick your friend’s chair', 'Feet to yourself, please!']
+];
+const TEASE = ['Do it! 😜', 'He won’t see! 👀', 'Quick! 🤫', 'Just once… 😏', 'Nobody’s looking!', 'Go on… 😈'];
+let classRun = null;
+function classPlaysAllowed() { const n = (store.settings || {}).classPlays; return n == null || n === '' ? 2 : Math.max(0, Number(n) || 0); }
+function classUnlimited(p = P()) {
+  if (!classPlaysAllowed()) return true;
+  const me = String((p && (p.sheetName || p.name)) || '').trim().toLowerCase();
+  return !!me && String((store.settings || {}).alwaysPlay || '').split(/[,;]/).some(n => n.trim() && n.trim().toLowerCase().replace(/\s+/g, ' ') === me.replace(/\s+/g, ' '));
+}
+function classPlaysLeft(p = P()) {
+  if (classUnlimited(p)) return Infinity;
+  const c = p.classPlays && p.classPlays.day === dayKey() ? p.classPlays.n : 0;
+  return Math.max(0, classPlaysAllowed() - c);
+}
+function classQuestion() {
+  const picked = kindsFrom((store.settings || {}).classTypes), k = pick(picked ? [...picked] : ['mult', 'mult', 'div', 'add', 'sub']);
+  if (k === 't4tens') return { skill: 'mult', ...factQ('mult', () => genMult(lvl('mult'))) };
+  if (k === 'mult') return { skill: 'mult', ...factQ('mult', () => genMult(lvl('mult'))) };
+  if (k === 'div') return { skill: 'div', ...factQ('div', () => genDiv(lvl('div'))) };
+  const op = k === 'add' ? '+' : '−';
+  return { skill: 'mental', ...factQ('mental', () => genMental(lvl('mental'), op), op) };
+}
+function pixelRaccoon(x, y, px) {
+  const rows = ['.KP.....PK.', '.PGGGGGGGP.', 'PGGLLGLLGGP', 'WKKKWGWKKKW', 'WKWKKWKKWKW', 'PWKKWWWKKWP', '.PWWWKWWWP.', '..PPWWWPP..'];
+  const C = { G: '#9EA3A8', L: '#C9CDD1', P: '#F6CFA8', K: '#22262A', W: '#FFFFFF' };
+  let out = '';
+  rows.forEach((r, j) => [...r].forEach((c, i) => { if (C[c]) out += `<rect x="${x + i * px}" y="${y + j * px}" width="${px - .8}" height="${px - .8}" rx="1.6" fill="${C[c]}"/>`; }));
+  return `<g>${out}</g>`;
+}
+/* Mr. Romanek's classroom, drawn from the student's seat (no real photo, no student names). */
+function classroomSVG(boardText) {
+  const tiles = Array.from({ length: 9 }, (_, i) => `<path d="M${i * 125} 0 L${i * 125 - 20} 118" stroke="#D6D8D2" stroke-width="2"/>`).join('');
+  const cards = [['#FFB84D', 'MORNING'], ['#9EE493', 'RECESS'], ['#FFE066', 'SNACK'], ['#FF8FA3', 'LANGUAGE'], ['#6EC3FF', 'MATH'], ['#9EE493', 'RECESS'], ['#B8E986', 'LUNCH'], ['#FFD580', 'READING'], ['#C3A6FF', 'CLEAN UP']]
+    .map(([c, t], i) => `<rect x="880" y="${236 + i * 19}" width="52" height="14" rx="2" fill="${c}" stroke="#555" stroke-width="1"/><text x="906" y="${246 + i * 19}" font-size="7.5" text-anchor="middle" font-family="Arial" font-weight="700" fill="#333">${t}</text><rect x="862" y="${238 + i * 19}" width="12" height="9" rx="1.5" fill="#888"/>`).join('');
+  const bday = Array.from({ length: 12 }, (_, i) => `<rect x="${148 + (i % 3) * 30}" y="${232 + Math.floor(i / 3) * 30}" width="24" height="22" rx="2" fill="#F8C8C0" stroke="#5A6" stroke-width=".8"/>`).join('');
+  return `<svg class="class-scene" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><pattern id="ceil" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#F3F4F0"/><circle cx="3" cy="4" r=".9" fill="#C9CBC4"/><circle cx="10" cy="10" r=".7" fill="#C9CBC4"/></pattern>
+      <pattern id="floor" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#B4B8B8"/><circle cx="5" cy="6" r="1.2" fill="#9DA2A3"/><circle cx="16" cy="15" r="1" fill="#C8CBCB"/><circle cx="20" cy="4" r=".8" fill="#9DA2A3"/></pattern></defs>
+    <rect width="1000" height="120" fill="url(#ceil)"/>${tiles}<circle cx="650" cy="40" r="13" fill="#E6E6E2" stroke="#BDBDB6" stroke-width="2"/><circle cx="650" cy="40" r="4" fill="#BDBDB6"/>
+    <rect y="118" width="1000" height="362" fill="#A6DCE2"/><rect y="118" width="1000" height="10" fill="#D8C9A0"/>
+    <!-- birthday poster -->
+    <rect x="96" y="178" width="178" height="196" fill="#2F3E7A"/><rect x="104" y="186" width="162" height="180" fill="#F2E8D2"/>
+    <rect x="132" y="196" width="106" height="162" rx="3" fill="#2F8FE0"/><text x="185" y="220" font-size="13" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="700">G4 Birthdays</text>${bday}
+    <!-- whiteboard (where the screen was) -->
+    <rect x="300" y="150" width="470" height="236" rx="6" fill="#7A5634"/><rect x="310" y="160" width="450" height="216" fill="#FCFCFA"/>
+    <g font-family="'Comic Sans MS','Chalkboard SE','Marker Felt',cursive" fill="#2B66C9">
+      <text x="334" y="198" font-size="22">Math 183–188</text><text x="334" y="232" font-size="18" fill="#C9302C">Times tables!</text>
+      <text x="560" y="196" font-size="18">6 × 7 = 42</text><text x="560" y="224" font-size="18">48 ÷ 8 = 6</text>
+      <text x="334" y="350" font-size="15" fill="#2E8B57">Reminders: try your best!</text>
+    </g>
+    <text class="board-write" x="430" y="290" font-size="26" font-family="'Comic Sans MS','Chalkboard SE',cursive" fill="#C9302C">${boardText || ''}</text>
+    <rect x="300" y="382" width="470" height="10" rx="3" fill="#6B4A2C"/><rect x="560" y="376" width="44" height="7" rx="2" fill="#E8283C"/><rect x="612" y="376" width="38" height="7" rx="2" fill="#2B66C9"/>
+    <!-- schedule board + clock -->
+    <rect x="790" y="214" width="190" height="230" fill="#FBFBF9" stroke="#C8C8C8" stroke-width="2"/>${cards}
+    <text x="800" y="246" font-size="12" font-family="'Comic Sans MS',cursive" fill="#333">M T W T F</text>
+    <circle cx="845" cy="170" r="34" fill="#fff" stroke="#222" stroke-width="6"/>
+    ${Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6; return `<line x1="${845 + Math.sin(a) * 25}" y1="${170 - Math.cos(a) * 25}" x2="${845 + Math.sin(a) * 29}" y2="${170 - Math.cos(a) * 29}" stroke="#222" stroke-width="2.5"/>`; }).join('')}
+    <line class="clock-m" x1="845" y1="170" x2="845" y2="146" stroke="#222" stroke-width="3" stroke-linecap="round"/><line x1="845" y1="170" x2="862" y2="178" stroke="#222" stroke-width="4" stroke-linecap="round"/><circle cx="845" cy="170" r="3" fill="#222"/>
+    <!-- door -->
+    <rect x="984" y="170" width="16" height="310" fill="#E9E4D8"/>
+    <!-- left side: couch, ottoman, shelf with baskets -->
+    <rect x="-20" y="380" width="125" height="150" rx="14" fill="#2C4A6E"/><rect x="-20" y="372" width="118" height="40" rx="12" fill="#355A84"/>
+    <rect x="120" y="440" width="150" height="70" rx="10" fill="#3A3D44"/>
+    <rect x="96" y="400" width="244" height="12" fill="#6C6E73"/><rect x="250" y="412" width="78" height="80" fill="#5E6166"/>
+    <rect x="104" y="378" width="60" height="22" rx="3" fill="#fff" stroke="#bbb"/><rect x="170" y="380" width="56" height="20" rx="3" fill="#F2F2F2" stroke="#bbb"/><rect x="232" y="374" width="92" height="26" rx="3" fill="#2346D6"/>
+    <!-- red stool -->
+    <path d="M462 418 L538 418 L548 478 L452 478 Z" fill="#E33A2B" stroke="#9E1F14" stroke-width="3"/><rect x="458" y="410" width="84" height="12" rx="5" fill="#F0493A"/>
+    <!-- right side: cabinet with baskets, box -->
+    <rect x="640" y="404" width="300" height="12" fill="#6C6E73"/><rect x="650" y="416" width="280" height="76" fill="#5E6166"/>
+    <rect x="660" y="384" width="64" height="20" rx="3" fill="#E8283C"/><rect x="734" y="382" width="80" height="22" rx="3" fill="#41C24A"/><circle cx="690" cy="378" r="8" fill="#3D6BE0"/>
+    <rect x="940" y="446" width="70" height="44" rx="4" fill="#DDBB8E" stroke="#B5925F" stroke-width="2"/>
+    <!-- floor -->
+    <rect y="478" width="1000" height="142" fill="url(#floor)"/><rect y="476" width="1000" height="6" fill="#CDBE95"/>
+    <!-- neighbour's desk corner -->
+    <path d="M-10 560 L170 545 L200 575 L-10 600 Z" fill="#D9D6CB" stroke="#5E5A55" stroke-width="5"/><path d="M-10 600 L200 575 L200 590 L-10 616 Z" fill="#7FB34A"/>
+    <!-- your desk -->
+    <path d="M250 520 L750 520 L820 640 L180 640 Z" fill="#DAD7CC" stroke="#5E5A55" stroke-width="6" stroke-linejoin="round"/>
+    <rect x="300" y="526" width="150" height="40" fill="#fff" transform="rotate(-1 375 546)"/><rect x="590" y="534" width="120" height="70" fill="#fff" transform="rotate(-9 650 570)"/>
+    <rect x="600" y="510" width="44" height="18" rx="6" fill="#D9D9D9" stroke="#999" stroke-width="2"/>
+    ${pixelRaccoon(330, 548, 6.8)}
+  </svg>`;
+}
+function classIntro() {
+  round = null; classRun = null;
+  const p = P(), left = classPlaysLeft(p), max = classPlaysAllowed();
+  $('#gameBody').innerHTML = `<div class="picker class-intro">
+    <div class="class-intro-scene">${classroomSVG('')}<div class="class-teacher" style="left:52%">${teacherSVG('walk', 150)}</div></div>
+    <h3>👀 Don't Get Caught!</h3>
+    <p class="story">You're at your desk and ${TEACHER} is teaching. Answer his questions as fast as you can.<br>
+      But watch out: when he turns around to write on the board, silly ideas will pop up on your desk…<br><b>Don't do them!</b> Wait until he turns back. Get caught 3 times and you're out!</p>
+    <p class="note">${left === Infinity ? 'You can play as many times as you like.' : left > 0 ? `You can play <b>${left}</b> more time${left === 1 ? '' : 's'} today (${max} a day).` : `You've played ${max} time${max === 1 ? '' : 's'} today. Come back tomorrow! 🌙`}</p>
+    ${left > 0 ? `<button class="btn primary big" id="classGo" type="button">🔔 Start class</button>` : ''}
+  </div>`;
+  const go = $('#classGo'); if (go) go.addEventListener('click', classStart);
+}
+function classStart() {
+  const p = P();
+  if (classPlaysLeft(p) <= 0) return classIntro();
+  if (!classUnlimited(p)) { const c = p.classPlays && p.classPlays.day === dayKey() ? p.classPlays.n : 0; p.classPlays = { day: dayKey(), n: c + 1 }; save(); scheduleSync(2000); }
+  session = { notes: [], badges: [], coins0: p.coins, xp0: p.xp, t0: Date.now(), game: 'classroom' };
+  classRun = { points: 0, right: 0, wrong: 0, focused: 0, strikes: 0, turns: 0, end: Date.now() + CLASS_SECS * 1000, over: false, q: null, state: 'ask', untilTurn: 2 + Math.floor(Math.random() * 2), combo: 0 };
+  $('#gameBody').innerHTML = `<div class="class-arena">
+      <div class="boss-top"><span class="chip" id="clTime">🔔 3:00</span><span class="chip" id="clPts">⭐ 0</span><span class="chip hearts" id="clHearts">❤️❤️❤️</span></div>
+      <div class="class-main">
+        <div class="class-stage" id="clStage">${classroomSVG('')}
+          <div class="class-teacher walking" id="clTeacher">${teacherSVG('walk', 150)}</div>
+          <div class="class-bubble" id="clBubble"></div>
+          <div class="class-desk" id="clDesk"></div>
+          <div class="class-banner" id="clBanner"></div>
+        </div>
+        <div class="class-pad"><div class="answer-row"><div class="slot" id="clAns"></div></div>${padHTML()}</div>
+      </div>
+    </div>`;
+  classWalk();
+  classAsk();
+  const tick = () => {
+    const R = classRun; if (!R || R.over) return;
+    const left = Math.max(0, Math.ceil((R.end - Date.now()) / 1000));
+    $('#clTime').textContent = `🔔 ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`; $('#clTime').classList.toggle('hurry', left <= 10);
+    if (left <= 0 && R.state === 'ask') return classEnd('bell');
+    later(tick, 250);
+  };
+  later(tick, 250);
+}
+function classWalk() { // stroll back and forth in front of the board
+  const R = classRun, t = $('#clTeacher'); if (!R || R.over || !t) return;
+  if (R.state === 'ask') { R.walkX = R.walkX === 64 ? 24 : 64; t.style.left = R.walkX + '%'; t.classList.toggle('flip', R.walkX === 24); }
+  later(classWalk, 3200);
+}
+function classAsk() {
+  const R = classRun; if (!R || R.over) return;
+  R.state = 'ask';
+  const t = $('#clTeacher'); t.innerHTML = teacherSVG('walk', 150); t.classList.add('walking');
+  R.q = classQuestion();
+  const b = $('#clBubble'); b.className = 'class-bubble show'; b.innerHTML = `${esc(R.q.text)} = ?`;
+  padBind([{ el: $('#clAns'), max: 5, placeholder: '?' }], () => {
+    const v = Pad.fields[0].value; if (v === '' || !classRun || R.over || R.state !== 'ask') return;
+    Pad.locked = true;
+    const ok = +v === R.q.answer;
+    record(R.q.skill, ok); noteFact(R.q, R.q.skill, ok);
+    if (ok) { R.right++; R.combo++; R.points += 1 + (R.combo >= 5 ? 1 : 0); sfx('ok'); cheer('', $('#clStage')); b.innerHTML = pick(['Great! 👍', 'Correct!', 'Nice work!', 'Yes! ⭐', 'Excellent!']); }
+    else { R.wrong++; R.combo = 0; sfx('bad'); b.innerHTML = `Not quite: ${esc(R.q.text)} = ${fmt(R.q.answer)}`; }
+    $('#clPts').textContent = `⭐ ${R.points}`;
+    later(() => {
+      if (!classRun || R.over) return;
+      if (Date.now() >= R.end) return classEnd('bell');
+      R.untilTurn--;
+      if (R.untilTurn <= 0) classTurn(); else classAsk();
+    }, ok ? 650 : 1500);
+  });
+}
+function classTurn() {
+  const R = classRun; if (!R || R.over) return;
+  R.state = 'turned'; R.turns++; padClear(); $('#clAns').textContent = '';
+  const t = $('#clTeacher'); t.classList.remove('walking', 'flip'); t.style.left = '40%';
+  $('#clBubble').className = 'class-bubble';
+  later(() => {
+    if (!classRun || R.over || R.state !== 'turned') return;
+    t.innerHTML = teacherSVG('back', 150);
+    const w = document.querySelector('#clStage .board-write'); if (w) { w.textContent = ''; const txt = pick(['7 × 8 = 56', '36 ÷ 4 = 9', '125 + 75', 'Fractions!', '9 × 9 = 81', 'Area = l × w']); [...txt].forEach((c, i) => later(() => { if (w && R.state === 'turned') w.textContent += c; }, 180 * i)); }
+    const n = R.turns > 4 ? 3 : 2, opts = [...SILLY].sort(() => Math.random() - .5).slice(0, n);
+    const desk = $('#clDesk');
+    desk.innerHTML = opts.map((o, i) => `<button type="button" class="silly s${i}" data-i="${SILLY.indexOf(o)}" style="--d:${(Math.random() * .6).toFixed(2)}s"><span class="si">${o[0]}</span>${esc(o[1])}<small>${pick(TEASE)}</small></button>`).join('');
+    desk.classList.add('show');
+    $('#clBanner').textContent = `${TEACHER} is writing on the board… 👀`; $('#clBanner').classList.add('show');
+    $$('#clDesk .silly').forEach(btn => btn.addEventListener('click', () => classCaught(SILLY[+btn.dataset.i])));
+    const dur = 3000 + Math.random() * 2600 + Math.min(R.turns, 6) * 250;
+    R.turnTimer = later(() => classResisted(), dur);
+    if (R.turns > 3 && Math.random() < .35) later(() => { if (classRun && R.state === 'turned') { t.innerHTML = teacherSVG('walk', 150); later(() => { if (classRun && R.state === 'turned') t.innerHTML = teacherSVG('back', 150); }, 450); } }, dur * .45); // a quick peek!
+  }, 700);
+}
+function classClearDesk() { const d = $('#clDesk'); d.classList.remove('show'); d.innerHTML = ''; $('#clBanner').classList.remove('show'); }
+function classResisted() {
+  const R = classRun; if (!R || R.over || R.state !== 'turned') return;
+  R.state = 'back'; R.focused++; R.points += 2; classClearDesk();
+  const t = $('#clTeacher'); t.innerHTML = teacherSVG('walk', 150);
+  const b = $('#clBubble'); b.className = 'class-bubble show good'; b.innerHTML = pick(['Great focus, class! 😊', 'Nice, everyone is working! +2', 'I love how focused you are!', 'Wonderful listening! +2']);
+  $('#clPts').textContent = `⭐ ${R.points}`; sfx('ok'); cheer('Focused! +2', $('#clStage'));
+  R.untilTurn = 2 + Math.floor(Math.random() * 3);
+  later(() => { if (classRun && !R.over) { if (Date.now() >= R.end) classEnd('bell'); else classAsk(); } }, 1500);
+}
+function classCaught(o) {
+  const R = classRun; if (!R || R.over || R.state !== 'turned') return;
+  R.state = 'caught'; R.strikes++; classClearDesk();
+  const t = $('#clTeacher'); t.innerHTML = teacherSVG('stern', 150); t.classList.add('spin');
+  later(() => t.classList.remove('spin'), 500);
+  const b = $('#clBubble'); b.className = 'class-bubble show bad'; b.innerHTML = `I saw that, ${esc(P().name)}! ${esc(o[2])}`;
+  $('#clHearts').textContent = '❤️'.repeat(3 - R.strikes) + '🖤'.repeat(R.strikes);
+  $('#clStage').classList.add('shake'); later(() => $('#clStage') && $('#clStage').classList.remove('shake'), 500);
+  sfx('bad'); R.combo = 0;
+  R.untilTurn = 2 + Math.floor(Math.random() * 3);
+  later(() => { if (!classRun || R.over) return; if (R.strikes >= 3) classEnd('out'); else if (Date.now() >= R.end) classEnd('bell'); else classAsk(); }, 2400);
+}
+function classEnd(why) {
+  const R = classRun; if (!R || R.over) return; R.over = true; classRun = null; padClear();
+  const p = P();
+  session.score = R.points; session.scoreKey = 'classroom';
+  const stars = why === 'out' ? (R.points >= 15 ? 2 : 1) : R.strikes === 0 ? 3 : 2;
+  reward(stars * 5 + R.focused * 3, 10 + stars * 10);
+  const g = gameStats('classroom'); g.best = Math.max(g.best || 0, R.points); g.stars = Math.max(g.stars || 0, stars);
+  if (R.focused >= 10) award('focused');
+  if (why === 'bell' && R.strikes === 0) award('teacherpet');
+  checkBadges({ finished: true, stars });
+  logActivity("Don't Get Caught!", `${R.points} points · ${R.right} right · focused ${R.focused}× · ${R.strikes} strike${R.strikes === 1 ? '' : 's'}`, stars, 'mult');
+  save(); scheduleSync(1500);
+  const left = classPlaysLeft(p);
+  showResults({ stars, title: why === 'out' ? 'Caught 3 times! 😅' : R.strikes === 0 ? `Perfect student! 😇` : '🔔 Class is over!',
+    lines: [['Points', `⭐ ${R.points}`], ['Right answers', `${R.right} of ${R.right + R.wrong}`], ['Stayed focused', `${R.focused} time${R.focused === 1 ? '' : 's'}`], ['Strikes', `${R.strikes} of 3`],
+      ['Plays left today', left === Infinity ? 'No limit' : String(left)]],
+    again: () => (classPlaysLeft(P()) > 0 ? classStart() : startGame('classroom')), back: { label: '👀 Back to class', fn: () => startGame('classroom') } });
 }
 
 /* ---------- Times Table Sprint ----------

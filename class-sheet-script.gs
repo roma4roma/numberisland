@@ -338,7 +338,9 @@ var EXTRA_ROWS = [
   ['Race Day + and − numbers', 'Same', 'Same = use the + and − numbers above. Auto = by level. Or a range like 10-99 just for Race Day.'],
   ['Keep activity for (days)', 7, 'Rows on the Activity tab older than this many days are deleted by themselves, so the tab stays short. 0 = keep everything.'],
   ['Boss hits needed for the prize', 20, 'Each student needs at least this many hits in the week to win the boss pet and coins when the class beats the boss. 0 = any hit counts. Students can keep attacking after the boss is beaten to reach it.'],
-  ['No-school Fridays (boss skips)', '12-18, 12-25, 1-1', 'Fridays with no school, like 12-18, 12-25, 1-1. Those weeks are skipped, so no boss is missed. Separate dates with commas.']
+  ['No-school Fridays (boss skips)', '12-18, 12-25, 1-1', 'Fridays with no school, like 12-18, 12-25, 1-1. Those weeks are skipped, so no boss is missed. Separate dates with commas.'],
+  ['Classroom game plays per day', 2, 'How many times each student can play "Don\'t Get Caught!" each day. 0 = no limit. Names under "Can always play" have no limit.'],
+  ['Classroom game questions', 'Mixed', 'Mixed = random × ÷ + − at each student\'s level. Or list the kinds, like: × ÷   or   + −   (uses the number ranges above).']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -382,7 +384,8 @@ function readSettings_(ss) {
            raceTypes: text_(v[24], 'Mixed'), raceA: text_(v[25], 'Same'), raceB: text_(v[26], 'Same'), raceAdd: text_(v[27], 'Same'),
            activityDays: String(v[28]).trim() === '' ? 7 : Math.max(0, Number(v[28]) || 0),
            bossNeed: String(v[29]).trim() === '' ? 20 : Math.max(0, Math.round(Number(v[29]) || 0)),
-           bossSkip: text_(v[30], '') };
+           bossSkip: text_(v[30], ''),
+           classPlays: String(v[31]).trim() === '' ? 2 : Math.max(0, Math.round(Number(v[31]) || 0)), classTypes: text_(v[32], 'Mixed') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {

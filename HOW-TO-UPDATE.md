@@ -65,6 +65,7 @@ node test/mock-sheet-server.js class-sheet-script.gs     # fake sheet on port 87
 - **Times Table Sprint:** 0–12 multiplication in 1, 2 or 5 minutes. It's a race against your own best only: no top 3 and no class comparisons. Goals per length pay coins; the total number of goals unlocks Sprint reward items (`sprint: N` in `SPRINT_ITEMS`). Facts are tracked in `p.tt` for the times-table chart.
 - **Pets grow:** each right answer while wearing a pet feeds it (Baby → Little → Grown → Big → Legendary). Pets owned before this feature started at Grown, so nobody's pet shrank.
 - **December is Christmas:** snow, lights, a snowy island and beach, a Santa hat on the cartoon Mr. Romanek, and Christmas shop items. No school Dec 18 – Jan 3.
+- **Don't Get Caught!:** the student's view of Mr. Romanek's classroom, drawn (never the real photo; no student names). He asks random questions, turns to the board, and silly choices pop up; tapping one is a strike, three strikes ends it, otherwise the bell rings after 3 minutes. Plays per day and question types come from Settings (default 2 a day, Mixed).
 - **Behaviour:**
   - Device clock tampering is not a concern.
   - School hours are enforced with the device clock.

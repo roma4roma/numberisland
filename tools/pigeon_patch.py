@@ -1,7 +1,7 @@
 """Builds pigeon.html (Banpo Pigeon, with Math Island questions) from source/banpo-pigeon-original.html.
 Usage: python3 tools/pigeon_patch.py source/banpo-pigeon-original.html pigeon.html
 Adds: a pause switch in the game loop, a math question on every snack (right = 5–60 s more, wrong/slow = it flies away,
-15 s each), a 3-minute flight clock, and the link to Math Island (ticket in, result out via localStorage)."""
+15 s each), a 2-minute flight clock, and the link to Math Island (ticket in, result out via localStorage)."""
 import sys
 src, out = sys.argv[1], sys.argv[2]
 s=open(src).read()
@@ -49,7 +49,7 @@ css = """
 </style>"""
 rep("</style>", css)
 html = """
-<div id="miClock">⏱ 3:00</div>
+<div id="miClock">⏱ 2:00</div>
 <button id="miBack" type="button">🛑 End game</button>
 <div id="miQ" role="dialog" aria-label="Math question"><div class="miCard">
   <h2 id="miQhead">🍜 Snack question!</h2>
@@ -69,7 +69,7 @@ js = r"""
 /* Math Island link: Math Island writes a "ticket" (student, questions at their level) before opening this page,
    and reads the "result" when they come back. Snacks ask a question: right = 5–60 s more, wrong or too slow = it flies away. */
 (function () {
-  const START_SECS = 180, BONUS_MIN = 5, BONUS_MAX = 60, Q_SECS = 15; // each right answer adds a random 5–60 seconds
+  const START_SECS = 120, BONUS_MIN = 5, BONUS_MAX = 60, Q_SECS = 15; // each right answer adds a random 5–60 seconds
   const $ = id => document.getElementById(id);
   let ticket = null;
   try { ticket = JSON.parse(localStorage.getItem('numberIsland.pigeonTicket') || 'null'); } catch (e) {}

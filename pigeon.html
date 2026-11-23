@@ -4041,7 +4041,7 @@ three/build/three.module.js:
 </script>
 <!-- Map data © OpenStreetMap contributors, ODbL. Place data: Kakao Map. -->
 
-<div id="miClock">⏱ 3:00</div>
+<div id="miClock">⏱ 2:00</div>
 <button id="miBack" type="button">🛑 End game</button>
 <div id="miQ" role="dialog" aria-label="Math question"><div class="miCard">
   <h2 id="miQhead">🍜 Snack question!</h2>
@@ -4058,7 +4058,7 @@ three/build/three.module.js:
 /* Math Island link: Math Island writes a "ticket" (student, questions at their level) before opening this page,
    and reads the "result" when they come back. Snacks ask a question: right = 5–60 s more, wrong or too slow = it flies away. */
 (function () {
-  const START_SECS = 180, BONUS_MIN = 5, BONUS_MAX = 60, Q_SECS = 15; // each right answer adds a random 5–60 seconds
+  const START_SECS = 120, BONUS_MIN = 5, BONUS_MAX = 60, Q_SECS = 15; // each right answer adds a random 5–60 seconds
   const $ = id => document.getElementById(id);
   let ticket = null;
   try { ticket = JSON.parse(localStorage.getItem('numberIsland.pigeonTicket') || 'null'); } catch (e) {}

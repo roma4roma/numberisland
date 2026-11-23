@@ -138,11 +138,11 @@ def mini_map(cv, x, y, size, here=None):
         cv.drawCentredString(bx + s / 2, by + s * .62, name)
 
 
-def grid_sheet(cv, name):
+def grid_sheet(cv, name, title=None):
     row = name[0]
     # header
     cv.setFillColor(INK); cv.setFont('Helvetica-Bold', 26)
-    cv.drawString(GX, H - 17 * mm, f'Our City  ·  Sheet {name}')
+    cv.drawString(GX, H - 17 * mm, title or f'Our City  ·  Sheet {name}')
     cv.setFont('Helvetica', 12); cv.setFillColor(SOFT)
     t = '1 square = 10 m × 10 m   ·   Write the number of floors inside every building   ·   '
     cv.drawString(GX, H - 24 * mm, t); tx = GX + cv.stringWidth(t, 'Helvetica', 12)

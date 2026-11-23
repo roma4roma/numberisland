@@ -4124,7 +4124,8 @@ three/build/three.module.js:
     log.push({ skill: c.q.skill, text: c.q.text, answer: c.q.answer, ok, slow: !!slow });
     const fb = $('miFb');
     if (ok) {
-      const add = BONUS_MIN + Math.floor(Math.random() * (BONUS_MAX - BONUS_MIN + 1)); left += add;
+      // 60% of snacks give under 30 s (5–29), 40% give 30–60 s
+      const add = Math.random() < .6 ? BONUS_MIN + Math.floor(Math.random() * (30 - BONUS_MIN)) : 30 + Math.floor(Math.random() * (BONUS_MAX - 30 + 1)); left += add;
       const txt = add >= 60 ? '1 minute' : add + ' seconds';
       fb.textContent = `✅ Yes! +${txt}${add >= 50 ? ' 🎉' : add <= 10 ? ' (a small snack!)' : ''}`; fb.className = 'miFb good';
       $('miClock').dataset.plus = add >= 60 ? '+1:00' : `+0:${String(add).padStart(2, '0')}`; $('miClock').classList.add('plus'); setTimeout(() => $('miClock').classList.remove('plus'), 1800);

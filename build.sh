@@ -15,4 +15,6 @@ node tools/embed_emoji.js index.html .emoji-min
 # 3. connect the class Google Sheet and stamp the version (tablets reload themselves when version.txt changes)
 sed -i "s|const CLASS_SHEET_URL = '';|const CLASS_SHEET_URL = '$SHEET_URL';|; s|const BUILD_ID = 'dev';|const BUILD_ID = '$V';|" index.html
 echo "$V" > version.txt
+# 4. Banpo Pigeon, with Math Island questions added
+python3 tools/pigeon_patch.py source/banpo-pigeon-original.html pigeon.html >/dev/null
 echo "Built index.html (version $V)"

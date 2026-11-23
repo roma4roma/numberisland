@@ -66,6 +66,7 @@ node test/mock-sheet-server.js class-sheet-script.gs     # fake sheet on port 87
 - **Pets grow:** each right answer while wearing a pet feeds it (Baby → Little → Grown → Big → Legendary). Pets owned before this feature started at Grown, so nobody's pet shrank.
 - **December is Christmas:** snow, lights, a snowy island and beach, a Santa hat on the cartoon Mr. Romanek, and Christmas shop items. No school Dec 18 – Jan 3.
 - **Don't Get Caught!:** the student's view of Mr. Romanek's classroom, drawn (never the real photo; no student names). He asks random questions, turns to the board, and silly choices pop up; tapping one is a strike, three strikes ends it, otherwise the bell rings after 3 minutes. Plays per day and question types come from Settings (default 2 a day, Mixed).
+- **Banpo Pigeon:** `pigeon.html` is built by `build.sh` from `source/banpo-pigeon-original.html` with `tools/pigeon_patch.py`. Math Island writes a ticket (student + 80 questions at their level) to localStorage before opening it; the game reads it and writes a result back, which Math Island turns into coins (10 a snack) and skill progress. Every snack asks a question (15 s): right = +2 minutes of flight (starts at 3:00), wrong or too slow = the snack flies away. Keep the map credits (OpenStreetMap, Kakao Map, VWorld).
 - **Behaviour:**
   - Device clock tampering is not a concern.
   - School hours are enforced with the device clock.

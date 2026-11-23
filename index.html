@@ -1036,7 +1036,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202611230909';
+const BUILD_ID = '202611231405';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -1359,6 +1359,7 @@ const GAMES = [
   { id: 'patterns',    name: 'Pattern Path',     icon: '🧩', blurb: 'Find the rule and the next number.', skill: 'patterns', bg: '#FFF0B8', practices: 'Topic 14: number patterns and rules', later: true },
   { id: 'angles',      name: 'Angle Arcade',     icon: '📐', blurb: 'Kinds of angles, protractors, missing angles.', skill: 'angles', bg: '#FFE1DB', practices: 'Topic 15: angles and angle measurement', later: true },
   { id: 'shapes',      name: 'Shape Safari',     icon: '🔷', blurb: 'Lines, triangles, quadrilaterals, symmetry.', skill: 'shapes', bg: '#CBE8FF', practices: 'Topic 16: lines, angles and shapes', later: true },
+  { id: 'pigeon', name: 'Banpo Pigeon', icon: '🐦', blurb: 'Fly over real Seoul streets! Every snack asks a math question: right = +2 minutes.', skill: 'mult', bg: '#E0F0FF', feature: true, practices: 'Mixed questions (× ÷ + −) at each student\'s level, 15 seconds each. A 3D flying game on its own page.' },
   { id: 'classroom', name: "Don't Get Caught!", icon: '👀', blurb: `Answer ${TEACHER}'s questions… and don't goof off when he turns around!`, skill: 'mult', bg: '#DFF4F6', feature: true, practices: 'Mixed questions (× ÷ + −). Three strikes for goofing off. Plays per day set on the Settings tab.' },
   { id: 'sprint',   name: 'Times Table Sprint', icon: '⏱️', blurb: 'Pick 1, 2 or 5 minutes and beat your own best!', skill: 'mult', bg: '#E3F2FF', feature: true, practices: 'Multiplication facts 0–12, timed. Students race their own best score (no leaderboard).' },
   { id: 'race',     name: 'Race Day',           icon: '🏁', blurb: 'A 2-minute race once a week. Best score of the day wins coins!', skill: null, bg: '#FFE1DB', special: true, practices: 'Weekly 2-minute facts race (+1 right, −1 wrong); the teacher picks the questions' },
@@ -2462,6 +2463,7 @@ function refreshFromSheet(force) {
 
 /* ---------- Hub ---------- */
 function openHub() {
+  try { pigeonResult(); } catch (e) {}
   trackTime(); stopArcade(); clearTimers();
   const p = P(); if (!p) return renderWho();
   ensureProfile(p);
@@ -2821,6 +2823,7 @@ function startGame(id) {
   if (id === 'race') return raceIntro();
   if (id === 'sprint') return sprintPicker();
   if (id === 'classroom') return classIntro();
+  if (id === 'pigeon') return pigeonLaunch();
   if (id === 'runner') return runnerPicker();
   if (id === 'memory') return memoryStart();
   if (id === 'boss') return bossIntro();
@@ -4462,6 +4465,34 @@ async function raceEnd() {
             ['Leader', leader ? `${leader.name} · ${leader.score}` : '—'], ['Results at', `${info.time || ''} · winner gets 🪙 ${fmt(info.prizeCoins || 0)}`]]
       .concat(res ? [] : [['Note', "Couldn't reach the class sheet. Your score will be sent when you're back online."]]),
     again: () => startGame('race') });
+}
+
+/* ---------- Banpo Pigeon (pigeon.html) ----------
+   A 3D flying game on its own page. Math Island hands it a "ticket" with questions at this student's level,
+   and when the student comes back it reads the result: 10 coins a snack, and every answer counts toward their skills. */
+function pigeonLaunch() {
+  const p = P(), qs = [];
+  for (let i = 0; i < 80; i++) { const q = classQuestion(); qs.push({ skill: q.skill, text: q.text, answer: q.answer }); }
+  try { localStorage.setItem('numberIsland.pigeonTicket', JSON.stringify({ pid: p.id, name: p.name, at: Date.now(), qs })); } catch (e) {}
+  $('#gameBody').innerHTML = `<div class="picker"><h3>🐦 Taking off…</h3><p class="note">Loading the city. This can take a few seconds.</p></div>`;
+  save(); setTimeout(() => { location.href = 'pigeon.html'; }, 300);
+}
+function pigeonResult() {
+  let r = null; try { r = JSON.parse(localStorage.getItem('numberIsland.pigeonResult') || 'null'); } catch (e) {}
+  if (!r) return;
+  const p = store.profiles[r.pid]; if (!p) return;
+  try { localStorage.removeItem('numberIsland.pigeonResult'); } catch (e) {}
+  if (p.pigeonDone === r.at) return; p.pigeonDone = r.at; // never count the same flight twice
+  const prev = store.current; store.current = r.pid;
+  session = { notes: [], badges: [], coins0: p.coins, xp0: p.xp, t0: Date.now(), game: 'pigeon' };
+  (r.log || []).forEach(x => { record(x.skill, !!x.ok); noteFact({ skill: x.skill, text: x.text, answer: x.answer }, x.skill, !!x.ok); });
+  const coins = (r.right || 0) * 8; if (coins) reward(coins, coins); // + 2 a right answer from record() = 10 a snack
+  const stars = r.right >= 10 ? 3 : r.right >= 5 ? 2 : 1;
+  const g = gameStats('pigeon'); g.best = Math.max(g.best || 0, r.right || 0); g.stars = Math.max(g.stars || 0, stars);
+  checkBadges({ finished: true, stars });
+  logActivity('Banpo Pigeon', `${r.right || 0} snacks · ${r.right || 0} of ${(r.log || []).length} right`, stars, 'mult');
+  store.current = prev || r.pid; save(); scheduleSync(1500);
+  toast(`🐦 Welcome back! ${r.right || 0} snack${r.right === 1 ? '' : 's'} = 🪙 ${(r.right || 0) * 10} coins`, true);
 }
 
 /* ---------- Don't Get Caught! (classroom) ----------

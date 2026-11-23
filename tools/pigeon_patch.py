@@ -1,6 +1,6 @@
 """Builds pigeon.html (Banpo Pigeon, with Math Island questions) from source/banpo-pigeon-original.html.
 Usage: python3 tools/pigeon_patch.py source/banpo-pigeon-original.html pigeon.html
-Adds: a pause switch in the game loop, a math question on every snack (right = +2 min, wrong/slow = it flies away,
+Adds: a pause switch in the game loop, a math question on every snack (right = 5–60 s more, wrong/slow = it flies away,
 15 s each), a 3-minute flight clock, and the link to Math Island (ticket in, result out via localStorage)."""
 import sys
 src, out = sys.argv[1], sys.argv[2]
@@ -14,10 +14,10 @@ rep("if(Si&&!Fs)__(t,e);else{","if(window.__paused);else if(Si&&!Fs)__(t,e);else
 # fewer, more spread-out snacks: skip any snack within 80 m of one already placed (the game used 6 m)
 rep("p.some(R=>Math.hypot(R.x-y[0],R.z-y[1])<6)","p.some(R=>Math.hypot(R.x-y[0],R.z-y[1])<80)")
 old='if(M<2.2&&Math.abs(b.y-F.y)<2.2){b.got=!0,Fl++;for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);xf(),'
-rep(old,'if(M<2.2&&Math.abs(b.y-F.y)<2.2&&window.__snackQ){b.got=!0;window.__snackQ(b,function(ok){for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);if(ok){Fl++;xf();xn(["Ramyeon!","Coffee!","Bread!"][b.t]+" +2 minutes!")}else xn("The snack flew away! Find food somewhere else.")});continue}'+old)
-rep("fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n", "fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b> of flying! Wrong answer, and the snack flies away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>\n")
+rep(old,'if(M<2.2&&Math.abs(b.y-F.y)<2.2&&window.__snackQ){b.got=!0;window.__snackQ(b,function(ok){for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);if(ok){Fl++;xf();xn(["Ramyeon!","Coffee!","Bread!"][b.t]+" Yum!")}else xn("The snack flew away! Find food somewhere else.")});continue}'+old)
+rep("fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n", "fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>extra flying time</b> (a surprise: 5 seconds to 1 minute)! Wrong answer, and the snack flies away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>\n")
 rep("explore the real streets of Banpo, Nonhyeon and Gangnam on foot. Collect 🍜 ☕ 🥐 outside real shops.</p>",
-    "explore the real streets of Banpo, Nonhyeon and Gangnam on foot. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b>! Wrong answer, and the snack runs away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>")
+    "explore the real streets of Banpo, Nonhyeon and Gangnam on foot. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>extra time</b> (a surprise: 5 seconds to 1 minute)! Wrong answer, and the snack runs away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>")
 css = """
   /* ---- Math Island additions ---- */
   .mathnote { background: #FFF5C2; border-radius: 12px; padding: 8px 10px; }
@@ -25,7 +25,7 @@ css = """
   body.playing #miClock { display: block; }
   #miClock.low { background: #FFE3E3; color: #B3261E; animation: miPulse .6s ease-in-out infinite alternate; }
   @keyframes miPulse { to { transform: translateX(-50%) scale(1.08); } }
-  #miClock.plus::after { content: ' +2:00'; color: #1E8A4C; }
+  #miClock.plus::after { content: ' ' attr(data-plus); color: #1E8A4C; }
   #miBack { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 40; border: 0; border-radius: 999px; padding: 6px 14px; font: 700 14px system-ui, sans-serif; background: rgba(255,255,255,.92); color: #1E2A33; border: 3px solid #1E2A33; }
   #miBack:not(.end) { top: 12px; left: 12px; transform: none; }
   #miBack.end { background: #E8463C; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer; }
@@ -67,9 +67,9 @@ html = html.replace('${PAD}', pad)
 js = r"""
 <script>
 /* Math Island link: Math Island writes a "ticket" (student, questions at their level) before opening this page,
-   and reads the "result" when they come back. Snacks ask a question: right = +2 minutes, wrong or too slow = it flies away. */
+   and reads the "result" when they come back. Snacks ask a question: right = 5–60 s more, wrong or too slow = it flies away. */
 (function () {
-  const START_SECS = 180, BONUS_SECS = 120, Q_SECS = 15;
+  const START_SECS = 180, BONUS_MIN = 5, BONUS_MAX = 60, Q_SECS = 15; // each right answer adds a random 5–60 seconds
   const $ = id => document.getElementById(id);
   let ticket = null;
   try { ticket = JSON.parse(localStorage.getItem('numberIsland.pigeonTicket') || 'null'); } catch (e) {}
@@ -134,7 +134,12 @@ js = r"""
     const ok = !slow && c.val !== '' && Number(c.val) === c.q.answer;
     log.push({ skill: c.q.skill, text: c.q.text, answer: c.q.answer, ok, slow: !!slow });
     const fb = $('miFb');
-    if (ok) { left += BONUS_SECS; fb.textContent = '✅ Yes! +2 minutes!'; fb.className = 'miFb good'; $('miClock').classList.add('plus'); setTimeout(() => $('miClock').classList.remove('plus'), 1800); }
+    if (ok) {
+      const add = BONUS_MIN + Math.floor(Math.random() * (BONUS_MAX - BONUS_MIN + 1)); left += add;
+      const txt = add >= 60 ? '1 minute' : add + ' seconds';
+      fb.textContent = `✅ Yes! +${txt}${add >= 50 ? ' 🎉' : add <= 10 ? ' (a small snack!)' : ''}`; fb.className = 'miFb good';
+      $('miClock').dataset.plus = add >= 60 ? '+1:00' : `+0:${String(add).padStart(2, '0')}`; $('miClock').classList.add('plus'); setTimeout(() => $('miClock').classList.remove('plus'), 1800);
+    }
     else { fb.textContent = (slow ? '⏰ Too slow! ' : '❌ Not quite! ') + `${c.q.text} = ${fmt(c.q.answer)}`; fb.className = 'miFb bad'; }
     saveResult();
     setTimeout(() => { $('miQ').classList.remove('show'); current = null; if (!over) { window.__paused = false; last = performance.now(); } c.done(ok); }, ok ? 900 : 1700);

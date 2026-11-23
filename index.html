@@ -1036,7 +1036,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202611230844';
+const BUILD_ID = '202611230909';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -2308,7 +2308,9 @@ $('#signIn').addEventListener('submit', async e => {
     if (store.profiles[sheetKey(r.name)] && (store.profiles[sheetKey(r.name)].dataVersion || 1) < ver) delete store.profiles[sheetKey(r.name)]; // a new school year started
     const key = sheetKey(r.name), local = store.profiles[key];
     const coinAdjust = r.coinAdjust || 0;
-    if (r.profile && !(local && (local.updated || 0) > (r.profile.updated || 0))) {
+    // keep whichever copy has more progress (right answers only ever go up); if they're level, the newer one
+    const more = (a, b) => (a.totalCorrect || 0) - (b.totalCorrect || 0);
+    if (r.profile && !(local && (more(local, r.profile) > 0 || (more(local, r.profile) === 0 && (local.updated || 0) > (r.profile.updated || 0))))) {
       store.profiles[key] = Object.assign(r.profile, { id: key, pending: local ? local.pending || [] : [] });
     }
     if (store.profiles[key]) {
@@ -2407,6 +2409,13 @@ async function syncNow(id) {
     if (!r.ok && r.error === 'bad_code') { // the code was changed (on another tablet, or by the teacher): sign in again
       p.code = null; p.needsSignIn = true; save();
       if (store.current === id) { store.current = null; save(); renderWho(); toast(`Your secret code changed. Please sign in again with your new code.`, true); }
+      return;
+    }
+    if (r.ok && r.kept && r.profile) { // the sheet has more progress than this tablet (e.g. a new tablet): use the sheet's copy
+      const keep = { id, code: p.code, sheetName: p.sheetName };
+      store.profiles[id] = Object.assign(r.profile, keep, { pending: [] });
+      ensureProfile(store.profiles[id]); save();
+      if (store.current === id) { setSyncStatus('ok'); if (currentScreen === 'hub') openHub(); toast('✅ Loaded your saved progress from the class sheet!', true); }
       return;
     }
     if (r.ok && r.stale) { // the teacher started a new school year

@@ -143,6 +143,14 @@ function doPost(e) {
         return out_({ ok: true, stale: true, settings: st, games: readGames_(ss) }); // saved before a new school year began
       }
       if (req.boss && req.boss.week && req.boss.hits > 0) addBossHits_(ss, req.boss.week, who, req.boss.hits);
+      // Never let a blank or older profile (a new tablet, or "play on this tablet for now") replace more progress:
+      // right answers and coins earned only ever go up, so a save with less of both is sent the sheet's copy instead.
+      var stored = req.profile ? loadSave_(ss, who) : null;
+      if (stored && (Number(stored.dataVersion) || 1) >= (Number(req.profile.dataVersion) || 1) &&
+          (Number(req.profile.totalCorrect) || 0) < (Number(stored.totalCorrect) || 0) && (Number(req.profile.coinsEarned) || 0) < (Number(stored.coinsEarned) || 0)) {
+        if (req.activity && req.activity.length) writeActivity_(ss, who, req.activity);
+        return out_({ ok: true, kept: true, profile: stored, games: readGames_(ss), settings: readSettings_(ss) });
+      }
       if (req.profile) writeSave_(ss, who, req.profile);
       if (req.summary) { writeSummary_(ss, who, req.summary); buildNeedsHelp_(ss); }
       if (req.activity && req.activity.length) writeActivity_(ss, who, req.activity);
@@ -200,6 +208,11 @@ function writeSave_(ss, who, profile) {
   var sh = ss.getSheetByName(TABS.data);
   var r = rowFor_(sh, who);
   if (r < 0) r = sh.getLastRow() + 1;
+  else { // keep the previous save in column D, just in case
+    var prev = sh.getRange(r, 3).getValue();
+    if (prev) sh.getRange(r, 4).setValue(prev);
+    if (!sh.getRange(1, 4).getValue()) sh.getRange(1, 4).setValue('Previous save (automatic backup)').setFontWeight('bold');
+  }
   sh.getRange(r, 1, 1, 3).setValues([[who, new Date(), JSON.stringify(profile)]]);
 }
 

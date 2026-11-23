@@ -22,11 +22,68 @@ BRIDGE = HexColor('#A9855F')
 TOWER = HexColor('#5B6B7A')
 SOFT = HexColor('#5A6772')
 RIVER_ROWS = (9, 10, 11)           # rows counted from the top (0 = top edge road)
+CITY_W, CITY_H = 60, 42
+TOWER_C = (30, 20)               # Start Tower centre (B2), inside the roundabout
+MAIN, SMALL = 1.25, .9           # road widths in squares
+ROADS = [  # (width, points) — smooth curves through these points
+    (MAIN, [(.6, .6), (59.4, .6), (59.4, 41.4), (.6, 41.4), (.6, .6)], 'straight'),          # ring road around the city
+    (MAIN, [(.6, 5), (9, 7), (17, 11.5), (26.6, 17.7)]),                                         # NW boulevard to the roundabout
+    (MAIN, [(33.9, 21.3), (42, 24), (50, 27.5), (59.4, 29)]),                                  # ...and on to the east
+    (MAIN, [(30, .6), (31.5, 7), (29.5, 12), (30, 16)]),                                     # north avenue
+    (MAIN, [(30.3, 24.1), (32, 30), (33, 36), (35, 41.4)]),                                    # south avenue + bridge
+    (MAIN, [(.6, 31.5), (12, 30.5), (24, 32.5), (36, 31), (48, 32.8), (59.4, 31.5)]),          # riverside road
+    (SMALL, [(17, .6), (16, 6), (12.5, 13), (12, 21), (16, 27), (19, 31)]),                   # winding west street
+    (SMALL, [(12, 21), (5, 23.5), (.6, 22)]),
+    (SMALL, [(47, .6), (44, 8), (46.5, 15), (54, 18), (59.4, 17)]),                           # winding east street
+    (SMALL, [(44, 8), (37, 9.5), (31, 9)]),
+    (SMALL, [(46.5, 15), (42, 24)]),
+    (SMALL, [(22, 33), (20.5, 37), (22, 41.4)]),                                               # bridge on the west
+    (SMALL, [(50, 27.5), (51, 32.8)]),
+    (SMALL, [(52, 33), (53, 37), (51, 41.4)]),                                                 # bridge on the east
+]
+RIVER = [(-2, 36.5), (10, 38.5), (21, 35.5), (33, 37.8), (45, 35.2), (62, 37.5)]
+RIVER_W, BANK_W = 3.2, 5.4
+ROUNDABOUT_R = 4.2
+
+def smooth_path(cv, pts):
+    """Catmull-Rom curve through pts, as Bezier curves."""
+    p = cv.beginPath(); p.moveTo(*pts[0])
+    for i in range(len(pts) - 1):
+        p0 = pts[i - 1] if i > 0 else pts[i]; p1 = pts[i]; p2 = pts[i + 1]; p3 = pts[i + 2] if i + 2 < len(pts) else pts[i + 1]
+        c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)
+        c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
+        p.curveTo(c1[0], c1[1], c2[0], c2[1], p2[0], p2[1])
+    return p
+
+def road_path(cv, pts, flags):
+    if 'straight' not in flags: return smooth_path(cv, pts)
+    p = cv.beginPath(); p.moveTo(*pts[0])
+    for q in pts[1:]: p.lineTo(*q)
+    return p
+
+def draw_city(cv, lines=True):
+    """Draws river, roads and roundabout in city units (current transform: 1 unit = 1 square, y down)."""
+    cv.setLineCap(1); cv.setLineJoin(1)
+    cv.setStrokeColor(PARK); cv.setLineWidth(BANK_W); cv.drawPath(smooth_path(cv, RIVER), stroke=1, fill=0)
+    cv.setStrokeColor(WATER); cv.setLineWidth(RIVER_W); cv.drawPath(smooth_path(cv, RIVER), stroke=1, fill=0)
+    circ = cv.beginPath(); circ.circle(*TOWER_C, ROUNDABOUT_R)
+    for col, extra in ((HexColor('#7E858C'), .14), (ROAD, 0)):     # dark curb first, then the road on top
+        cv.setStrokeColor(col)
+        for w, pts, *f in ROADS:
+            cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
+        cv.setLineWidth(MAIN + extra); cv.drawPath(circ, stroke=1, fill=0)
+    if lines:
+        cv.setStrokeColor(ROAD_LINE); cv.setLineWidth(.07); cv.setDash(.35, .3)
+        for w, pts, *f in ROADS:
+            if w == MAIN: cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
+        cv.drawPath(circ, stroke=1, fill=0); cv.setDash()
+    cv.setFillColor(HexColor('#BFE5B5')); cv.circle(*TOWER_C, ROUNDABOUT_R - MAIN / 2 - .07, stroke=0, fill=1)
+
 V_ROADS = (6, 13)                  # streets running up/down on every sheet (they line up from sheet to sheet)
 H_ROAD = 7                         # street running across on rows A and B
 H_ROAD_C = 8                       # on row C it runs along the river instead
 BANK_ROW = 12                      # row C: riverbank park between the river and the bottom edge road
-PARK = HexColor('#BFE5B5')
+PARK = HexColor('#BFE5B5')  # light green (riverbank)
 SHEETS = [r + c for r in 'ABC' for c in '123']   # A = top row of the city, C = bottom (river)
 
 
@@ -63,12 +120,18 @@ def mini_map(cv, x, y, size, here=None):
         cv.setFillColor(HexColor('#FFE08A') if name == here else white)
         cv.setStrokeColor(INK); cv.setLineWidth(1.2)
         cv.rect(bx, by, s, s, stroke=1, fill=1)
-        if name[0] == 'C':
-            cv.setFillColor(WATER); cv.rect(bx + 1, by + s * .18, s - 2, s * .22, stroke=0, fill=1)
-        if name == 'B2':
-            cv.setFillColor(TOWER); cv.rect(bx + s * .72, by + s * .1, s * .18, s * .18, stroke=0, fill=1)
-        cv.setFillColor(INK); cv.setFont('Helvetica-Bold', max(7, s * .28))
-        cv.drawCentredString(bx + s / 2, by + s * .55, name)
+    cv.saveState()
+    clip = cv.beginPath(); clip.rect(x, y, size, size); cv.clipPath(clip, stroke=0, fill=0)
+    cv.translate(x, y + size); cv.scale(size / CITY_W, -size / CITY_H)
+    draw_city(cv, lines=False)
+    cv.setFillColor(TOWER); cv.rect(TOWER_C[0] - 1, TOWER_C[1] - 1, 2, 2, stroke=0, fill=1)
+    cv.restoreState()
+    for i, name in enumerate(SHEETS):
+        r, c = i // 3, i % 3
+        bx, by = x + c * s, y + (2 - r) * s
+        cv.setStrokeColor(INK); cv.setLineWidth(1.2); cv.rect(bx, by, s, s, stroke=1, fill=0)
+        cv.setFillColor(INK); cv.setFont('Helvetica-Bold', max(7, s * .26))
+        cv.drawCentredString(bx + s / 2, by + s * .62, name)
 
 
 def grid_sheet(cv, name):
@@ -85,61 +148,19 @@ def grid_sheet(cv, name):
     cv.setFont('Helvetica', 8); cv.setFillColor(SOFT)
     cv.drawRightString(W - GX - 26 * mm, H - 26 * mm, 'Where your sheet goes:')
 
-    # river first (rows 9-11) on the bottom row of sheets
-    if row == 'C':
-        for r in RIVER_ROWS:
-            for c in range(COLS):
-                fill_cell(cv, c, r, WATER)
-        x0, y0 = cell(0, RIVER_ROWS[-1]); cv.setStrokeColor(WATER_D); cv.setLineWidth(1.5)
-        for k in range(1, 7):  # little waves
-            wy = y0 + k * (3 * SQ) / 7
-            for c in range(2, COLS - 2, 3):
-                wx = GX + c * SQ
-                p = cv.beginPath(); p.moveTo(wx, wy); p.curveTo(wx + SQ * .3, wy + 5, wx + SQ * .7, wy - 5, wx + SQ, wy); cv.drawPath(p, stroke=1, fill=0)
-    # edge roads on all four sides
-    for c in range(COLS):
-        fill_cell(cv, c, 0, ROAD); fill_cell(cv, c, ROWS - 1, ROAD)
-    for r in range(ROWS):
-        fill_cell(cv, 0, r, ROAD); fill_cell(cv, COLS - 1, r, ROAD)
-    # inner streets: same place on every sheet, so they continue onto the next sheet
-    hr = H_ROAD_C if row == 'C' else H_ROAD
-    for c in range(COLS):
-        fill_cell(cv, c, hr, ROAD)
-    last = hr if row == 'C' else ROWS - 1
-    for c in V_ROADS:
-        for r in range(0, last + 1):
-            fill_cell(cv, c, r, ROAD)
-    if row == 'C':
-        for c in range(1, COLS - 1):
-            fill_cell(cv, c, BANK_ROW, PARK)
-        x, y = cell(2, BANK_ROW); cv.setFillColor(HexColor('#2E7D32')); cv.setFont('Helvetica-Bold', 8)
-        cv.drawString(x, y + SQ / 2 - 3, 'RIVERBANK PARK (already done)')
-    if row == 'C':  # bridges where the side roads cross the river
-        for c in (0, COLS - 1):
-            for r in RIVER_ROWS:
-                fill_cell(cv, c, r, ROAD)
-            x, y = cell(c, RIVER_ROWS[-1]); cv.setFillColor(BRIDGE)
-            cv.rect(x - .5, y, 3, 3 * SQ, stroke=0, fill=1); cv.rect(x + SQ - 2.5, y, 3, 3 * SQ, stroke=0, fill=1)
-            cv.setFillColor(INK); cv.setFont('Helvetica-Bold', 8)
-            cv.saveState(); cv.translate(x + SQ / 2 + 3, y + 1.5 * SQ); cv.rotate(90); cv.drawCentredString(0, 0, 'BRIDGE'); cv.restoreState()
-    # dashed centre lines on the edge roads
-    cv.setStrokeColor(ROAD_LINE); cv.setLineWidth(2); cv.setDash(6, 5)
-    cv.line(GX, GY + (ROWS - .5) * SQ, GX + COLS * SQ, GY + (ROWS - .5) * SQ)
-    cv.line(GX, GY + .5 * SQ, GX + COLS * SQ, GY + .5 * SQ)
-    cv.line(GX + .5 * SQ, GY, GX + .5 * SQ, GY + ROWS * SQ)
-    cv.line(GX + (COLS - .5) * SQ, GY, GX + (COLS - .5) * SQ, GY + ROWS * SQ)
-    yh = GY + (ROWS - 1 - hr + .5) * SQ
-    cv.line(GX, yh, GX + COLS * SQ, yh)
-    for c in V_ROADS:
-        ybot = GY if row != 'C' else GY + (ROWS - 1 - hr) * SQ
-        cv.line(GX + (c + .5) * SQ, ybot, GX + (c + .5) * SQ, GY + ROWS * SQ)
-    cv.setDash()
+    # roads + river: one city map, cut into this sheet's piece
+    i, j = 'ABC'.index(row), int(name[1]) - 1
+    cv.saveState()
+    clip = cv.beginPath(); clip.rect(GX, GY, COLS * SQ, ROWS * SQ); cv.clipPath(clip, stroke=0, fill=0)
+    cv.translate(GX - j * COLS * SQ, GY + ROWS * SQ + i * ROWS * SQ); cv.scale(SQ, -SQ)
+    draw_city(cv)
+    cv.restoreState()
     # Start Tower on B2
     if name == 'B2':
         for c in (9, 10):
-            for r in (3, 4):
+            for r in (5, 6):
                 fill_cell(cv, c, r, TOWER)
-        x, y = cell(9, 4); cv.setStrokeColor(INK); cv.setLineWidth(2.5); cv.rect(x, y, 2 * SQ, 2 * SQ, stroke=1, fill=0)
+        x, y = cell(9, 6); cv.setStrokeColor(INK); cv.setLineWidth(2.5); cv.rect(x, y, 2 * SQ, 2 * SQ, stroke=1, fill=0)
         cv.setFillColor(white); cv.setFont('Helvetica-Bold', 11)
         cv.drawCentredString(x + SQ, y + SQ + 8, 'START'); cv.drawCentredString(x + SQ, y + SQ - 4, 'TOWER')
         cv.setFont('Helvetica-Bold', 9); cv.drawCentredString(x + SQ, y + SQ - 16, '40 floors')
@@ -153,7 +174,8 @@ def grid_sheet(cv, name):
     cv.setStrokeColor(INK); cv.setLineWidth(2.2); cv.rect(GX, GY, COLS * SQ, ROWS * SQ, stroke=1, fill=0)
     # labels on the edge roads, and square numbers outside the grid
     cv.setFillColor(SOFT); cv.setFont('Helvetica-Bold', 8)
-    cv.drawString(GX + 1.3 * SQ, GY + (ROWS - 1) * SQ + 6, 'ROADS ARE ALREADY DONE · design the blocks in between')
+    cv.setFillColor(white); cv.rect(GX + 2, GY + ROWS * SQ - 13, 250, 11, stroke=0, fill=1); cv.setFillColor(SOFT)
+    cv.drawString(GX + 5, GY + ROWS * SQ - 10, 'Roads and river are already drawn · design around them!')
     # footer
     cv.setFont('Helvetica', 8)
     cv.drawRightString(W - GX, 5 * mm, f'Sheet {name}  ·  Write your first name on the BACK of this sheet  ·  Mr. Romanek’s Grade 4 · Banpo Pigeon: Our City')
@@ -182,8 +204,8 @@ def instructions(cv):
     x1 = m; h1 = 112 * mm
     box(x1, top - h1, col_w, h1, '1. The puzzle')
     mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
-    lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Row C has the', 'river and bridges.', '', 'B2 has the', 'Start Tower.', 'The pigeon takes', 'off from its roof!'], 11, 15)
-    lines(x1 + 14, top - h1 + 34, ['All the ROADS are already printed. They join up', 'from sheet to sheet, so you design the blocks in between!'], 10.5, 14)
+    lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'A river winds', 'through row C.', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)
+    lines(x1 + 14, top - h1 + 34, ['The ROADS are already printed. They bend and curve and', 'join up from sheet to sheet. Design around them!'], 10.5, 14)
     # 2. size
     x2 = m + col_w + 10 * mm
     box(x2, top - h1, col_w, h1, '2. How big is a square?')
@@ -197,7 +219,7 @@ def instructions(cv):
     # 3. colours
     x3 = m + 2 * (col_w + 10 * mm)
     box(x3, top - h1, col_w, h1, '3. Colour key')
-    key = [(ROAD, ['Roads are already printed! You can add a small', 'extra road or path in grey if you want.']),
+    key = [(ROAD, ['Roads are already printed! Fit your buildings', 'around them. You can add a small path in grey.']),
            (HexColor('#7BC67E'), ['Park, grass, trees: green.', 'Draw small circles for trees.']),
            (WATER, ['Water: blue. Ponds, pools, fountains.']),
            (HexColor('#F28C6B'), ['Building: outline it in black along the lines,', 'then colour it ANY colour you like (red, orange,', 'yellow, pink, purple, brown). That is its 3D colour!']),
@@ -239,7 +261,7 @@ def instructions(cv):
     rules = ['• Use the grid lines: buildings are squares and', '   rectangles (no diagonal or round buildings).',
              '• Biggest building: 6 × 6 squares.',
              '• Every building must touch a road or a park,', '   so people (and pigeons!) can reach it.',
-             '• Don’t draw on the printed roads, the river,', '   the bridges or the riverbank park.',
+             '• Don’t draw on the printed roads, the river', '   or the riverbank. Half a square of road = road.',
              '• Leave some open space: parks and plazas', '   make the city fun to fly over.',
              '• Use made-up names for shops and places,', '   not real people’s names.',
              '• Write your first name on the BACK only.']

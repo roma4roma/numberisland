@@ -15,9 +15,9 @@ rep("if(Si&&!Fs)__(t,e);else{","if(window.__paused);else if(Si&&!Fs)__(t,e);else
 rep("p.some(R=>Math.hypot(R.x-y[0],R.z-y[1])<6)","p.some(R=>Math.hypot(R.x-y[0],R.z-y[1])<80)")
 old='if(M<2.2&&Math.abs(b.y-F.y)<2.2){b.got=!0,Fl++;for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);xf(),'
 rep(old,'if(M<2.2&&Math.abs(b.y-F.y)<2.2&&window.__snackQ){b.got=!0;window.__snackQ(b,function(ok){for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);if(ok){Fl++;xf();xn(["Ramyeon!","Coffee!","Bread!"][b.t]+" +2 minutes!")}else xn("The snack flew away! Find food somewhere else.")});continue}'+old)
-rep("fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n", "fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b> of flying! Wrong answer, and the snack flies away.</p>\n")
+rep("fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n", "fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b> of flying! Wrong answer, and the snack flies away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>\n")
 rep("explore the real streets of Banpo, Nonhyeon and Gangnam on foot. Collect 🍜 ☕ 🥐 outside real shops.</p>",
-    "explore the real streets of Banpo, Nonhyeon and Gangnam on foot. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b>! Wrong answer, and the snack runs away.</p>")
+    "explore the real streets of Banpo, Nonhyeon and Gangnam on foot. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b>! Wrong answer, and the snack runs away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>")
 css = """
   /* ---- Math Island additions ---- */
   .mathnote { background: #FFF5C2; border-radius: 12px; padding: 8px 10px; }
@@ -26,7 +26,9 @@ css = """
   #miClock.low { background: #FFE3E3; color: #B3261E; animation: miPulse .6s ease-in-out infinite alternate; }
   @keyframes miPulse { to { transform: translateX(-50%) scale(1.08); } }
   #miClock.plus::after { content: ' +2:00'; color: #1E8A4C; }
-  #miBack { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 40; border: 0; border-radius: 999px; padding: 6px 14px; font: 700 14px system-ui, sans-serif; background: rgba(255,255,255,.9); color: #1E2A33; box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer; }
+  #miBack { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 40; border: 0; border-radius: 999px; padding: 6px 14px; font: 700 14px system-ui, sans-serif; background: rgba(255,255,255,.92); color: #1E2A33; border: 3px solid #1E2A33; }
+  #miBack:not(.end) { top: 12px; left: 12px; transform: none; }
+  #miBack.end { background: #E8463C; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer; }
   #miQ, #miEnd, #miGate { position: fixed; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center; background: rgba(20,30,40,.55); touch-action: manipulation; }
   #miQ.show, #miEnd.show, #miGate.show { display: flex; }
   .miCard { background: #FFFBEF; border: 4px solid #1E2A33; border-radius: 22px; padding: 16px 18px; width: min(380px, 92vw); text-align: center; box-shadow: 0 8px 0 #1E2A33; font-family: system-ui, sans-serif; color: #1E2A33; }
@@ -48,7 +50,7 @@ css = """
 rep("</style>", css)
 html = """
 <div id="miClock">⏱ 3:00</div>
-<button id="miBack" type="button">🏝️ Back to Math Island</button>
+<button id="miBack" type="button">🛑 End game</button>
 <div id="miQ" role="dialog" aria-label="Math question"><div class="miCard">
   <h2 id="miQhead">🍜 Snack question!</h2>
   <div class="miBar"><i id="miQbar"></i></div>
@@ -92,6 +94,8 @@ js = r"""
     last = now;
     const s = Math.ceil(left); $('miClock').textContent = `⏱ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     $('miClock').classList.toggle('low', s <= 20 && !over);
+    const playing = document.body.classList.contains('playing'), bt = playing ? '🛑 End game' : '🏝️ Back to Math Island';
+    if ($('miBack').textContent !== bt) { $('miBack').textContent = bt; $('miBack').classList.toggle('end', playing); }
     requestAnimationFrame(clock);
   }
   requestAnimationFrame(clock);
@@ -100,11 +104,14 @@ js = r"""
     if (current) { clearInterval(current.timer); $('miQ').classList.remove('show'); }
     const r = saveResult();
     $('miEndHead').textContent = head;
-    $('miEndLines').innerHTML = `<div>🍜 Snacks eaten: <b>${r.snacks}</b></div><div>✅ Right answers: <b>${r.right}</b> of ${log.length}</div><div>🪙 Coins waiting on Math Island: <b>${fmt(r.right * 10)}</b></div>`;
+    $('miEndLines').innerHTML = `<div>🍜 Snacks eaten: <b>${r.snacks}</b></div><div>✅ Right answers: <b>${r.right}</b> of ${log.length}</div><div>🪙 Coins you earned: <b>${fmt(r.right * 10)}</b> <small>(10 for each snack)</small></div>`;
     $('miEnd').classList.add('show');
   }
   $('miHome').addEventListener('click', home);
-  $('miBack').addEventListener('click', () => { if (log.length && !over) finish('🐦 Landing early!'); else { saveResult(); home(); } });
+  $('miBack').addEventListener('click', () => {
+    if (over) return;
+    if (document.body.classList.contains('playing')) finish('🛑 Game over! Time to land.'); else { saveResult(); home(); }
+  });
   /* the game calls this when the pigeon reaches a snack */
   window.__snackQ = function (snack, done) {
     if (over) return done(false);

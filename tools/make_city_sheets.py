@@ -22,6 +22,11 @@ BRIDGE = HexColor('#A9855F')
 TOWER = HexColor('#5B6B7A')
 SOFT = HexColor('#5A6772')
 RIVER_ROWS = (9, 10, 11)           # rows counted from the top (0 = top edge road)
+V_ROADS = (6, 13)                  # streets running up/down on every sheet (they line up from sheet to sheet)
+H_ROAD = 7                         # street running across on rows A and B
+H_ROAD_C = 8                       # on row C it runs along the river instead
+BANK_ROW = 12                      # row C: riverbank park between the river and the bottom edge road
+PARK = HexColor('#BFE5B5')
 SHEETS = [r + c for r in 'ABC' for c in '123']   # A = top row of the city, C = bottom (river)
 
 
@@ -96,6 +101,19 @@ def grid_sheet(cv, name):
         fill_cell(cv, c, 0, ROAD); fill_cell(cv, c, ROWS - 1, ROAD)
     for r in range(ROWS):
         fill_cell(cv, 0, r, ROAD); fill_cell(cv, COLS - 1, r, ROAD)
+    # inner streets: same place on every sheet, so they continue onto the next sheet
+    hr = H_ROAD_C if row == 'C' else H_ROAD
+    for c in range(COLS):
+        fill_cell(cv, c, hr, ROAD)
+    last = hr if row == 'C' else ROWS - 1
+    for c in V_ROADS:
+        for r in range(0, last + 1):
+            fill_cell(cv, c, r, ROAD)
+    if row == 'C':
+        for c in range(1, COLS - 1):
+            fill_cell(cv, c, BANK_ROW, PARK)
+        x, y = cell(2, BANK_ROW); cv.setFillColor(HexColor('#2E7D32')); cv.setFont('Helvetica-Bold', 8)
+        cv.drawString(x, y + SQ / 2 - 3, 'RIVERBANK PARK (already done)')
     if row == 'C':  # bridges where the side roads cross the river
         for c in (0, COLS - 1):
             for r in RIVER_ROWS:
@@ -110,13 +128,18 @@ def grid_sheet(cv, name):
     cv.line(GX, GY + .5 * SQ, GX + COLS * SQ, GY + .5 * SQ)
     cv.line(GX + .5 * SQ, GY, GX + .5 * SQ, GY + ROWS * SQ)
     cv.line(GX + (COLS - .5) * SQ, GY, GX + (COLS - .5) * SQ, GY + ROWS * SQ)
+    yh = GY + (ROWS - 1 - hr + .5) * SQ
+    cv.line(GX, yh, GX + COLS * SQ, yh)
+    for c in V_ROADS:
+        ybot = GY if row != 'C' else GY + (ROWS - 1 - hr) * SQ
+        cv.line(GX + (c + .5) * SQ, ybot, GX + (c + .5) * SQ, GY + ROWS * SQ)
     cv.setDash()
     # Start Tower on B2
     if name == 'B2':
         for c in (9, 10):
-            for r in (6, 7):
+            for r in (3, 4):
                 fill_cell(cv, c, r, TOWER)
-        x, y = cell(9, 7); cv.setStrokeColor(INK); cv.setLineWidth(2.5); cv.rect(x, y, 2 * SQ, 2 * SQ, stroke=1, fill=0)
+        x, y = cell(9, 4); cv.setStrokeColor(INK); cv.setLineWidth(2.5); cv.rect(x, y, 2 * SQ, 2 * SQ, stroke=1, fill=0)
         cv.setFillColor(white); cv.setFont('Helvetica-Bold', 11)
         cv.drawCentredString(x + SQ, y + SQ + 8, 'START'); cv.drawCentredString(x + SQ, y + SQ - 4, 'TOWER')
         cv.setFont('Helvetica-Bold', 9); cv.drawCentredString(x + SQ, y + SQ - 16, '40 floors')
@@ -130,9 +153,7 @@ def grid_sheet(cv, name):
     cv.setStrokeColor(INK); cv.setLineWidth(2.2); cv.rect(GX, GY, COLS * SQ, ROWS * SQ, stroke=1, fill=0)
     # labels on the edge roads, and square numbers outside the grid
     cv.setFillColor(SOFT); cv.setFont('Helvetica-Bold', 8)
-    for txt, x, y in [('EDGE ROAD · already done, don’t draw here', GX + 3 * SQ, GY + (ROWS - 1) * SQ + 6),
-                      ('EDGE ROAD · join your roads to it', GX + 3 * SQ, GY + 6)]:
-        cv.drawString(x, y, txt)
+    cv.drawString(GX + 1.3 * SQ, GY + (ROWS - 1) * SQ + 6, 'ROADS ARE ALREADY DONE · design the blocks in between')
     # footer
     cv.setFont('Helvetica', 8)
     cv.drawRightString(W - GX, 5 * mm, f'Sheet {name}  ·  Write your first name on the BACK of this sheet  ·  Mr. Romanek’s Grade 4 · Banpo Pigeon: Our City')
@@ -162,7 +183,7 @@ def instructions(cv):
     box(x1, top - h1, col_w, h1, '1. The puzzle')
     mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
     lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Row C has the', 'river and bridges.', '', 'B2 has the', 'Start Tower.', 'The pigeon takes', 'off from its roof!'], 11, 15)
-    lines(x1 + 14, top - h1 + 34, ['Every sheet has an EDGE ROAD all around it,', 'so all the streets join up when we put them together.'], 10.5, 14)
+    lines(x1 + 14, top - h1 + 34, ['All the ROADS are already printed. They join up', 'from sheet to sheet, so you design the blocks in between!'], 10.5, 14)
     # 2. size
     x2 = m + col_w + 10 * mm
     box(x2, top - h1, col_w, h1, '2. How big is a square?')
@@ -176,7 +197,7 @@ def instructions(cv):
     # 3. colours
     x3 = m + 2 * (col_w + 10 * mm)
     box(x3, top - h1, col_w, h1, '3. Colour key')
-    key = [(ROAD, ['Road: grey pencil, at least 1 square wide.', 'Every road must join an edge road.']),
+    key = [(ROAD, ['Roads are already printed! You can add a small', 'extra road or path in grey if you want.']),
            (HexColor('#7BC67E'), ['Park, grass, trees: green.', 'Draw small circles for trees.']),
            (WATER, ['Water: blue. Ponds, pools, fountains.']),
            (HexColor('#F28C6B'), ['Building: outline it in black along the lines,', 'then colour it ANY colour you like (red, orange,', 'yellow, pink, purple, brown). That is its 3D colour!']),
@@ -218,7 +239,7 @@ def instructions(cv):
     rules = ['• Use the grid lines: buildings are squares and', '   rectangles (no diagonal or round buildings).',
              '• Biggest building: 6 × 6 squares.',
              '• Every building must touch a road or a park,', '   so people (and pigeons!) can reach it.',
-             '• Don’t draw on the grey EDGE ROADS,', '   the river or the bridges.',
+             '• Don’t draw on the printed roads, the river,', '   the bridges or the riverbank park.',
              '• Leave some open space: parks and plazas', '   make the city fun to fly over.',
              '• Use made-up names for shops and places,', '   not real people’s names.',
              '• Write your first name on the BACK only.']
@@ -226,7 +247,7 @@ def instructions(cv):
 
     box(x3, top2 - h2, col_w, h2, '6. Before you hand it in')
     checks = ['Every building has its number of floors', 'Every building touches a road or a park',
-              'My roads join the edge roads', 'Snack shops have a star and a name (max 4)',
+              'I didn’t draw on the printed roads', 'Snack shops have a star and a name (max 4)',
               'Nothing is taller than 39 floors', 'Only one building over 20 floors',
               'My first name is on the back']
     for i, t in enumerate(checks):

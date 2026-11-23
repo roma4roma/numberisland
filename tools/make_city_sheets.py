@@ -25,25 +25,26 @@ RIVER_ROWS = (9, 10, 11)           # rows counted from the top (0 = top edge roa
 CITY_W, CITY_H = 60, 42
 TOWER_C = (30, 20)               # Start Tower centre (B2), inside the roundabout
 MAIN, SMALL = 1.25, .9           # road widths in squares
-ROADS = [  # (width, points) — smooth curves through these points
+ROADS = [  # (width, points[, 'straight']) — smooth curves through these points
     (MAIN, [(.6, .6), (59.4, .6), (59.4, 41.4), (.6, 41.4), (.6, .6)], 'straight'),          # ring road around the city
-    (MAIN, [(.6, 5), (9, 7), (17, 11.5), (26.6, 17.7)]),                                         # NW boulevard to the roundabout
-    (MAIN, [(33.9, 21.3), (42, 24), (50, 27.5), (59.4, 29)]),                                  # ...and on to the east
-    (MAIN, [(30, .6), (31.5, 7), (29.5, 12), (30, 16)]),                                     # north avenue
-    (MAIN, [(30.3, 24.1), (32, 30), (33, 36), (35, 41.4)]),                                    # south avenue + bridge
-    (MAIN, [(.6, 31.5), (12, 30.5), (24, 32.5), (36, 31), (48, 32.8), (59.4, 31.5)]),          # riverside road
-    (SMALL, [(17, .6), (16, 6), (12.5, 13), (12, 21), (16, 27), (19, 31)]),                   # winding west street
+    (MAIN, [(.6, 5), (9, 7), (17, 11.5), (27.0, 18.0)]),                                       # NW boulevard to the roundabout
+    (MAIN, [(33.4, 21.1), (42, 24), (50, 27.5), (59.4, 29)]),                                  # ...and on to the east
+    (MAIN, [(30, .6), (31.5, 7), (29.5, 12), (30, 16.4)]),                                       # north avenue
+    (MAIN, [(30.3, 23.6), (32, 30), (29, 36), (31, 41.4)]),                                    # south avenue
+    (MAIN, [(.6, 30), (9, 28.5), (18, 32), (25, 30), (31.2, 28.5)]),                           # south-west road
+    (SMALL, [(17, .6), (16, 6), (12.5, 13), (12, 21), (15, 27), (18, 32)]),                   # winding west street
     (SMALL, [(12, 21), (5, 23.5), (.6, 22)]),
     (SMALL, [(47, .6), (44, 8), (46.5, 15), (54, 18), (59.4, 17)]),                           # winding east street
     (SMALL, [(44, 8), (37, 9.5), (31, 9)]),
     (SMALL, [(46.5, 15), (42, 24)]),
-    (SMALL, [(22, 33), (20.5, 37), (22, 41.4)]),                                               # bridge on the west
-    (SMALL, [(50, 27.5), (51, 32.8)]),
-    (SMALL, [(52, 33), (53, 37), (51, 41.4)]),                                                 # bridge on the east
+    (SMALL, [(30.5, 34), (38, 36.5), (45, 34), (50, 27.5)]),                                   # south-east curve
+    (SMALL, [(16, 6), (23, 5), (31.3, 5.5)]),                                                 # cross street to the north avenue
+    (SMALL, [(18, 32), (21, 41.4)]),
 ]
-RIVER = [(-2, 36.5), (10, 38.5), (21, 35.5), (33, 37.8), (45, 35.2), (62, 37.5)]
-RIVER_W, BANK_W = 3.2, 5.4
-ROUNDABOUT_R = 4.2
+PONDS = [(52, 8, 2.3, 1.6), (6, 17.5, 2.6, 1.9), (15, 37, 1.6, 1.2), (53, 35.5, 2.2, 1.6), (24, 37, 2, 1.4), (24.5, 10, 2.1, 1.5), (51, 22.5, 2, 1.4)]  # x, y, rx, ry
+STREAMS = [[(24.5, 10), (22.5, 11.8), (23.5, 13.4)], [(51, 22.5), (54, 24.5), (57.5, 23.8)], [(6, 17.5), (9, 19.8), (8.5, 24.5)]]
+STREAM_W = .75
+ROUNDABOUT_R = 3.6
 
 def smooth_path(cv, pts):
     """Catmull-Rom curve through pts, as Bezier curves."""
@@ -64,8 +65,11 @@ def road_path(cv, pts, flags):
 def draw_city(cv, lines=True):
     """Draws river, roads and roundabout in city units (current transform: 1 unit = 1 square, y down)."""
     cv.setLineCap(1); cv.setLineJoin(1)
-    cv.setStrokeColor(PARK); cv.setLineWidth(BANK_W); cv.drawPath(smooth_path(cv, RIVER), stroke=1, fill=0)
-    cv.setStrokeColor(WATER); cv.setLineWidth(RIVER_W); cv.drawPath(smooth_path(cv, RIVER), stroke=1, fill=0)
+    cv.setStrokeColor(WATER); cv.setLineWidth(STREAM_W)
+    for st in STREAMS: cv.drawPath(smooth_path(cv, st), stroke=1, fill=0)
+    for (px, py, rx, ry) in PONDS:
+        cv.setFillColor(PARK); cv.ellipse(px - rx - .7, py - ry - .7, px + rx + .7, py + ry + .7, stroke=0, fill=1)
+        cv.setFillColor(WATER); cv.setStrokeColor(WATER_D); cv.setLineWidth(.06); cv.ellipse(px - rx, py - ry, px + rx, py + ry, stroke=1, fill=1)
     circ = cv.beginPath(); circ.circle(*TOWER_C, ROUNDABOUT_R)
     for col, extra in ((HexColor('#7E858C'), .14), (ROAD, 0)):     # dark curb first, then the road on top
         cv.setStrokeColor(col)
@@ -174,8 +178,8 @@ def grid_sheet(cv, name):
     cv.setStrokeColor(INK); cv.setLineWidth(2.2); cv.rect(GX, GY, COLS * SQ, ROWS * SQ, stroke=1, fill=0)
     # labels on the edge roads, and square numbers outside the grid
     cv.setFillColor(SOFT); cv.setFont('Helvetica-Bold', 8)
-    cv.setFillColor(white); cv.rect(GX + 2, GY + ROWS * SQ - 13, 250, 11, stroke=0, fill=1); cv.setFillColor(SOFT)
-    cv.drawString(GX + 5, GY + ROWS * SQ - 10, 'Roads and river are already drawn · design around them!')
+    cv.setFillColor(white); cv.rect(GX + 2, GY + ROWS * SQ - 13, 300, 11, stroke=0, fill=1); cv.setFillColor(SOFT)
+    cv.drawString(GX + 5, GY + ROWS * SQ - 10, 'Roads, ponds and streams are already drawn · design around them!')
     # footer
     cv.setFont('Helvetica', 8)
     cv.drawRightString(W - GX, 5 * mm, f'Sheet {name}  ·  Write your first name on the BACK of this sheet  ·  Mr. Romanek’s Grade 4 · Banpo Pigeon: Our City')
@@ -204,7 +208,7 @@ def instructions(cv):
     x1 = m; h1 = 112 * mm
     box(x1, top - h1, col_w, h1, '1. The puzzle')
     mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
-    lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'A river winds', 'through row C.', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)
+    lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Look for ponds', 'and streams!', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)
     lines(x1 + 14, top - h1 + 34, ['The ROADS are already printed. They bend and curve and', 'join up from sheet to sheet. Design around them!'], 10.5, 14)
     # 2. size
     x2 = m + col_w + 10 * mm
@@ -221,7 +225,7 @@ def instructions(cv):
     box(x3, top - h1, col_w, h1, '3. Colour key')
     key = [(ROAD, ['Roads are already printed! Fit your buildings', 'around them. You can add a small path in grey.']),
            (HexColor('#7BC67E'), ['Park, grass, trees: green.', 'Draw small circles for trees.']),
-           (WATER, ['Water: blue. Ponds, pools, fountains.']),
+           (WATER, ['Water: blue. Some ponds and streams are printed;', 'you can add pools or fountains too.']),
            (HexColor('#F28C6B'), ['Building: outline it in black along the lines,', 'then colour it ANY colour you like (red, orange,', 'yellow, pink, purple, brown). That is its 3D colour!']),
            ('num', ['Write the number of FLOORS inside', 'every building, like this.']),
            ('star', ['Snack shop: draw a star and write its name,', 'like "Raccoon Cafe". Up to 4 per sheet.']),
@@ -261,7 +265,7 @@ def instructions(cv):
     rules = ['• Use the grid lines: buildings are squares and', '   rectangles (no diagonal or round buildings).',
              '• Biggest building: 6 × 6 squares.',
              '• Every building must touch a road or a park,', '   so people (and pigeons!) can reach it.',
-             '• Don’t draw on the printed roads, the river', '   or the riverbank. Half a square of road = road.',
+             '• Don’t draw on the printed roads, ponds or', '   streams. Half a square of road = road.',
              '• Leave some open space: parks and plazas', '   make the city fun to fly over.',
              '• Use made-up names for shops and places,', '   not real people’s names.',
              '• Write your first name on the BACK only.']

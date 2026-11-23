@@ -11,6 +11,8 @@ def rep(a,b):
     s=s.replace(a,b)
 # pause switch + snack hook inside the game's own code
 rep("if(Si&&!Fs)__(t,e);else{","if(window.__paused);else if(Si&&!Fs)__(t,e);else{")
+# fewer, more spread-out snacks: skip any snack within 80 m of one already placed (the game used 6 m)
+rep("p.some(R=>Math.hypot(R.x-y[0],R.z-y[1])<6)","p.some(R=>Math.hypot(R.x-y[0],R.z-y[1])<80)")
 old='if(M<2.2&&Math.abs(b.y-F.y)<2.2){b.got=!0,Fl++;for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);xf(),'
 rep(old,'if(M<2.2&&Math.abs(b.y-F.y)<2.2&&window.__snackQ){b.got=!0;window.__snackQ(b,function(ok){for(let x of oa[b.t])x.setMatrixAt(b.idx,c_);if(ok){Fl++;xf();xn(["Ramyeon!","Coffee!","Bread!"][b.t]+" +2 minutes!")}else xn("The snack flew away! Find food somewhere else.")});continue}'+old)
 rep("fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n", "fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.</p>\n    <p class=\"intro mathnote\">🧮 Every snack asks a math question. Right answer = <b>+2 minutes</b> of flying! Wrong answer, and the snack flies away.</p>\n")

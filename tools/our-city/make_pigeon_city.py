@@ -97,6 +97,14 @@ for it in C['items']:
     cc = (z + d / 2) if along_x else (x + w / 2); half = max(2, min(4, d / 2 - .5 if along_x else w / 2 - .5))
     SKYBRIDGES.append([left, cc - half, right, cc + half, lo, hi, '#9cc3dd'] if along_x else [cc - half, left, cc + half, right, lo, hi, '#9cc3dd'])
 print('sky bridges:', SKYBRIDGES)
+# living things: soccer players on every soccer field, pigeons in Pigeon Park, an elephant walking round each zoo
+CRITTERS = []
+for it in C['items']:
+    n = (it['n'] or '').lower()
+    if it['k'] == 'f': CRITTERS.append(['soccer', it['x'], it['z'], it['w'], it['d']])
+    elif it['k'] in ('p', 'g') and 'pigeon' in n: CRITTERS.append(['pigeons', it['x'], it['z'], it['w'], it['d']])
+    elif it['k'] in ('b', 's') and re.search(r'\bzoo\b', n): CRITTERS.append(['elephant', it['x'], it['z'], it['w'], it['d']])
+print('critters:', [c[0] for c in CRITTERS])
 
 buildings = [[128.0, 1, 5, 4, ccw(rect(TX - 9, TZ - 9, 18, 18)), '', 0x5b6b7a, 1, 0]]   # g=1: flat clean roof to start on   # index 0 = Start Tower (the nest)
 areas, trees, snacks, solids, deco = [], [], [], [], []
@@ -172,7 +180,7 @@ roads.append([C['mainw'], 1, ring, 'Roundabout', 0, 2])
 terrain = {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
 city = {'home': -1, 'bounds': [-40.0, -40.0, 640.0, 460.0], 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
-        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'solids': solids, 'deco': deco}
+        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
 
 # ---------- engine patches ----------
@@ -213,6 +221,55 @@ else if(k==='dock'){box(w,.6,d,'#8a5a3a',cx,.5,cz)}
 }
 for(const[x0,z0,x1,z1,lo,hi,c]of ie.skybridges||[]){const L=x1-x0+1.2,W=z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2,H=hi-lo;
 box(L,.5,W,'#e9ecef',cx,lo+.25,cz);box(L,.5,W,'#e9ecef',cx,hi-.25,cz);box(L,H-1,W-.3,c,cx,(lo+hi)/2,cz);for(let k=0;k<=Math.round(L/2.5);k++){const xx=x0-.6+k*L/Math.round(L/2.5);box(.25,H,W+.05,'#e9ecef',xx,(lo+hi)/2,cz)}}
+
+{const LIVE=[];const rnd=Math.random,clampv=(v,a,b)=>Math.max(a,Math.min(b,v));
+const part=(g,geo,c,x,y,z,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);g.add(m);return m};
+const pivot=(g,x,y,z)=>{const p=new T.Group();p.position.set(x,y,z);g.add(p);return p};
+function person(shirt){const g=new T.Group(),skin=['#f1c7a0','#d9a47a','#a86f4a','#f6d6b8'][Math.floor(rnd()*4)];
+const legs=[-1,1].map(s=>{const p=pivot(g,s*.13,.85,0);part(p,new T.Box(.16,.8,.18),'#22262b',0,-.4,0);part(p,new T.Box(.18,.12,.3),'#ffffff',0,-.82,.06);return p});
+part(g,new T.Box(.48,.62,.28),shirt,0,1.18,0);part(g,new T.Box(.5,.2,.3),'#22262b',0,.85,0);
+const arms=[-1,1].map(s=>{const p=pivot(g,s*.31,1.45,0);part(p,new T.Box(.13,.6,.14),shirt,0,-.28,0);part(p,new T.Sph(.08,8,6),skin,0,-.62,0);return p});
+part(g,new T.Sph(.2,12,10),skin,0,1.68,0);part(g,new T.Sph(.21,12,10),['#2b1d14','#111','#6b4426','#c9a15a'][Math.floor(rnd()*4)],0,1.74,-.04,1,.7,1);
+$t.add(g);return{g,legs,arms}}
+function soccer(x,z,w,d){const long=w>=d,L=(long?w:d)-6,Wd=(long?d:w)-6,cx=x+w/2,cz=z+d/2;
+const P=(u,v)=>long?[cx+u,cz+v]:[cx+v,cz+u];   // u = along the pitch, v = across
+const ball=new T.Mesh(new T.Sph(.22,12,10),mat('#ffffff'));$t.add(ball);const B={u:0,v:0,tu:0,tv:0,sp:0,h:0};
+const team=[['#e8463c',-1],['#2f6fdf',1]],pl=[];
+for(const[col,side]of team){for(let k=0;k<5;k++){const keeper=k===0;const home=keeper?[side*(L/2-1),0]:[side*(L*(.12+.22*(k%2))),(k<3?-1:1)*Wd*(.18+.12*(k>>1&1))];
+const p=person(keeper?'#ffd23c':col);p.side=side;p.keeper=keeper;p.home=home;p.u=home[0];p.v=home[1];p.ph=rnd()*6;p.cool=0;pl.push(p)}}
+const kick=p=>{const tu=-p.side*(L/2)*(.2+rnd()*.85),tv=(rnd()-.5)*Wd*.9;B.tu=clampv(tu,-L/2,L/2);B.tv=tv;B.sp=7+rnd()*7;p.cool=1.2};
+LIVE.push(dt=>{const du=B.tu-B.u,dv=B.tv-B.v,dd=Math.hypot(du,dv);if(dd>.05&&B.sp>0){const st=Math.min(dd,B.sp*dt);B.u+=du/dd*st;B.v+=dv/dd*st;B.sp=Math.max(1.5,B.sp-3*dt)}else B.sp=0;
+if(Math.abs(B.u)>L/2-.5){B.u=0;B.v=0;B.tu=0;B.tv=0}   // goal! back to the middle
+const[bx,bz]=P(B.u,B.v);ball.position.set(bx,.3,bz);ball.rotation.x+=B.sp*dt*2;
+for(const s of[-1,1]){let best=null,bd=1e9;for(const p of pl)if(p.side===s&&!p.keeper){const q=Math.hypot(p.u-B.u,p.v-B.v);q<bd&&(bd=q,best=p)}for(const p of pl)if(p.side===s)p.chase=p===best}
+for(const p of pl){p.cool-=dt;let tu,tv;if(p.keeper){tu=p.home[0];tv=clampv(B.v,-3,3)}else if(p.chase){tu=B.u;tv=B.v}else{tu=p.home[0]+B.u*.45;tv=p.home[1]+B.v*.3}
+const a=tu-p.u,b=tv-p.v,q=Math.hypot(a,b),spd=p.chase?5.5:3.2,mv=Math.min(q,spd*dt);if(q>.3){p.u+=a/q*mv;p.v+=b/q*mv}
+if(p.chase&&q<.7&&p.cool<=0)kick(p);
+const moving=q>.3;p.ph+=dt*(moving?(p.chase?11:8):0);const sw=moving?Math.sin(p.ph)*.7:0;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw*.8;p.arms[1].rotation.x=sw*.8;
+const[px,pz]=P(p.u,p.v);p.g.position.set(px,.08,pz);const[lx,lz]=P(p.keeper||!moving?B.u:tu,p.keeper||!moving?B.v:tv);p.g.rotation.y=Math.atan2(lx-px,lz-pz)}})}
+function pigeons(x,z,w,d){for(let k=0;k<12;k++){const g=new T.Group();
+part(g,new T.Sph(.13,10,8),'#8a96a8',0,.16,0,1,.85,1.5);const head=pivot(g,0,.27,.16);part(head,new T.Sph(.075,10,8),'#5d6a7e',0,0,0);part(head,new T.Sph(.07,8,6),'#5fb39a',0,-.06,-.02,1,1,.8);
+const bk=part(head,new T.Cone(.022,.08,6),'#f2b23c',0,0,.09);bk.rotation.x=Math.PI/2;part(head,new T.Sph(.018,6,5),'#ff7a3c',.05,.02,.04);part(head,new T.Sph(.018,6,5),'#ff7a3c',-.05,.02,.04);
+part(g,new T.Box(.12,.03,.18),'#5d6a7e',0,.17,-.2);for(const s of[-1,1])part(g,new T.Cyl(.012,.012,.1,5),'#e2725b',s*.05,.05,0);
+g.scale.setScalar(1.6);$t.add(g);const b={g,head,x:x+3+rnd()*(w-6),z:z+3+rnd()*(d-6),yaw:rnd()*6.3,t:rnd()*2,hop:0,fx:0,fz:0,peck:0};
+LIVE.push(dt=>{b.t-=dt;if(b.hop>0){b.hop=Math.max(0,b.hop-dt*2.6);b.x+=b.fx*dt*2.6;b.z+=b.fz*dt*2.6}else if(b.t<=0){const r=rnd();if(r<.55){b.yaw+=(rnd()-.5)*2.2;const st=.35+rnd()*.5;b.fx=Math.sin(b.yaw)*st;b.fz=Math.cos(b.yaw)*st;
+const nx=b.x+b.fx,nz=b.z+b.fz;if(nx<x+2||nx>x+w-2||nz<z+2||nz>z+d-2){b.yaw+=Math.PI;b.fx=-b.fx;b.fz=-b.fz}b.hop=1}else if(r<.85)b.peck=1;b.t=.35+rnd()*1.1}
+b.peck=Math.max(0,b.peck-dt*2.2);g.position.set(b.x,.08+Math.sin(b.hop*Math.PI)*.28,b.z);g.rotation.y=b.yaw;b.head.rotation.x=Math.sin(b.peck*Math.PI)*1.1})}}
+function elephant(x,z,w,d){const g=new T.Group(),C='#8f9196';
+part(g,new T.Sph(1,16,12),C,0,2,0,1.15,1.05,1.7);
+const legs=[[-.65,1.05],[.65,1.05],[-.65,-1.05],[.65,-1.05]].map(([lx,lz])=>{const p=pivot(g,lx,1.55,lz);part(p,new T.Cyl(.32,.36,1.55,10),C,0,-.78,0);part(p,new T.Cyl(.38,.38,.1,10),'#c9c4b8',0,-1.5,0);return p});
+const head=pivot(g,0,2.55,1.85);part(head,new T.Sph(.82,14,12),C,0,0,0);
+for(const s of[-1,1]){const e=part(head,new T.Sph(.75,12,10),'#a3a0a6',s*.75,.05,-.25,.15,1.05,.95);e.rotation.y=s*.35;part(head,new T.Sph(.1,8,6),'#1e2124',s*.42,.2,.62);
+const tk=part(head,new T.Cone(.09,.75,8),'#fffaf0',s*.32,-.5,.6);tk.rotation.x=Math.PI*.62}
+let seg=head;const trunk=[];for(let k=0;k<5;k++){const p=pivot(seg,0,k?-.42:-.35,k?0:.62);part(p,new T.Cyl(.22-k*.03,.25-k*.03,.46,8),C,0,-.21,0);trunk.push(p);seg=p}
+const tail=pivot(g,0,2.3,-1.65);part(tail,new T.Cyl(.04,.04,.8,5),C,0,-.4,0);
+g.scale.setScalar(1.25);$t.add(g);(window.__elephants=window.__elephants||[]).push(g);const o=3.3,X0=x-o,X1=x+w+o,Z0=z-o,Z1=z+d+o,per=2*(X1-X0+Z1-Z0);let s=rnd()*per,ph=0;
+LIVE.push(dt=>{s=(s+dt*1.4)%per;ph+=dt*4.2;let q=s,px,pz,yaw;const a=X1-X0,b=Z1-Z0;
+if(q<a){px=X0+q;pz=Z0;yaw=Math.PI/2}else if((q-=a)<b){px=X1;pz=Z0+q;yaw=0}else if((q-=b)<a){px=X1-q;pz=Z1;yaw=-Math.PI/2}else{q-=a;px=X0;pz=Z1-q;yaw=Math.PI}
+let dy=yaw-g.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));g.rotation.y+=dy*Math.min(1,dt*3);g.position.set(px,0,pz);
+legs.forEach((l,k)=>l.rotation.x=Math.sin(ph+(k===0||k===3?0:Math.PI))*.35);trunk.forEach((t,k)=>{t.rotation.x=.12+Math.sin(ph*.5+k*.6)*.18;t.rotation.z=Math.sin(ph*.35+k)*.12});tail.rotation.z=Math.sin(ph*1.3)*.4;head.rotation.y=Math.sin(ph*.25)*.15})}
+for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'&&elephant(x,z,w,d);
+let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);
 for(const o of[-2.1,2.1]){const p=new T.Mesh(new T.Cyl(.12,.12,2.7,8),mat('#7a4f2c'));p.position.set(o,1.35,0);g.add(p)}
 box(4.8,1.5,.16,'#2f7d3a',0,2,0,g);box(5,.14,.3,'#7a4f2c',0,2.82,0,g);

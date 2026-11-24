@@ -74,6 +74,11 @@ def best_side(x, z, w, d):
         return road_dist(S[0] + S[2] * 5, S[1] + S[3] * 5) + (1000 if blocked else 0)
     return min(sides, key=score)
 signs, parksigns = [], []
+# sky bridges between buildings you can fly under: [x0, z0, x1, z1 (the open gap), bottom, top, colour]
+SKYBRIDGES = [
+    [59.4, 381, 70.6, 389, 12.8, 16.0, '#9cc3dd'],   # C1: 10-storey tower <-> Cake Cake
+    [79.4, 306, 90.6, 314, 9.6, 12.8, '#9cc3dd'],    # C1: GS25 <-> Car Car
+]
 
 buildings = [[128.0, 1, 5, 4, ccw(rect(TX - 9, TZ - 9, 18, 18)), '', 0x5b6b7a, 1, 0]]   # g=1: flat clean roof to start on   # index 0 = Start Tower (the nest)
 areas, trees, snacks, solids, deco = [], [], [], [], []
@@ -149,7 +154,7 @@ roads.append([C['mainw'], 1, ring, 'Roundabout', 0, 2])
 terrain = {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
 city = {'home': -1, 'bounds': [-40.0, -40.0, 640.0, 460.0], 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
-        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'solids': solids, 'deco': deco}
+        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
 
 # ---------- engine patches ----------
@@ -188,6 +193,8 @@ else if(k==='f'){const L=(a,b,X,Z)=>box(a,.06,b,'#ffffff',X,.13,Z);L(w-4,.5,cx,z
 else if(k==='g'){for(let q=0;q<w*d/6;q++){const fl=new T.Mesh(new T.Sph(.5,8,6),mat(c||'#e8463c'));fl.position.set(x+1+Wt(q+x)*(w-2),.4,z+1+Wt(q*7+z)*(d-2));$t.add(fl)}}
 else if(k==='dock'){box(w,.6,d,'#8a5a3a',cx,.5,cz)}
 }
+for(const[x0,z0,x1,z1,lo,hi,c]of ie.skybridges||[]){const L=x1-x0+1.2,W=z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2,H=hi-lo;
+box(L,.5,W,'#e9ecef',cx,lo+.25,cz);box(L,.5,W,'#e9ecef',cx,hi-.25,cz);box(L,H-1,W-.3,c,cx,(lo+hi)/2,cz);for(let k=0;k<=Math.round(L/2.5);k++){const xx=x0-.6+k*L/Math.round(L/2.5);box(.25,H,W+.05,'#e9ecef',xx,(lo+hi)/2,cz)}}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);
 for(const o of[-2.1,2.1]){const p=new T.Mesh(new T.Cyl(.12,.12,2.7,8),mat('#7a4f2c'));p.position.set(o,1.35,0);g.add(p)}
 box(4.8,1.5,.16,'#2f7d3a',0,2,0,g);box(5,.14,.3,'#7a4f2c',0,2.82,0,g);
@@ -210,6 +217,7 @@ for(let k=0;k<5;k++){let s0=t+.08+k*.07+Math.random()*.04,o=i.createOscillator()
 """
 rep('function d_(){', WET + 'function d_(){')
 rep('F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)', '(()=>{if(F.grounded){const w=isWet(F.x,F.z);w&&!F.wet&&(xn("\\u{1F4A6} Wet bird! \\u{1F4A6}"),splashSound());F.wet=w}else F.wet=!1})(),F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)')
+rep('bi=en.spaceAt;', 'bi=en.spaceAt;{const SB=ie.skybridges||[];if(SB.length){const old=bi;bi=(x,z,y)=>{for(const[x0,z0,x1,z1,lo,hi]of SB)if(x>x0&&x<x1&&z>z0&&z<z1)return y<(lo+hi)/2?{f:He(x,z),c:lo,name:null}:{f:hi,c:1e4,name:null};return old?old(x,z,y):null}}}')
 # words on the screens
 rep('<title>Banpo Pigeon · Seocho Person</title>', '<title>Our City · Pigeon</title>')
 rep('Building the neighbourhood…', 'Building Our City…')

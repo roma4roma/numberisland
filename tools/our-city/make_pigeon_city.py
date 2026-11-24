@@ -77,8 +77,26 @@ signs, parksigns = [], []
 # sky bridges between buildings you can fly under: [x0, z0, x1, z1 (the open gap), bottom, top, colour]
 SKYBRIDGES = [
     [59.4, 381, 70.6, 389, 12.8, 16.0, '#9cc3dd'],   # C1: 10-storey tower <-> Cake Cake
-    [79.4, 306, 90.6, 314, 9.6, 12.8, '#9cc3dd'],    # C1: GS25 <-> Car Car
 ]
+# ...plus every sky bridge the students drew ('bridge' items): span the gap between the two buildings at its ends
+for it in C['items']:
+    if it['k'] != 'bridge': continue
+    x, z, w, d, f = it['x'], it['z'], it['w'], it['d'], it['f']
+    lo, hi = (f - 1) * FLOOR, f * FLOOR
+    along_x = w >= d
+    c0, c1 = (x, x + w) if along_x else (z, z + d)
+    mid = (c0 + c1) / 2
+    ends = []
+    for o in C['items']:
+        if o['k'] not in ('b', 's') or o['s'] != it['s']: continue
+        a0, a1 = (o['x'] + .6, o['x'] + o['w'] - .6) if along_x else (o['z'] + .6, o['z'] + o['d'] - .6)
+        b0, b1 = (o['z'], o['z'] + o['d']) if along_x else (o['x'], o['x'] + o['w'])
+        q0, q1 = (z, z + d) if along_x else (x, x + w)
+        if a1 > c0 - 1 and a0 < c1 + 1 and b1 > q0 and b0 < q1: ends.append((a0, a1))
+    left = max([a1 for a0, a1 in ends if a1 <= mid] or [c0]); right = min([a0 for a0, a1 in ends if a0 >= mid] or [c1])
+    cc = (z + d / 2) if along_x else (x + w / 2); half = max(2, min(4, d / 2 - .5 if along_x else w / 2 - .5))
+    SKYBRIDGES.append([left, cc - half, right, cc + half, lo, hi, '#9cc3dd'] if along_x else [cc - half, left, cc + half, right, lo, hi, '#9cc3dd'])
+print('sky bridges:', SKYBRIDGES)
 
 buildings = [[128.0, 1, 5, 4, ccw(rect(TX - 9, TZ - 9, 18, 18)), '', 0x5b6b7a, 1, 0]]   # g=1: flat clean roof to start on   # index 0 = Start Tower (the nest)
 areas, trees, snacks, solids, deco = [], [], [], [], []

@@ -35,7 +35,47 @@ def snack_kind(n):
     return 'convenience'
 
 TX, TZ = C['tower']
-buildings = [[128.0, 0, 5, 4, ccw(rect(TX - 9, TZ - 9, 18, 18)), '', 0x5b6b7a, 0, 0]]   # index 0 = Start Tower (the nest)
+import re
+STYLES = [  # (pattern, background, text colour) -- first match wins
+    (r'bank|money', '#d4a017', '#1e2a33'),
+    (r'school|wca|kids', '#1f3a93', '#ffd23c'),
+    (r'station|train', '#0a7bd0', '#ffffff'),
+    (r'gs25', '#00a6d6', '#ffffff'),
+    (r'coffee|cafe|caf', '#6f4e37', '#fff3d6'),
+    (r'cake|bake|bread|pie|donut|mochi', '#ff8fb1', '#ffffff'),
+    (r'zoo|pet|cat shop', '#f39c12', '#1e2a33'),
+    (r'pizza|food|hot ?dog|kimchi|pasta|spicy|yum|fish|cheese|restaurant|court|burger', '#d63031', '#ffffff'),
+    (r'mart|market|store|shop', '#2e9e5b', '#ffffff'),
+    (r'car', '#4a5560', '#ffffff'),
+    (r'power|nuclear', '#ffd23c', '#1e2a33'),
+    (r'bathroom|toilet', '#e8f4ff', '#1f3a93'),
+]
+def sign_style(n):
+    for pat, bg, fg in STYLES:
+        if re.search(pat, n, re.I): return bg, fg
+    return '#ffffff', '#1e2a33'
+segs = []
+for r in C['roads']:
+    for a in range(1, len(r['pts'])): segs.append((r['pts'][a - 1], r['pts'][a], r['w'] / 2))
+def road_dist(x, z):
+    best = 1e9
+    for (ax, az), (bx, bz), hw in segs:
+        dx, dz = bx - ax, bz - az; L = dx * dx + dz * dz or 1
+        t = max(0, min(1, ((x - ax) * dx + (z - az) * dz) / L))
+        best = min(best, math.hypot(x - ax - dx * t, z - az - dz * t) - hw)
+    best = min(best, abs(math.hypot(x - TX, z - TZ) - C['rr']) - C['mainw'] / 2)
+    return best
+def best_side(x, z, w, d):
+    """side of the rect that faces the nearest road: (mid x, mid z, outward nx, nz, side length)"""
+    sides = [(x + w / 2, z, 0, -1, w), (x + w / 2, z + d, 0, 1, w), (x, z + d / 2, -1, 0, d), (x + w, z + d / 2, 1, 0, d)]
+    def score(S):
+        px, pz = S[0] + S[2] * 4, S[1] + S[3] * 4
+        blocked = any(it['k'] in ('b', 's') and it['x'] < px < it['x'] + it['w'] and it['z'] < pz < it['z'] + it['d'] for it in C['items'])
+        return road_dist(S[0] + S[2] * 5, S[1] + S[3] * 5) + (1000 if blocked else 0)
+    return min(sides, key=score)
+signs, parksigns = [], []
+
+buildings = [[128.0, 1, 5, 4, ccw(rect(TX - 9, TZ - 9, 18, 18)), '', 0x5b6b7a, 1, 0]]   # g=1: flat clean roof to start on   # index 0 = Start Tower (the nest)
 areas, trees, snacks, solids, deco = [], [], [], [], []
 
 for it in C['items']:
@@ -46,6 +86,11 @@ for it in C['items']:
         style = 2 if k == 's' else (3 if f <= 3 else 6)
         pitched = 1 if (k == 'b' and f <= 3 and not n) else 0
         buildings.append([round(h, 1), 0, 5, style, ccw(rect(x, z, w, d, .6)), n or '', hexcol(c), 1 if k == 's' else 0, pitched])
+        if n and n not in ('House', 'Apartment'):
+            mx, mz, nx, nz, L = best_side(x + .6, z + .6, w - 1.2, d - 1.2)
+            bg, fg = sign_style(n)
+            sw = round(max(2.5, min(L - .8, 9, 1.6 + .55 * len(n))), 1)
+            signs.append([round(mx + nx * .02, 2), round(mz + nz * .02, 2), round(math.atan2(nx, nz), 3), 0, sw, bg, fg, n, 'SH'])
         if k == 's':
             snacks.append([snack_kind(n), n or 'Shop', round(cx, 1), round(z + d + 3, 1)])
     elif k in ('p', 'g', 'f'):
@@ -54,6 +99,9 @@ for it in C['items']:
             for _ in range(max(1, round(w * d / (45 if k == 'p' else 120)))):
                 trees.append([round(x + 2 + random.random() * (w - 4), 1), round(z + 2 + random.random() * (d - 4), 1)])
         deco.append([k, x, z, w, d, c, n])
+        if n:
+            mx, mz, nx, nz, L = best_side(x, z, w, d)
+            parksigns.append([round(mx - nx * 1.5, 1), round(mz - nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
     elif k in ('raccoon', 'cat', 'L67', 'LOL'):
         deco.append([k, x, z, w, d, c, n])
         h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22}[k]
@@ -100,8 +148,8 @@ roads.append([C['mainw'], 1, ring, 'Roundabout', 0, 2])
 # street trees along the lanes (kept off buildings by the engine's own check when walking)
 terrain = {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
 city = {'home': -1, 'bounds': [-40.0, -40.0, 640.0, 460.0], 'buildings': buildings, 'roads': roads, 'areas': areas,
-        'rails': [], 'stations': [], 'snacks': snacks, 'signs': [], 'trees': trees, 'crosswalks': [], 'dong': [],
-        'billboards': [], 'terrain': terrain, 'solids': solids, 'deco': deco}
+        'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
+        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
 
 # ---------- engine patches ----------
@@ -139,7 +187,14 @@ else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff'
 else if(k==='f'){const L=(a,b,X,Z)=>box(a,.06,b,'#ffffff',X,.13,Z);L(w-4,.5,cx,z+2);L(w-4,.5,cx,z+d-2);L(.5,d-4,x+2,cz);L(.5,d-4,x+w-2,cz);w>d?L(.5,d-4,cx,cz):L(w-4,.5,cx,cz);const lg=w>d;[-1,1].forEach(s=>{const gx=lg?cx+s*(w/2-2.5):cx,gz=lg?cz:cz+s*(d/2-2.5);box(lg?.3:7,.3,lg?7:.3,'#ffffff',gx,2.4,gz);for(const o of[-3.4,3.4])box(.3,2.4,.3,'#ffffff',lg?gx:gx+o,1.2,lg?gz+o:gz)})}
 else if(k==='g'){for(let q=0;q<w*d/6;q++){const fl=new T.Mesh(new T.Sph(.5,8,6),mat(c||'#e8463c'));fl.position.set(x+1+Wt(q+x)*(w-2),.4,z+1+Wt(q*7+z)*(d-2));$t.add(fl)}}
 else if(k==='dock'){box(w,.6,d,'#8a5a3a',cx,.5,cz)}
-}}
+}
+for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);
+for(const o of[-2.1,2.1]){const p=new T.Mesh(new T.Cyl(.12,.12,2.7,8),mat('#7a4f2c'));p.position.set(o,1.35,0);g.add(p)}
+box(4.8,1.5,.16,'#2f7d3a',0,2,0,g);box(5,.14,.3,'#7a4f2c',0,2.82,0,g);
+const cv=document.createElement('canvas');cv.width=512;cv.height=160;const x2=cv.getContext('2d');x2.fillStyle='#2f7d3a';x2.fillRect(0,0,512,160);x2.strokeStyle='#ffe9a8';x2.lineWidth=8;x2.strokeRect(10,10,492,140);
+x2.fillStyle='#ffffff';x2.textAlign='center';x2.textBaseline='middle';let fs=86;x2.font='bold '+fs+'px sans-serif';while(x2.measureText(n).width>460&&fs>30){fs-=4;x2.font='bold '+fs+'px sans-serif'}x2.fillText(n,256,84);
+const tx=new Pe(cv);tx.colorSpace=me;const tm=new Be({map:tx});for(const s of[1,-1]){const pl=new T.Mesh(new Hn(4.6,1.4),tm);pl.position.set(0,2,s*.09);s<0&&(pl.rotation.y=Math.PI);g.add(pl)}}
+}
 '''
 rep('var ff=new Float32Array(fe*Ke);', STATUES + 'var ff=new Float32Array(fe*Ke);')
 

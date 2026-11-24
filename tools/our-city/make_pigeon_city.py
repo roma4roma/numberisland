@@ -86,13 +86,13 @@ for it in C['items']:
         style = 2 if k == 's' else (3 if f <= 3 else 6)
         pitched = 1 if (k == 'b' and f <= 3 and not n) else 0
         buildings.append([round(h, 1), 0, 5, style, ccw(rect(x, z, w, d, .6)), n or '', hexcol(c), 1 if k == 's' else 0, pitched])
+        mx, mz, nx, nz, L = best_side(x + .6, z + .6, w - 1.2, d - 1.2)   # the front door side (faces the nearest road)
         if n and n not in ('House', 'Apartment'):
-            mx, mz, nx, nz, L = best_side(x + .6, z + .6, w - 1.2, d - 1.2)
             bg, fg = sign_style(n)
             sw = round(max(2.5, min(L - .8, 9, 1.6 + .55 * len(n))), 1)
             signs.append([round(mx + nx * .02, 2), round(mz + nz * .02, 2), round(math.atan2(nx, nz), 3), 0, sw, bg, fg, n, 'SH'])
         if k == 's':
-            snacks.append([snack_kind(n), n or 'Shop', round(cx, 1), round(z + d + 3, 1)])
+            snacks.append([snack_kind(n), n or 'Shop', round(mx + nx * 2.5, 1), round(mz + nz * 2.5, 1)])   # by the entrance, under the sign
     elif k in ('p', 'g', 'f'):
         areas.append([2 if k == 'f' else 0, ccw(rect(x, z, w, d))])
         if k != 'f':

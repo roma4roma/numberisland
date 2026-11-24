@@ -203,6 +203,13 @@ rep('Math.atan2(-F.x,-F.z)', 'Math.atan2((Yt+gn)/2-F.x,(jt+bn)/2-F.z)', 2)
 rep('yaw:Math.PI*.75}', 'yaw:1.75}')
 # no low wall (parapet) around the roof edges, so you can see out when standing on a roof
 rep('H=!L&&p>6&&g<1?p>30?1.3:.9:0', 'H=0')
+# land in water -> "Wet bird!" + splash sound
+WET = r"""var WATER=ie.areas.filter(a=>a[0]===1).map(a=>a[1]);function isWet(x,z){for(const p of WATER){let c=!1;for(let a=0,b=p.length-2;a<p.length;b=a,a+=2){const xa=p[a],za=p[a+1],xb=p[b],zb=p[b+1];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}if(c)return!0}return!1}
+function splashSound(){let i=eh();if(!i||vr)return;let t=i.currentTime,n=Math.floor(i.sampleRate*.5),bf=i.createBuffer(1,n,i.sampleRate),d=bf.getChannelData(0);for(let k=0;k<n;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/n,2.5);let src=i.createBufferSource();src.buffer=bf;let f=i.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(2600,t);f.frequency.exponentialRampToValueAtTime(400,t+.45);let g=i.createGain();g.gain.setValueAtTime(.55,t);g.gain.exponentialRampToValueAtTime(.001,t+.5);src.connect(f);f.connect(g);g.connect(i.destination);src.start(t);
+for(let k=0;k<5;k++){let s0=t+.08+k*.07+Math.random()*.04,o=i.createOscillator(),gg=i.createGain(),f0=700+Math.random()*900;o.type="sine";o.frequency.setValueAtTime(f0,s0);o.frequency.exponentialRampToValueAtTime(f0*1.9,s0+.06);gg.gain.setValueAtTime(.12,s0);gg.gain.exponentialRampToValueAtTime(.001,s0+.08);o.connect(gg);gg.connect(i.destination);o.start(s0);o.stop(s0+.1)}}
+"""
+rep('function d_(){', WET + 'function d_(){')
+rep('F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)', '(()=>{if(F.grounded){const w=isWet(F.x,F.z);w&&!F.wet&&(xn("\\u{1F4A6} Wet bird! \\u{1F4A6}"),splashSound());F.wet=w}else F.wet=!1})(),F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)')
 # words on the screens
 rep('<title>Banpo Pigeon · Seocho Person</title>', '<title>Our City · Pigeon</title>')
 rep('Building the neighbourhood…', 'Building Our City…')

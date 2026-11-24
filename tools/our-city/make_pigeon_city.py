@@ -8,6 +8,7 @@ usage: python3 make_pigeon_city.py ORIGINAL.html city.json OUT.html
 import json, math, sys, random
 
 src, city_path, out = sys.argv[1:4]
+SNACK_SPACING = 30   # metres between snacks in the Math Island version (the original Banpo build used 80)
 s = open(src, encoding='utf-8').read()
 C = json.load(open(city_path))
 random.seed(67)
@@ -385,8 +386,16 @@ for(let k=0;k<5;k++){let s0=t+.08+k*.07+Math.random()*.04,o=i.createOscillator()
 rep('function d_(){', WET + 'function d_(){')
 rep('F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)', '(()=>{if(F.grounded){const w=isWet(F.x,F.z);w&&!F.wet&&(xn("\\u{1F4A6} Wet bird! \\u{1F4A6}"),splashSound());F.wet=w}else F.wet=!1})(),F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)')
 rep('bi=en.spaceAt;', 'bi=en.spaceAt;{const SB=ie.skybridges||[];if(SB.length){const old=bi;bi=(x,z,y)=>{for(const[x0,z0,x1,z1,lo,hi]of SB)if(x>x0&&x<x1&&z>z0&&z<z1)return y<(lo+hi)/2?{f:He(x,z),c:lo,name:null}:{f:hi,c:1e4,name:null};return old?old(x,z,y):null}}}')
+# ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
+rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
+rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')
+rep('aria-label="Banpo Pigeon logo"', 'aria-label="Pigeon Pigeon logo"')
+BEE = 'M0 0 h17 a14 14 0 0 1 3 27.5 a15.5 15.5 0 0 1 -3 32.5 h-17 z M9 9 v15 h7 a7.5 7.5 0 0 0 0 -15 z M9 33 v18 h8 a9 9 0 0 0 0 -18 z'
+PEE = 'M0 0 h16 a15 15 0 0 1 0 30 h-7 v30 h-9 z M9 9 v12 h7 a6 6 0 0 0 0 -12 z'
+rep(BEE, PEE, 2)
+if 'R.z-y[1])<80)' in s: rep('R.z-y[1])<80)', 'R.z-y[1])<SPACING)'.replace('SPACING', str(SNACK_SPACING)))   # Math Island build: spread the snacks out a bit
 # words on the screens
-rep('<title>Banpo Pigeon · Seocho Person</title>', '<title>Our City · Pigeon</title>')
+rep('<title>Banpo Pigeon · Seocho Person</title>', '<title>Pigeon Pigeon</title>')
 rep('Building the neighbourhood…', 'Building Our City…')
 rep('<div class="ko">Sinsa → Gangnam, Seoul</div>', '<div class="ko">Our City · designed by our class</div>', 2)
 rep('Take off from the roof of Urban Hive and fly over the real streets of Banpo, Nonhyeon and Gangnam. Collect 🍜 ☕ 🥐 outside real shops.',

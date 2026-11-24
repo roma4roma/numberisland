@@ -1036,7 +1036,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202611231945';
+const BUILD_ID = '202611241446';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -1359,7 +1359,7 @@ const GAMES = [
   { id: 'patterns',    name: 'Pattern Path',     icon: '🧩', blurb: 'Find the rule and the next number.', skill: 'patterns', bg: '#FFF0B8', practices: 'Topic 14: number patterns and rules', later: true },
   { id: 'angles',      name: 'Angle Arcade',     icon: '📐', blurb: 'Kinds of angles, protractors, missing angles.', skill: 'angles', bg: '#FFE1DB', practices: 'Topic 15: angles and angle measurement', later: true },
   { id: 'shapes',      name: 'Shape Safari',     icon: '🔷', blurb: 'Lines, triangles, quadrilaterals, symmetry.', skill: 'shapes', bg: '#CBE8FF', practices: 'Topic 16: lines, angles and shapes', later: true },
-  { id: 'pigeon', name: 'Banpo Pigeon', icon: '🐦', blurb: 'Fly over real Seoul streets! Every snack asks a math question: right = extra flying time.', skill: 'mult', bg: '#E0F0FF', feature: true, practices: 'Mixed questions (× ÷ + −) at each student\'s level, 15 seconds each. A 3D flying game on its own page.' },
+  { id: 'pigeon', name: 'Pigeon Pigeon', icon: '🐦', blurb: 'Fly over the city our class designed! Every snack asks a math question: right = extra flying time.', skill: 'mult', bg: '#E0F0FF', feature: true, practices: 'Mixed questions (× ÷ + −) at each student\'s level, 15 seconds each. A 3D flying game on its own page.' },
   { id: 'classroom', name: "Don't Get Caught!", icon: '👀', blurb: `Answer ${TEACHER}'s questions… and don't goof off when he turns around!`, skill: 'mult', bg: '#DFF4F6', feature: true, practices: 'Mixed questions (× ÷ + −). Three strikes for goofing off. Plays per day set on the Settings tab.' },
   { id: 'sprint',   name: 'Times Table Sprint', icon: '⏱️', blurb: 'Pick 1, 2 or 5 minutes and beat your own best!', skill: 'mult', bg: '#E3F2FF', feature: true, practices: 'Multiplication facts 0–12, timed. Students race their own best score (no leaderboard).' },
   { id: 'race',     name: 'Race Day',           icon: '🏁', blurb: 'A 2-minute race once a week. Best score of the day wins coins!', skill: null, bg: '#FFE1DB', special: true, practices: 'Weekly 2-minute facts race (+1 right, −1 wrong); the teacher picks the questions' },
@@ -4467,7 +4467,7 @@ async function raceEnd() {
     again: () => startGame('race') });
 }
 
-/* ---------- Banpo Pigeon (pigeon.html) ----------
+/* ---------- Pigeon Pigeon (pigeon.html: Banpo Pigeon engine + Our City) ----------
    A 3D flying game on its own page. Math Island hands it a "ticket" with questions at this student's level,
    and when the student comes back it reads the result: 10 coins a snack, and every answer counts toward their skills. */
 function pigeonLaunch() {
@@ -4490,7 +4490,7 @@ function pigeonResult() {
   const stars = r.right >= 10 ? 3 : r.right >= 5 ? 2 : 1;
   const g = gameStats('pigeon'); g.best = Math.max(g.best || 0, r.right || 0); g.stars = Math.max(g.stars || 0, stars);
   checkBadges({ finished: true, stars });
-  logActivity('Banpo Pigeon', `${r.right || 0} snacks · ${r.right || 0} of ${(r.log || []).length} right`, stars, 'mult');
+  logActivity('Pigeon Pigeon', `${r.right || 0} snacks · ${r.right || 0} of ${(r.log || []).length} right`, stars, 'mult');
   store.current = prev || r.pid; save(); scheduleSync(1500);
   toast(`🐦 Welcome back! ${r.right || 0} snack${r.right === 1 ? '' : 's'} = 🪙 ${(r.right || 0) * 10} coins`, true);
 }

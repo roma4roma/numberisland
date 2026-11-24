@@ -1,4 +1,4 @@
-"""Builds pigeon.html (Banpo Pigeon, with Math Island questions) from source/banpo-pigeon-original.html.
+"""Adds the Math Island questions to Banpo Pigeon (build.sh then swaps in Our City with tools/our-city/make_pigeon_city.py) from source/banpo-pigeon-original.html.
 Usage: python3 tools/pigeon_patch.py source/banpo-pigeon-original.html pigeon.html
 Adds: a pause switch in the game loop, a math question on every snack (right = 5–60 s more, wrong/slow = it flies away,
 15 s each), a 2-minute flight clock, and the link to Math Island (ticket in, result out via localStorage)."""
@@ -60,7 +60,7 @@ html = """
   <div class="miFb" id="miFb"></div>
 </div></div>
 <div id="miEnd"><div class="miCard"><h2 id="miEndHead">🐦 Time to land!</h2><div class="miLines" id="miEndLines"></div><button class="miBtn" id="miHome" type="button">🏝️ Back to Math Island</button></div></div>
-<div id="miGate"><div class="miCard"><h2>🐦 Banpo Pigeon</h2><p>Open Banpo Pigeon from the Math Island main screen to play.</p><button class="miBtn" id="miGateBtn" type="button">🏝️ Go to Math Island</button></div></div>
+<div id="miGate"><div class="miCard"><h2>🐦 Pigeon Pigeon</h2><p>Open Pigeon Pigeon from the Math Island main screen to play.</p><button class="miBtn" id="miGateBtn" type="button">🏝️ Go to Math Island</button></div></div>
 """
 pad = ''.join(f'<button type="button" data-k="{k}">{k}</button>' for k in [7,8,9,4,5,6,1,2,3]) + '<button type="button" class="del" data-k="del">⌫</button><button type="button" data-k="0">0</button><button type="button" class="ok" data-k="ok">✓</button>'
 html = html.replace('${PAD}', pad)

@@ -49,5 +49,5 @@ roads = [{'w': round(w * 10, 1), 'main': w == ns['MAIN'], 'pts': [[round(p[0] * 
 streams = [[[round(p[0] * 10, 1), round(p[1] * 10, 1)] for p in curve(s, n=24)] for s in ns['STREAMS']]
 ponds = [[px * 10, py * 10, rx * 10, ry * 10] for px, py, rx, ry in ns['PONDS']]
 json.dump({'items': out, 'roads': roads, 'streams': streams, 'ponds': ponds, 'tower': [ns['TOWER_C'][0] * 10, ns['TOWER_C'][1] * 10],
-           'rr': ns['ROUNDABOUT_R'] * 10, 'mainw': ns['MAIN'] * 10, 'done': list(SHEETS)}, open('/home/claude/work/mock3d/city.json', 'w'))
+           'rr': ns['ROUNDABOUT_R'] * 10, 'mainw': ns['MAIN'] * 10, 'done': list(SHEETS)}, open(__import__('os').path.join(__import__('os').path.dirname(__file__), 'city.json'), 'w'))
 print(len(out), 'items'); print('\n'.join(notes))

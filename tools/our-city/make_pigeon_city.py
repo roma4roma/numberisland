@@ -31,13 +31,24 @@ def hexcol(c, default=0xc9cdd2):
 def snack_kind(n):
     n = (n or '').lower()
     if any(k in n for k in ('coffee', 'cafe', 'caf', 'tea', 'juice', 'milk')): return 'cafe'
-    if any(k in n for k in ('bake', 'bread', 'cake', 'pie', 'donut', 'cookie', 'croissant', 'muffin', 'dessert', 'sweet', 'candy', 'ice')): return 'bakery'
+    if any(k in n for k in ('bake', 'bread', 'cake', 'pie', 'donut', 'cookie', 'croissant', 'muffin', 'dessert', 'sweet', 'candy', 'ice', 'baskin', 'baguette')): return 'bakery'
     return 'convenience'
 
 TX, TZ = C['tower']
 import re
 STYLES = [  # (pattern, background, text colour) -- first match wins
     (r'bank|money', '#d4a017', '#1e2a33'),
+    (r'airport', '#1f3a93', '#ffffff'),
+    (r'hospital', '#ffffff', '#e8282d'),
+    (r'hotel', '#3b3f6b', '#ffd98a'),
+    (r'movie|theat', '#1e1e2e', '#ffd23c'),
+    (r'barber', '#ffffff', '#d63031'),
+    (r'^cu$', '#7b4fc0', '#b8f070'),
+    (r'baskin', '#ff5ca8', '#ffffff'),
+    (r'7-eleven', '#ffffff', '#e8582c'),
+    (r'phone|tablet', '#2b2f36', '#7fd8ff'),
+    (r'decorat', '#f5a3d0', '#ffffff'),
+    (r'rent', '#4a5560', '#ffd23c'),
     (r'school|wca|kids', '#1f3a93', '#ffd23c'),
     (r'station|train', '#0a7bd0', '#ffffff'),
     (r'gs25', '#00a6d6', '#ffffff'),
@@ -105,6 +116,19 @@ for it in C['items']:
     elif it['k'] in ('p', 'g') and 'pigeon' in n: CRITTERS.append(['pigeons', it['x'], it['z'], it['w'], it['d']])
     elif it['k'] in ('b', 's') and re.search(r'\bzoo\b', n): CRITTERS.append(['elephant', it['x'], it['z'], it['w'], it['d']])
 print('critters:', [c[0] for c in CRITTERS])
+AIR = [it for it in C['items'] if 'airport' in (it['n'] or '').lower()]
+PLANES = []
+if AIR:
+    ax0 = min(i['x'] for i in AIR) + .6; ax1 = max(i['x'] + i['w'] for i in AIR) - .6
+    az0 = min(i['z'] for i in AIR) + .6; az1 = max(i['z'] + i['d'] for i in AIR) - .6
+    roof = max(i['f'] for i in AIR) * FLOOR
+    along_z = (az1 - az0) >= (ax1 - ax0)
+    # the narrowest part of the roof decides where the plane can sit
+    cx = (max(i['x'] for i in AIR) + min(i['x'] + i['w'] for i in AIR)) / 2 if along_z else (ax0 + ax1) / 2
+    cx = (min(i['x'] for i in AIR) + min(i['x'] + i['w'] for i in AIR)) / 2 if along_z else cx
+    cz = (az0 + az1) / 2
+    PLANES.append([round(cx, 1), round(cz, 1), roof, 1 if along_z else 0, round(ax0, 1), round(az0, 1), round(ax1, 1), round(az1, 1)])
+print('planes:', PLANES)
 
 buildings = [[128.0, 1, 5, 4, ccw(rect(TX - 9, TZ - 9, 18, 18)), '', 0x5b6b7a, 1, 0]]   # g=1: flat clean roof to start on   # index 0 = Start Tower (the nest)
 areas, trees, snacks, solids, deco = [], [], [], [], []
@@ -116,7 +140,8 @@ for it in C['items']:
         h = max(1, f) * FLOOR
         style = 2 if k == 's' else (3 if f <= 3 else 6)
         pitched = 1 if (k == 'b' and f <= 3 and not n) else 0
-        buildings.append([round(h, 1), 0, 5, style, ccw(rect(x, z, w, d, .6)), n or '', hexcol(c), 1 if k == 's' else 0, pitched])
+        clean = 1 if 'airport' in (n or '').lower() else 0   # g=1: no rooftop boxes (the plane needs a clear roof)
+        buildings.append([round(h, 1), clean, 5, style, ccw(rect(x, z, w, d, .6)), n or '', hexcol(c), 1 if (k == 's' or clean) else 0, pitched])
         mx, mz, nx, nz, L = best_side(x + .6, z + .6, w - 1.2, d - 1.2)   # the front door side (faces the nearest road)
         if n and n not in ('House', 'Apartment'):
             bg, fg = sign_style(n)
@@ -133,6 +158,18 @@ for it in C['items']:
         if n:
             mx, mz, nx, nz, L = best_side(x, z, w, d)
             parksigns.append([round(mx - nx * 1.5, 1), round(mz - nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
+    elif k in ('pool', 'waterpark'):
+        deco.append([k, x, z, w, d, c, n])
+        if k == 'pool': areas.append([1, ccw(rect(x, z, w, d, 2.2))])
+        else: areas.append([1, ccw(rect(x + 2, z + d * .48, w - 4, d * .52 - 2.2))])
+        if n:
+            mx, mz, nx, nz, L = best_side(x, z, w, d)
+            parksigns.append([round(mx - nx * 1.2, 1), round(mz - nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
+        if k == 'waterpark':   # the slide tower is solid (you can land on top)
+            solids.append([x + w * .3 - 3, z + 3, x + w * .3 + 3, z + 9, 13])
+    elif k == 'redpanda':
+        deco.append([k, x, z, w, d, c, n])
+        solids.append([x + 1.5, z + 1.5, x + w - 1.5, z + d - 1.5, min(w, d) / 11 * 10.5 + 1.4])
     elif k in ('raccoon', 'cat', 'L67', 'LOL'):
         deco.append([k, x, z, w, d, c, n])
         h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22}[k]
@@ -180,7 +217,7 @@ roads.append([C['mainw'], 1, ring, 'Roundabout', 0, 2])
 terrain = {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
 city = {'home': -1, 'bounds': [-40.0, -40.0, 640.0, 460.0], 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
-        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'solids': solids, 'deco': deco}
+        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'planes': PLANES, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
 
 # ---------- engine patches ----------
@@ -204,6 +241,15 @@ add(new T.Box(26,3,26),'#cfc8b8',0,1.5,0);add(new T.Sph(8,24,18),o.body,0,13,0,1
 [-1,1].forEach(s=>{if(o.mask)add(new T.Sph(2.6,16,12),'#1e2124',s*3,27,5.4,1.2,.8,.6);add(new T.Sph(1,12,10),o.mask?'#ffffff':'#9be36b',s*3,27.3,6.8);add(new T.Sph(.5,10,8),'#1e2124',s*3,27.3,7.7);const ear=add(new T.Cone(2.4,o.mask?4.5:6,o.mask?14:4),o.body,s*4.6,32.5,0);ear.rotation.z=-s*.35});
 for(let i=0;i<6;i++)add(new T.Sph(2.6-i*.15,14,10),o.stripes&&i%2?'#1e2124':o.body,4+i*1.6,6+i*2.6,-8-Math.sin(i*.6)*3);
 g.scale.setScalar(Math.max(.7,S));g.position.set(x+w/2,0,z+d/2);g.rotation.y=.7;$t.add(g)}
+function redpanda(x,z,w,d){const g=new T.Group(),R='#c1440e',K='#3a1d12',W='#fff4e6',L2='#e8a070';const lx=w<d,len=lx?d:w,wid=lx?w:d,S=Math.min(wid/11,len/21);
+const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
+add(new T.Box(10,1.4,20),'#cfc8b8',0,.7,0);add(new T.Sph(1,20,16),R,0,6.2,-1,3.2,2.6,5.2);add(new T.Sph(1,16,12),K,0,4.8,-1,2.6,1.4,4.4);
+[[-1.8,-4],[1.8,-4],[-1.8,2],[1.8,2]].forEach(([a,b])=>{add(new T.Cyl(.85,.75,4.2,10),K,a,3.5,b);add(new T.Sph(.95,10,8),K,a,1.6,b-.25,1,.6,1.3)});
+add(new T.Sph(2.6,20,16),R,0,8.3,-6.9,1.1,.95,1);add(new T.Sph(1.4,16,12),W,0,7.3,-8.9,1.35,.8,.9);add(new T.Sph(.45,10,8),K,0,7.7,-10.1);
+[-1,1].forEach(s=>{add(new T.Sph(.55,10,8),W,s*1.15,9.4,-8.8);add(new T.Sph(.38,10,8),K,s*1.05,8.7,-9.1);add(new T.Sph(.4,8,6),'#8a2c08',s*1.25,7.6,-8.8,.6,1.6,.5);
+const e=add(new T.Cone(1.15,1.9,12),R,s*1.9,10.6,-6.6);e.rotation.z=-s*.3;const ei=add(new T.Cone(.7,1.2,10),W,s*1.85,10.45,-7.05);ei.rotation.z=-s*.3});
+for(let i=0;i<8;i++){const t=i/7;add(new T.Sph(1.55-t*.45,14,10),i%2?L2:R,0,6.4+Math.sin(t*Math.PI*.85)*3.6,3.8+i*.9)}
+g.scale.setScalar(S);lx||(g.rotation.y=Math.PI/2);g.position.set(x+w/2,0,z+d/2);$t.add(g)}
 const shp=p=>{const s=new T.Shape();s.moveTo(...p[0]);p.slice(1).forEach(q=>s.lineTo(...q));return s};
 const ring=(cx,cy,r1,r2)=>{const s=new T.Shape();s.absarc(cx,cy,r2,0,Math.PI*2);const h=new T.Path();h.absarc(cx,cy,r1,0,Math.PI*2,!0);s.holes.push(h);return s};
 const SIX=[ring(4.5,5,2.2,4.5),shp([[.2,5],[2.4,5],[6,15],[3.6,15.6]])],SEVEN=shp([[0,13],[9,13],[9,11.4],[4.2,0],[1.6,0],[6.2,11],[0,11]]),ELL=shp([[0,0],[8,0],[8,2.6],[2.6,2.6],[2.6,14],[0,14]]),OH=ring(4.5,7,2.6,5.6);
@@ -213,6 +259,7 @@ const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0});
 else if(k==='cat')animal(x,z,w,d,{body:'#f2a65a',belly:'#fff1dc',nose:'#f27a8a',mask:!1,stripes:!1});
+else if(k==='redpanda')redpanda(x,z,w,d);
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
 else if(k==='f'){const L=(a,b,X,Z)=>box(a,.06,b,'#ffffff',X,.13,Z);L(w-4,.5,cx,z+2);L(w-4,.5,cx,z+d-2);L(.5,d-4,x+2,cz);L(.5,d-4,x+w-2,cz);w>d?L(.5,d-4,cx,cz):L(w-4,.5,cx,cz);const lg=w>d;[-1,1].forEach(s=>{const gx=lg?cx+s*(w/2-2.5):cx,gz=lg?cz:cz+s*(d/2-2.5);box(lg?.3:7,.3,lg?7:.3,'#ffffff',gx,2.4,gz);for(const o of[-3.4,3.4])box(.3,2.4,.3,'#ffffff',lg?gx:gx+o,1.2,lg?gz+o:gz)})}
@@ -268,6 +315,51 @@ LIVE.push(dt=>{s=(s+dt*1.4)%per;ph+=dt*4.2;let q=s,px,pz,yaw;const a=X1-X0,b=Z1-
 if(q<a){px=X0+q;pz=Z0;yaw=Math.PI/2}else if((q-=a)<b){px=X1;pz=Z0+q;yaw=0}else if((q-=b)<a){px=X1-q;pz=Z1;yaw=-Math.PI/2}else{q-=a;px=X0;pz=Z1-q;yaw=Math.PI}
 let dy=yaw-g.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));g.rotation.y+=dy*Math.min(1,dt*3);g.position.set(px,0,pz);
 legs.forEach((l,k)=>l.rotation.x=Math.sin(ph+(k===0||k===3?0:Math.PI))*.35);trunk.forEach((t,k)=>{t.rotation.x=.12+Math.sin(ph*.5+k*.6)*.18;t.rotation.z=Math.sin(ph*.35+k)*.12});tail.rotation.z=Math.sin(ph*1.3)*.4;head.rotation.y=Math.sin(ph*.25)*.15})}
+
+const WATER2=new T.Mat({color:new Pt('#3fd0e6')});
+function poolBase(x0,z0,x1,z1,deck){const w=x1-x0,d=z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2;box(w,.5,d,'#e9e4d6',cx,.25,cz);
+const wt=new T.Mesh(new Hn(w-2*deck,d-2*deck),WATER2);wt.rotation.x=-Math.PI/2;wt.position.set(cx,.52,cz);$t.add(wt);
+for(let k=1;k<Math.floor((w-2*deck)/2.5);k++)box(.12,.02,d-2*deck-1,'#ffffff',x0+deck+k*2.5,.54,cz)}
+function floats(x0,z0,x1,z1,n){for(let k=0;k<n;k++){const r=new T.Mesh(new Vo(.5,.2,8,16),mat(['#ff5a5a','#ffd23c','#5ac8ff','#7fe08a'][k%4]));r.rotation.x=Math.PI/2;$t.add(r);
+const ox=x0+1+rnd()*(x1-x0-2),oz=z0+1+rnd()*(z1-z0-2),ph=rnd()*6;let t=0;LIVE.push(dt=>{t+=dt;r.position.set(ox+Math.sin(t*.3+ph)*.8,.62+Math.sin(t*2+ph)*.06,oz+Math.cos(t*.25+ph)*.8)})}}
+function umbrella(x,z,c){const p=new T.Mesh(new T.Cyl(.06,.06,2.4,6),mat('#ffffff'));p.position.set(x,1.7,z);$t.add(p);const u=new T.Mesh(new T.Cone(1.4,.7,10),mat(c));u.position.set(x,3,z);$t.add(u);box(.7,.15,1.8,'#ffffff',x+1.1,.75,z)}
+function pool(x,z,w,d){poolBase(x,z,x+w,z+d,2.2);floats(x+2.2,z+2.2,x+w-2.2,z+d-2.2,Math.max(2,Math.round(w*d/120)));
+umbrella(x+1.1,z+1.1,'#ff5a5a');umbrella(x+w-1.1,z+d-1.1,'#ffd23c')}
+function slidePath(pts,c){for(let k=1;k<pts.length;k++){const a=pts[k-1],b=pts[k],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const g=new T.Group();g.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);g.lookAt(b[0],b[1],b[2]);
+const m=new T.Mesh(new T.Cyl(.75,.75,L+.15,12,1,!0,Math.PI*.15,Math.PI*1.7),mat(c));m.material.side=2;m.rotation.x=Math.PI/2;m.rotation.y=Math.PI;g.add(m);$t.add(g)}}
+function along(pts){const seg=[];let tot=0;for(let k=1;k<pts.length;k++){const a=pts[k-1],b=pts[k],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);seg.push([a,b,L,tot]);tot+=L}
+return[tot,s=>{for(const[a,b,L,o]of seg)if(s<=o+L){const t=(s-o)/L;return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}const e=pts[pts.length-1];return e}]}
+function waterpark(x,z,w,d){const py=z+d*.48;poolBase(x,py-2.2+2.2,x+w,z+d,2.2);box(w,.5,d*.48,'#e9e4d6',x+w/2,.25,z+d*.24);floats(x+2.2,py+2.2,x+w-2.2,z+d-2.2,5);
+const tx=x+w*.3,tz=z+6,H=12;for(const[a,b]of[[-2.6,-2.6],[2.6,-2.6],[-2.6,2.6],[2.6,2.6]])box(.5,H,.5,'#ff8a3c',tx+a,H/2,tz+b);box(6,.6,6,'#ffd23c',tx,H,tz);
+for(const[a,b,ww,dd]of[[0,-3,6,.15],[0,3,6,.15],[-3,0,.15,6]])box(ww,1.1,dd,'#ffffff',tx+a,H+.85,tz+b);const rf=new T.Mesh(new T.Cone(4.6,2.4,4),mat('#5ac8ff'));rf.rotation.y=Math.PI/4;rf.position.set(tx,H+4.6,tz);$t.add(rf);
+for(const[a,b]of[[-2.6,-2.6],[2.6,-2.6],[-2.6,2.6],[2.6,2.6]])box(.25,3.4,.25,'#ff8a3c',tx+a,H+1.7,tz+b);
+for(let k=0;k<9;k++)box(1.6,.25,1.1,'#ffffff',tx-3.6,1+k*1.25,tz+3.4-k*.75);
+const end=z+d-5;const A=[[tx+3.2,H+.4,tz]];for(let k=1;k<=22;k++){const a=k/22*Math.PI*3,r=5.2;A.push([tx+Math.cos(a)*r,H+.4-k*.42,tz+Math.sin(a)*r])}A.push([tx+5,2.8,py+1]);A.push([tx+4,1.2,Math.min(end,py+6)]);
+const B=[[tx,H+.4,tz+3.2]];for(let k=1;k<=12;k++){const t=k/12;B.push([tx-1.5+Math.sin(t*Math.PI*3)*2.6,H+.4-t*(H-1.6),tz+3.2+t*(py+3-tz-3.2)])}B.push([tx-2,1.2,Math.min(end,py+7)]);
+slidePath(A,'#ff4d4d');slidePath(B,'#ffd23c');
+for(const P of[A,B]){const[tot,at]=along(P);for(let q=0;q<2;q++){const rider=new T.Group();const ring=new T.Mesh(new Vo(.45,.2,8,14),mat(['#7fe08a','#5ac8ff','#ff8ad8'][Math.floor(rnd()*3)]));ring.rotation.x=Math.PI/2;rider.add(ring);
+const hd=new T.Mesh(new T.Sph(.25,10,8),mat('#f1c7a0'));hd.position.y=.45;rider.add(hd);$t.add(rider);let s=q*tot/2;LIVE.push(dt=>{s+=dt*(4+s*.35);if(s>tot+3)s=0;const p=at(Math.min(s,tot));rider.position.set(p[0],p[1]+.45+(s>tot?-.3:0),p[2]);rider.visible=s<tot+2.5})}}
+const bx=x+w*.78,bz=z+7;for(const[a,b]of[[-2,-2],[2,-2],[-2,2],[2,2]])box(.4,8,.4,'#5ac8ff',bx+a,4,bz+b);box(4.8,.4,4.8,'#5ac8ff',bx,8,bz);
+const bk=pivot($t,bx,9.6,bz);const bucket=new T.Mesh(new T.Cyl(1.5,1.1,2,14),mat('#ffd23c'));bucket.position.y=.6;bk.add(bucket);
+const fall=new T.Mesh(new T.Cyl(1.2,2,8,14),new T.Mat({color:new Pt('#9fe6ff'),transparent:!0,opacity:.6}));fall.position.set(bx+1.6,4.4,bz);fall.visible=!1;$t.add(fall);
+for(let k=0;k<6;k++){const j=new T.Mesh(new T.Sph(.25,8,6),new T.Mat({color:new Pt('#bff0ff'),transparent:!0,opacity:.8}));$t.add(j);const ox=x+3+rnd()*(w-6),oz=z+11+rnd()*(d*.48-13);let t=rnd()*3;LIVE.push(dt=>{t=(t+dt)%1.6;j.position.set(ox,.5+Math.sin(t/1.6*Math.PI)*3,oz)})}
+let bt=0;LIVE.push(dt=>{bt=(bt+dt)%9;const tip=bt>7?Math.sin((bt-7)/2*Math.PI)*2:0;bk.rotation.z=-tip;fall.visible=bt>7.4&&bt<8.6})}
+function plane(cx,cz,h,az,x0,z0,x1,z1){const g=new T.Group();const add=(geo,c,px,py,pz)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);g.add(m);return m};
+const len=az?z1-z0:x1-x0;box(az?6:len-6,.06,az?len-6:6,'#3a3f48',(x0+x1)/2,h+.03,(z0+z1)/2);for(let k=-len/2+6;k<len/2-6;k+=6)box(az?.4:3,.07,az?3:.4,'#ffffff',az?(x0+x1)/2:(x0+x1)/2+k,h+.04,az?(z0+z1)/2+k:(z0+z1)/2);
+const y=h+3.4;add(new T.Cyl(2,2,26,18),'#ffffff',0,y,0).rotation.x=Math.PI/2;const no=add(new T.Sph(2,18,14),'#ffffff',0,y,13);no.scale.set(1,1,1.7);
+const tc=add(new T.Cone(2,7,18),'#ffffff',0,y+.4,-16.4);tc.rotation.x=-Math.PI/2;add(new T.Box(4.06,.4,25),'#2f6fdf',0,y-.3,0);
+const wg=add(new T.Box(30,.45,5.5),'#dfe4ea',0,y-.9,1);for(const s of[-1,1]){const e=add(new T.Cyl(.9,.9,3.6,14),'#8a96a8',s*7,y-1.9,2.4);e.rotation.x=Math.PI/2;add(new T.Box(.3,.9,1.6),'#8a96a8',s*7,y-1.3,2.4)}
+add(new T.Box(.45,6,4.6),'#2f6fdf',0,y+4.6,-16.6);add(new T.Box(11,.3,3),'#dfe4ea',0,y+1,-17);
+for(let i=0;i<15;i++)for(const s of[-1,1])add(new T.Box(.1,.6,.6),'#1e2a33',s*1.98,y+.8,-9.5+i*1.4);add(new T.Box(2.4,.6,.5),'#1e2a33',0,y+1.2,14.2);
+for(const[a,b]of[[0,11],[-2.5,0],[2.5,0]]){add(new T.Cyl(.12,.12,1.6,6),'#555',a,h+1.2,b);const wh=add(new T.Cyl(.55,.55,.5,12),'#222',a,h+.55,b);wh.rotation.z=Math.PI/2}
+const cv=document.createElement('canvas');cv.width=512;cv.height=96;const c2=cv.getContext('2d');c2.fillStyle='#ffffff';c2.fillRect(0,0,512,96);c2.fillStyle='#1f3a93';c2.font='bold 60px sans-serif';c2.textAlign='center';c2.textBaseline='middle';c2.fillText('OUR CITY AIR',256,50);
+const tx2=new Pe(cv);tx2.colorSpace=me;const tm=new Be({map:tx2});for(const s of[-1,1]){const pl=new T.Mesh(new Hn(10,1.9),tm);pl.position.set(s*2.03,y+.75,-1);pl.rotation.y=s*Math.PI/2;g.add(pl)}
+g.position.set(cx,0,cz);az||(g.rotation.y=Math.PI/2);$t.add(g);
+const cl=(a,b,c,d,top)=>{a=Math.max(a,x0);b=Math.max(b,z0);c=Math.min(c,x1);d=Math.min(d,z1);if(a<c&&b<d)extra.push([a,b,c,d,top])};const extra=[];
+if(az){cl(cx-2.2,cz-20,cx+2.2,cz+16.5,y+2.1);cl(cx-15,cz-1.8,cx+15,cz+3.8,y-.6)}else{cl(cx-20,cz-2.2,cx+16.5,cz+2.2,y+2.1);cl(cx-1.8,cz-15,cx+3.8,cz+15,y-.6)}
+for(const[a,b,c,d,top]of extra){const i0=Math.max(0,Math.floor((a-Yt)/Zt)),i1=Math.min(fe-1,Math.floor((c-Yt)/Zt)),j0=Math.max(0,Math.floor((b-jt)/Zt)),j1=Math.min(Ke-1,Math.floor((d-jt)/Zt));for(let zz=j0;zz<=j1;zz++)for(let xx=i0;xx<=i1;xx++){const q=zz*fe+xx;$i[q]<top&&($i[q]=top)}}}
+for(const[k,x,z,w,d]of ie.deco||[])k==='pool'?pool(x,z,w,d):k==='waterpark'&&waterpark(x,z,w,d);
+for(const P of ie.planes||[])plane(...P);
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'&&elephant(x,z,w,d);
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);

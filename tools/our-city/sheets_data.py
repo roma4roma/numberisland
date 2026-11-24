@@ -1,23 +1,58 @@
 """Students' sheets, transcribed from the photos. Each item: kind, col, row, width, depth (sheet squares; col 0 = left,
 row 0 = top of the upright sheet), floors, colour, name.
 kind: b = building, s = snack shop (building with a star), p = park, f = soccer field, g = flower garden,
-      L67 / LOL / raccoon / cat = landmarks, dock = dock on a pond, bridge = sky bridge (between two buildings)."""
+      L67 / LOL / raccoon / cat / redpanda = landmarks, pool = swimming pool, waterpark = water park with slides, dock = dock on a pond, bridge = sky bridge (between two buildings)."""
 GREY = '#C9CDD2'
 SHEETS = {
- 'B3': [  # Mr. Romanek's example
-  ('raccoon', 1, 1, 3, 3, 0, None, 'Giant Raccoon'),
-  ('s', 10, 1, 1, 1, 2, '#F6A04D', 'Yum Yum'),
-  ('p', 12, 0.3, 3, 3.6, 0, None, ''),
-  ('b', 16, 1, 2, 2.8, 11, '#B7A3E0', ''),
-  ('s', 6, 3, 4, 3, 13, '#F7A8C4', 'Roma Cafe'), ('b', 5, 4, 1, 2, 13, '#F7A8C4', ''),
-  ('b', 1, 5, 2, 2, 18, '#7FB0E0', ''),
-  ('p', 12, 5, 3, 2, 0, None, ''),
-  ('b', 16, 5, 2.7, 3, 20, '#F6D55C', 'School'),
-  ('b', 14, 8, 2, 1, 30, '#9ED3B5', ''),
-  ('b', 4, 8, 3, 2, 5, '#F2B880', ''),
-  ('b', 1, 11, 2, 2, 2, '#F7A8C4', ''),
-  ('s', 9.2, 11, 8.6, 1, 32, '#5FA8E8', 'Food Place'),
-  ('b', 15, 12, 3, 1, 7, '#E8583C', ''),
+ 'B3': [  # the class's B3 (Mr. Romanek's example B3 is kept below as EXAMPLE_B3)
+  ('s', 0, 0, 4, 4, 10, '#B8C4CE', 'Giant Airport'),          # joins the A3 half of the airport
+  ('s', 10, 0, 3, 2.4, 2, '#C8805A', 'Dog Cafeteria'),
+  ('p', 13, 0, 2, 3, 0, None, 'Dog Playground'),
+  ('s', 15, 0, 3.7, 2.6, 2, '#6FA8E8', 'Dog School'),
+  ('b', 6, 3, 1, 1, 4, '#E8A6D8', ''), ('b', 7, 3, 1, 1, 4, '#E8A6D8', ''), ('b', 8, 3, 1, 1, 4, '#E8A6D8', ''),
+  ('b', 6, 4, 1, 1, 4, '#E8A6D8', ''), ('b', 7, 4, 1, 1, 4, '#E8A6D8', ''), ('b', 8, 4, 1, 1, 4, '#E8A6D8', ''), ('b', 9, 4, 1, 1, 4, '#E8A6D8', ''),
+  ('s', 0, 5, 2.8, 3.4, 4, GREY, 'Rent Car Place'),
+  ('p', 4.1, 6, 5.9, 3, 0, None, ''),
+  ('s', 11, 5, 3, 1.45, 2, '#E8E8F0', 'Barber Shop'),
+  ('s', 15, 5, 2, 3, 3, '#E9DCC8', 'Dog Bakery'), ('b', 17, 5, 1, 3, 2, GREY, ''), ('b', 18, 5, .7, 3, 1, GREY, ''),
+  ('b', 7.1, 10, 2, 2.1, 6, GREY, 'Hotel'),
+  ('s', 0, 11, 3, 3, 2, GREY, 'Tablet And Phone'),
+  ('s', 4, 12, 2.6, 2, 3, '#F5E6F0', 'Decorating Place'),
+  ('s', 10.1, 11.05, 4.1, 2.3, 2, '#9B6FD0', 'CU'),
+  ('pool', 15, 11, 3.7, 3, 0, None, 'Pool'),
+ ],
+ 'A3': [
+  ('s', 0, 1.3, 5, 2.7, 3, '#8FD0E8', 'Super Duper Market'),
+  ('s', 0, 4.05, 1.95, 2.1, 2, '#6FB0E8', 'GS25'),
+  ('s', 0, 10, 3, 4.12, 10, '#B8C4CE', 'Giant Airport'),       # runs into B3 so the two halves join
+  ('s', 7, 2.05, 3, 1.95, 2, '#F6D55C', 'Cake and Cookie Bakery'),
+  ('b', 11, 1.3, 2.9, 1.7, 5, '#F4F4F4', 'Hospital'),
+  ('b', 14.9, 1.8, 3.1, 2.3, 2, '#D8C8A8', 'Cute Dog Cafe'),
+  ('s', 10.95, 4, 2, 2, 1, '#F2E27A', 'Giant Hotdog'),
+  ('p', 5.1, 6.05, 4.9, 2.95, 0, None, 'Park'),
+  ('p', 14.4, 6.05, 4.2, 3.9, 0, None, 'Tree House Playground'),
+  ('s', 5, 11, 4, 3, 2, '#F6E7A0', 'Resting Room'),
+  ('s', 10, 11, 4, 3, 3, '#E8C27A', 'Snack Factory'),
+  ('s', 15, 11, 3, 3, 3, '#F2A0A0', 'Ramen Factory'),
+ ],
+ 'B1': [
+  ('waterpark', 9, 0, 2, 2.9, 0, None, 'Waterpark Splash'),
+  ('pool', 7, 0, 2, 1, 0, None, ''),
+  ('s', 9.6, 3.85, 1.1, 1.95, 2, '#D58FD8', 'Tablet & Phone Shop'),
+  ('p', 2.2, 5.8, 3, 2, 0, None, 'Park'),
+  ('s', 12.5, 1, 2, 2.9, 4, '#DCD3E8', 'Raccoon Bakery'),
+  ('b', 15.5, 1.9, 3.2, 1.95, 3, '#D8E86A', 'Amazing Zoo'),
+  ('redpanda', 13.6, 4.85, 1.1, 2, 3, None, 'Red Panda Statue'),
+  ('s', 15.6, 4.8, 1.2, 2, 2, '#F2E89A', 'Tasty Pizza Shop'),
+  ('s', 17.7, 5.6, 2.1, 2.3, 5, '#F5A86A', 'Movie Theater'),
+  ('s', 14.9, 7.8, 2.2, 2, 2, '#F5C6D6', 'Baskin Robbins'),
+  ('s', 18, 8.5, 1.6, 1.4, 3, '#BFD8F0', 'Paris Baguette'),
+  ('s', 16.3, 10.4, 3.4, 3.6, 10, '#C86FC8', 'Giant Kids Cafe'),
+  ('b', 10.9, 8.75, 0.95, 2.05, 4, '#F4F4F4', 'Hospital'),
+  ('s', 9.2, 10.8, 3, 2.2, 3, '#5FC8B0', 'Supermarket'),
+  ('s', 7.4, 11.9, 2, 1.1, 2, '#F08A3C', '7-Eleven'),
+  ('b', 12.2, 11.9, 0.95, 2.1, 10, '#A8D0F0', 'Hotel'),
+  ('s', 3.2, 10.8, 2.2, 1.1, 3, '#F2E27A', 'Tasty Hot Dog'),
  ],
  'A1': [
   ('s', 2, 1.5, 3.5, 2.5, 2, '#F4CF7A', 'Zoo'),
@@ -119,3 +154,20 @@ SHEETS = {
   ('b', 19, 4.7, 1, 1, 8, '#B9E08A', ''),
  ],
 }
+
+# Mr. Romanek's example sheet (shown to the class) - not part of the real city any more
+EXAMPLE_B3 = [  # Mr. Romanek's example
+  ('raccoon', 1, 1, 3, 3, 0, None, 'Giant Raccoon'),
+  ('s', 10, 1, 1, 1, 2, '#F6A04D', 'Yum Yum'),
+  ('p', 12, 0.3, 3, 3.6, 0, None, ''),
+  ('b', 16, 1, 2, 2.8, 11, '#B7A3E0', ''),
+  ('s', 6, 3, 4, 3, 13, '#F7A8C4', 'Roma Cafe'), ('b', 5, 4, 1, 2, 13, '#F7A8C4', ''),
+  ('b', 1, 5, 2, 2, 18, '#7FB0E0', ''),
+  ('p', 12, 5, 3, 2, 0, None, ''),
+  ('b', 16, 5, 2.7, 3, 20, '#F6D55C', 'School'),
+  ('b', 14, 8, 2, 1, 30, '#9ED3B5', ''),
+  ('b', 4, 8, 3, 2, 5, '#F2B880', ''),
+  ('b', 1, 11, 2, 2, 2, '#F7A8C4', ''),
+  ('s', 9.2, 11, 8.6, 1, 32, '#5FA8E8', 'Food Place'),
+  ('b', 15, 12, 3, 1, 7, '#E8583C', ''),
+ ]

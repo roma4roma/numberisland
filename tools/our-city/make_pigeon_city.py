@@ -201,6 +201,8 @@ rep('var ff=new Float32Array(fe*Ke);', STATUES + 'var ff=new Float32Array(fe*Ke)
 # keep the bird over OUR city: turn back toward the city centre (not 0,0) and face the city at the start
 rep('Math.atan2(-F.x,-F.z)', 'Math.atan2((Yt+gn)/2-F.x,(jt+bn)/2-F.z)', 2)
 rep('yaw:Math.PI*.75}', 'yaw:1.75}')
+# no low wall (parapet) around the roof edges, so you can see out when standing on a roof
+rep('H=!L&&p>6&&g<1?p>30?1.3:.9:0', 'H=0')
 # words on the screens
 rep('<title>Banpo Pigeon · Seocho Person</title>', '<title>Our City · Pigeon</title>')
 rep('Building the neighbourhood…', 'Building Our City…')

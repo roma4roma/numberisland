@@ -142,8 +142,12 @@ for it in C['items']:
         style = 2 if k == 's' else (3 if f <= 3 else 6)
         pitched = 1 if (k == 'b' and f <= 3 and not n) else 0
         clean = 1 if 'airport' in (n or '').lower() else 0   # g=1: no rooftop boxes (the plane needs a clear roof)
-        buildings.append([round(h, 1), clean, 5, style, ccw(rect(x, z, w, d, .6)), n or '', hexcol(c), 1 if (k == 's' or clean) else 0, pitched])
         mx, mz, nx, nz, L = best_side(x + .6, z + .6, w - 1.2, d - 1.2)   # the front door side (faces the nearest road)
+        if re.fullmatch(r'\s*barn\s*', n or '', re.I):   # a real barn: red walls, white trim, curved (gambrel) roof, silo
+            deco.append(['barn', x, z, w, d, c, n, round(math.atan2(nx, nz), 3)])
+            solids.append([x + .6, z + .6, x + w - .6, z + d - .6, max(9, h * .75)])
+        else:
+            buildings.append([round(h, 1), clean, 5, style, ccw(rect(x, z, w, d, .6)), n or '', hexcol(c), 1 if (k == 's' or clean) else 0, pitched])
         if n and n not in ('House', 'Apartment'):
             bg, fg = sign_style(n)
             sw = round(max(2.5, min(L - .8, 9, 1.6 + .55 * len(n))), 1)
@@ -277,6 +281,21 @@ parts.forEach(([sh,c],i)=>{const m=new T.Mesh(new T.Ext(sh,{depth:3,bevelEnabled
 const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=-.5;$t.add(g)}
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
+else if(k==='barn'){const g=new T.Group(),R='#b8322a',Wt='#fbf6ec',RF='#4a3b36';const long=w>=d,len=(long?w:d)-1.2,wid=(long?d:w)-1.2,H=Math.max(7,wid*.42);
+box(len,H,wid,R,0,H/2,0,g);
+const sh=new T.Shape(),hw=wid/2+.5,r1=H*.55,r2=H*1.05;sh.moveTo(-hw,0);sh.lineTo(-hw*.72,r1*.62);sh.lineTo(0,r1);sh.lineTo(hw*.72,r1*.62);sh.lineTo(hw,0);sh.lineTo(-hw,0);
+const roof=new T.Mesh(new T.Ext(sh,{depth:len+1,bevelEnabled:!1}),mat(RF));roof.rotation.y=Math.PI/2;roof.position.set(-len/2-.5,H,0);g.add(roof);
+const gs=new T.Shape(),gw=wid/2-.05;gs.moveTo(-gw,0);gs.lineTo(-gw*.72,r1*.6);gs.lineTo(0,r1*.96);gs.lineTo(gw*.72,r1*.6);gs.lineTo(gw,0);gs.lineTo(-gw,0);
+for(const s of[-1,1]){const gb=new T.Mesh(new T.Ext(gs,{depth:.2,bevelEnabled:!1}),mat(R));gb.rotation.y=Math.PI/2;gb.position.set(s*(len/2+.01)-(s<0?.2:0),H,0);g.add(gb);
+const dx=s*(len/2+.12),dw=Math.min(wid*.42,7),dh=Math.min(H*.72,6.5);box(.15,dh+.5,dw+.5,Wt,dx,dh/2+.25,0,g);box(.2,dh,dw,'#8e231c',dx+s*.05,dh/2,0,g);
+for(const a of[1,-1]){const x2=box(.25,Math.hypot(dw,dh),.35,Wt,dx+s*.12,dh/2,0,g);x2.rotation.x=a*Math.atan2(dw,dh)}box(.25,.35,dw,Wt,dx+s*.12,dh/2,0,g);
+box(.15,1.6,1.6,Wt,dx,H+r1*.45,0,g);box(.2,1.2,1.2,'#3a2a22',dx+s*.04,H+r1*.45,0,g)}
+for(const s of[-1,1]){box(len+.2,.3,.3,Wt,0,H,s*(wid/2+.05),g);for(const e of[-1,1])box(.35,H,.35,Wt,e*len/2,H/2,s*wid/2,g)}
+const si=new T.Mesh(new T.Cyl(2.6,2.6,H*1.9,18),mat('#c9ced3'));si.position.set(0,H*.95,wid/2+3.2);g.add(si);for(let k=1;k<5;k++){const rg=new T.Mesh(new T.Cyl(2.66,2.66,.25,18),mat('#9aa3ab'));rg.position.set(0,k*H*1.9/5,wid/2+3.2);g.add(rg)}
+const dm=new T.Mesh(new T.Sph(2.6,18,10,0,6.3,0,1.6),mat('#b8322a'));dm.position.set(0,H*1.9,wid/2+3.2);g.add(dm);
+box(.12,1.6,.12,'#333',0,H+r1+1,0,g);box(1.4,.08,.08,'#333',0,H+r1+1.4,0,g);
+for(let k=0;k<4;k++){const hb=new T.Mesh(new T.Cyl(.75,.75,1.2,12),mat('#e9cf6a'));hb.rotation.z=Math.PI/2;hb.position.set(len/2+2.2,.75,-wid/2+1+k*1.7);g.add(hb)}
+g.position.set(x+w/2,0,z+d/2);g.rotation.y=long?0:Math.PI/2;$t.add(g)}
 else if(k==='pig'){const g=new T.Group(),S=Math.min(w,d)/26,P='#f7a8b8',D='#e8879c';const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
 add(new T.Box(24,3,24),'#cfc8b8',0,1.5,0);add(new T.Sph(8,24,18),P,0,12,0,1,.9,1.35);[[-4,-6],[4,-6],[-4,6],[4,6]].forEach(([a,b])=>{add(new T.Cyl(1.8,1.6,6,10),P,a,6,b);add(new T.Cyl(1.7,1.7,.8,10),'#8a5a4a',a,3.4,b)});
 add(new T.Sph(5.8,20,16),P,0,15,11);add(new T.Cyl(2.4,2.6,2,16),D,0,14.2,16.3).rotation.x=Math.PI/2;[-1,1].forEach(s=>{add(new T.Sph(.5,8,6),'#8a3a4a',s*.9,14.3,17.35);add(new T.Sph(.8,10,8),'#1e2124',s*2.4,17,15.5);add(new T.Sph(.45,8,6),'#ffffff',s*2.5,17.3,16.1);

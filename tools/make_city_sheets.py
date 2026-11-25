@@ -102,7 +102,7 @@ LABELS = [  # (x, y, text, size) in squares
     (71, -10.6, 'MT. PIGEON', 22), (71.5, -9.4, 'already made: don\u2019t draw here', 9),
     (63.5, -9.6, 'Road to the Lookout', 10), (72, 12, 'River', 13), (72, 28, 'River', 13),
     (69.5, 44.2, 'BEACH', 13), (78, 51.2, 'LAKE', 22), (75.5, 54.6, 'Lake Bridge', 10),
-    (-16, -1, 'FOREST', 22), (-16, 20, 'FOREST', 22), (-12, -11.6, 'FOREST', 18), (4, -12.2, 'Forest pond', 9),
+    (-16, -1, 'RACCOON FOREST', 20), (-16, 20, 'RACCOON FOREST', 20), (-12, -11.6, 'RACCOON FOREST', 16), (4, -12.2, 'Forest pond', 9),
     (-15, 51.5, 'FARM', 22), (-7, 55, 'FARM', 14), (58.5, -12.3, 'Tunnel', 11), (77.6, 6, 'Tunnel', 11)]
 NATURE_NOTE = 'Nature (mountain, forest, farm, lake): you can add small things like a cabin, campsite, trail or lookout (max 2 floors).'
 
@@ -391,7 +391,7 @@ def instructions(cv, ring=False):
     box(x1, top - h1, col_w, h1, '1. The puzzle')
     if ring:
         mini_map5(cv, x1 + 12, top - 76 * mm, 64 * mm)
-        lines(x1 + 16 + 66 * mm, top - 40, ['N = north (top)', 'S = south (bottom)', 'W = west (left)', 'E = east (right)', '', 'The grey middle', 'is the city we', 'already built!', '', 'NEW: a mountain,', 'forest, farm,', 'river and a lake!'], 11, 15)
+        lines(x1 + 16 + 66 * mm, top - 40, ['N = north (top)', 'S = south (bottom)', 'W = west (left)', 'E = east (right)', '', 'The grey middle', 'is the city we', 'already built!', '', 'NEW: Mt. Pigeon,', 'Raccoon Forest, a', 'farm, river + lake!'], 11, 15)
     else:
         mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
         lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Look for ponds', 'and streams!', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)

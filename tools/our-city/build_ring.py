@@ -4,6 +4,7 @@ Students' ring designs go in sheets_data.py like the first 9 (sheet names N1-N5,
 run from tools/:  PYTHONPATH=.:our-city python3 our-city/build_ring.py"""
 import json, math, os, random
 from freemap import curve, ns
+from sheets_data import RING_SHEETS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = json.load(open(os.path.join(HERE, 'city.json')))
@@ -86,6 +87,24 @@ for r in roads:
 def near_road(x, z, extra):
     return any(abs(px - x) < hw + extra and abs(pz - z) < hw + extra and math.hypot(px - x, pz - z) < hw + extra for px, pz, hw in RP)
 
+# ---- the students' ring sheets
+gantries, keepout = [], []
+for name, items in RING_SHEETS.items():
+    sc, sr = ns['RING'][name]; ox, oy = sc * 20, sr * 14
+    for kind, c, r, w, d, fl, col, label in items:
+        if kind == 'gantry':
+            ax, az, bx, bz = (ox + c) * M, (oy + r) * M, (ox + w) * M, (oy + d) * M
+            gantries.append([round(ax, 1), round(az, 1), round(bx, 1), round(bz, 1), fl * 3.2, col, label]); keepout += [(ax - 9, az - 9, 18, 18), (bx - 9, bz - 9, 18, 18)]
+            continue
+        it = {'k': kind, 'x': round((ox + c) * M, 1), 'z': round((oy + r) * M, 1), 'w': round(w * M, 1), 'd': round(d * M, 1), 'f': fl,
+              'c': None if kind in ('raccoon', 'pigeonstatue') else col, 'n': label, 's': name}
+        if kind in ('raccoon', 'pigeonstatue'):   # statues look at the welcome sign on their sheet
+            g0 = [q for q in items if q[0] == 'gantry'][0]
+            tx_, tz_ = (ox + (g0[1] + g0[3]) / 2) * M, (oy + (g0[2] + g0[4]) / 2) * M
+            it['rot'] = round(math.atan2(tx_ - (it['x'] + it['w'] / 2), tz_ - (it['z'] + it['d'] / 2)), 3)
+        C['items'].append(it); keepout.append((it['x'] - 6, it['z'] - 6, it['w'] + 12, it['d'] + 12))
+    C['done'].append(name)
+def kept_out(x, z): return any(a < x < a + w and b < z < b + d for a, b, w, d in keepout)
 # ---- forest
 inside = ns['inside']
 FOREST = [(x * M, z * M) for x, z in ns['FOREST']]
@@ -93,7 +112,7 @@ g = random.Random(7); trees = []
 for z in range(-300, 400, 8):
     for x in range(-450, 100, 8):
         tx, tz = x + g.uniform(-3, 3), z + g.uniform(-3, 3)
-        if inside(FOREST, tx, tz) and not near_road(tx, tz, 5) and not any(((tx - px) / (rx + 6)) ** 2 + ((tz - pz) / (ry + 6)) ** 2 < 1 for px, pz, rx, ry in ponds):
+        if inside(FOREST, tx, tz) and not near_road(tx, tz, 5) and not kept_out(tx, tz) and not any(((tx - px) / (rx + 6)) ** 2 + ((tz - pz) / (ry + 6)) ** 2 < 1 for px, pz, rx, ry in ponds):
             trees.append([round(tx, 1), round(tz, 1)])
 # ---- farm fields
 FARM = [(x * M, z * M) for x, z in ns['FARM']]
@@ -110,7 +129,7 @@ lx, ly, lrx, lry = ns['LAKE']
 nature = {'forest': FOREST, 'farm': FARM, 'fields': fields, 'barn': barn, 'river': RIV, 'riverW': ns['RIVER_W'] * M,
           'lake': [lx * M, ly * M, lrx * M, lry * M], 'beach': 22, 'mountain': [cx * M, cy * M, RX * M, RY * M],
           'lookout': [880, -290], 'tunnels': tunnels, 'trees': trees,
-          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line]}
+          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'gantries': gantries}
 C.update({'roads': roads, 'streams': streams, 'ponds': ponds, 'terrain': T, 'nature': nature,
           'bounds': [-420.0, -1000.0, 1900.0, 750.0]})
 json.dump(C, open(os.path.join(HERE, 'city_ring.json'), 'w'))

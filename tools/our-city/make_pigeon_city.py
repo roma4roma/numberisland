@@ -171,11 +171,11 @@ for it in C['items']:
     elif k == 'redpanda':
         deco.append([k, x, z, w, d, c, n])
         solids.append([x + 1.5, z + 1.5, x + w - 1.5, z + d - 1.5, min(w, d) / 11 * 10.5 + 1.4])
-    elif k in ('raccoon', 'cat', 'L67', 'LOL'):
-        deco.append([k, x, z, w, d, c, n])
-        h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22}[k]
-        m = min(w, d) / 26 if k in ('raccoon', 'cat') else 1
-        r = (13 * max(.7, m)) if k in ('raccoon', 'cat') else None
+    elif k in ('raccoon', 'cat', 'L67', 'LOL', 'pigeonstatue'):
+        deco.append([k, x, z, w, d, c, n, it.get('rot')])
+        h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22, 'pigeonstatue': 30}[k]
+        m = min(w, d) / 26 if k in ('raccoon', 'cat', 'pigeonstatue') else 1
+        r = (13 * max(.7, m)) if k in ('raccoon', 'cat', 'pigeonstatue') else None
         if r: solids.append([cx - r, cz - r, cx + r, cz + r, h * max(.7, m)])
         else: solids.append([x + 1, z + 1, x + w - 1, z + d - 1, h])
     elif k in ('dock', 'bridge'):
@@ -232,7 +232,7 @@ if NAT:   # the ring's countryside: river + lake are water, forest trees, signs
     areas.append([1, ellipse(lx, lz, lrx, lrz, 64)])
     trees += NAT['trees']
     face = lambda x, z: round(math.atan2(300 - x, 210 - z), 3)
-    for x, z, n in [(626, -28, 'Mt. Pigeon'), (688, 420, 'Pigeon Lake'), (-118, 432, 'Pigeon Farm'), (-128, 70, 'Pigeon Forest')]:
+    for x, z, n in [(688, 420, 'Pigeon Lake'), (-118, 432, 'Pigeon Farm'), (-128, 70, 'Raccoon Forest')]:
         parksigns.append([x, z, face(x, z), n])
 city = {'home': -1, 'bounds': C.get('bounds') or [-40.0, -40.0, 640.0, 460.0], 'nature': NAT, 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
@@ -259,7 +259,7 @@ function animal(x,z,w,d,o){const g=new T.Group(),S=Math.min(w,d)/26;const add=(g
 add(new T.Box(26,3,26),'#cfc8b8',0,1.5,0);add(new T.Sph(8,24,18),o.body,0,13,0,1,1.25,.9);add(new T.Sph(4.2,18,14),o.belly,0,11,6.2,1,1.3,.5);add(new T.Sph(7,24,18),o.body,0,26,1);add(new T.Sph(3.4,16,12),o.belly,0,24.2,6.8,1.2,.8,.8);add(new T.Sph(1.1,12,10),o.nose,0,25,9.4);
 [-1,1].forEach(s=>{if(o.mask)add(new T.Sph(2.6,16,12),'#1e2124',s*3,27,5.4,1.2,.8,.6);add(new T.Sph(1,12,10),o.mask?'#ffffff':'#9be36b',s*3,27.3,6.8);add(new T.Sph(.5,10,8),'#1e2124',s*3,27.3,7.7);const ear=add(new T.Cone(2.4,o.mask?4.5:6,o.mask?14:4),o.body,s*4.6,32.5,0);ear.rotation.z=-s*.35});
 for(let i=0;i<6;i++)add(new T.Sph(2.6-i*.15,14,10),o.stripes&&i%2?'#1e2124':o.body,4+i*1.6,6+i*2.6,-8-Math.sin(i*.6)*3);
-g.scale.setScalar(Math.max(.7,S));g.position.set(x+w/2,0,z+d/2);g.rotation.y=.7;$t.add(g)}
+g.scale.setScalar(Math.max(.7,S));g.position.set(x+w/2,0,z+d/2);g.rotation.y=o.rot!=null?o.rot:.7;$t.add(g)}
 function redpanda(x,z,w,d){const g=new T.Group(),R='#c1440e',K='#3a1d12',W='#fff4e6',L2='#e8a070';const lx=w<d,len=lx?d:w,wid=lx?w:d,S=Math.min(wid/11,len/21);
 const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
 add(new T.Box(10,1.4,20),'#cfc8b8',0,.7,0);add(new T.Sph(1,20,16),R,0,6.2,-1,3.2,2.6,5.2);add(new T.Sph(1,16,12),K,0,4.8,-1,2.6,1.4,4.4);
@@ -276,7 +276,15 @@ function letters(x,z,w,d,parts){const g=new T.Group();box(Math.max(w,8),2,Math.m
 parts.forEach(([sh,c],i)=>{const m=new T.Mesh(new T.Ext(sh,{depth:3,bevelEnabled:!0,bevelSize:.4,bevelThickness:.4,bevelSegments:2}),mat(c));m.position.set(st+i*step-4.5,2,-1.5);g.add(m)});
 const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=-.5;$t.add(g)}
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
-if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0});
+if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
+else if(k==='pigeonstatue'){const g=new T.Group(),S=Math.min(w,d)/26;const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
+add(new T.Box(24,3,24),'#cfc8b8',0,1.5,0);add(new T.Box(20,2,20),'#b9b2a2',0,4,0);
+add(new T.Sph(7,24,18),'#8a96a8',0,15,-1,1,1.05,1.45);add(new T.Sph(5.2,20,16),'#5fb39a',0,19.5,4.5,1,1.1,.9);add(new T.Sph(4.6,20,16),'#6d7b90',0,24.5,7);
+const bk=add(new T.Cone(1,3.4,12),'#f2b23c',0,24,11.6);bk.rotation.x=Math.PI/2;add(new T.Sph(1.1,12,10),'#e8e8e8',0,25.5,10.2,1,.6,.8);
+[-1,1].forEach(s=>{add(new T.Sph(1.2,12,10),'#ff7a3c',s*2.7,25.6,9.3);add(new T.Sph(.55,10,8),'#1e2124',s*3,25.7,10.2);const wg=add(new T.Sph(5,18,14),'#9aa6b8',s*6.2,15.5,-2,.35,.75,1.5);wg.rotation.z=s*.15;
+for(let k=0;k<3;k++)add(new T.Box(.5,2.2,4.6-k),'#4d5866',s*6.9,12.4+k*1.3,-6.5-k*.8);const lg=add(new T.Cyl(.6,.6,5,8),'#e2725b',s*2.5,7,0);for(const t of[-1,0,1])add(new T.Box(.7,.6,3),'#e2725b',s*2.5+t*1.1,5.2,1.2).rotation.y=t*.4});
+add(new T.Box(7,1.4,9),'#6d7b90',0,13.5,-11).rotation.x=.35;
+g.scale.setScalar(Math.max(.7,S));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f!=null?f:0;$t.add(g)}
 else if(k==='cat')animal(x,z,w,d,{body:'#f2a65a',belly:'#fff1dc',nose:'#f27a8a',mask:!1,stripes:!1});
 else if(k==='redpanda')redpanda(x,z,w,d);
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
@@ -392,6 +400,17 @@ for(const s of[-1,1])box(5,11,3,'#9a9590',s*10.3,5.5,0,g);box(26,4,3,'#9a9590',0
 const TS=[];for(const P of N.tunnels)for(let k=1;k<P.length;k++)TS.push([P[k-1][0],P[k-1][1],P[k][0],P[k][1]]);
 const inTunnel=(x,z)=>{for(const[a,b,c,d]of TS){const dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<56)return!0}return!1};
 window.__inTunnel=inTunnel;
+// welcome signs over the road: two towers + a beam with the sign (fly under it!)
+for(const[ax,az,bx,bz,H,col,txt]of N.gantries||[]){const L=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az),g=new T.Group();g.position.set((ax+bx)/2,0,(az+bz)/2);g.rotation.y=yaw;$t.add(g);
+for(const s of[-1,1]){box(9,H,9,col,0,H/2,s*L/2,g);box(10,1,10,'#e9d8b0',0,H+.5,s*L/2,g)}
+addSolid(ax-4.5,az-4.5,ax+4.5,az+4.5,H+1);addSolid(bx-4.5,bz-4.5,bx+4.5,bz+4.5,H+1);
+box(2.4,1.4,L-8,col,0,H-1.2,0,g);
+const cv=document.createElement('canvas');cv.width=1024;cv.height=200;const x2=cv.getContext('2d');x2.fillStyle='#2f7d3a';x2.fillRect(0,0,1024,200);x2.strokeStyle='#ffe9a8';x2.lineWidth=12;x2.strokeRect(12,12,1000,176);
+x2.fillStyle='#ffffff';x2.textAlign='center';x2.textBaseline='middle';let fs=110;x2.font='bold '+fs+'px sans-serif';while(x2.measureText(txt).width>950&&fs>40){fs-=4;x2.font='bold '+fs+'px sans-serif'}x2.fillText(txt,512,104);
+const tx=new Pe(cv);tx.colorSpace=me;const tm=new Be({map:tx});const bw=Math.min(L-12,26),bh=bw*200/1024,sy=H+bh/2+.1;box(.5,bh+.8,bw+.8,'#ffe9a8',0,sy,0,g);
+for(const s of[-1,1]){const pl=new T.Mesh(new Hn(bw,bh),tm);pl.position.set(s*.3,sy,0);pl.rotation.y=s*Math.PI/2;g.add(pl)}
+for(const s of[-1,1])box(.4,bh+1.2,.4,col,0,H+bh/2,s*(bw/2+.6),g);
+window.__gantries=(window.__gantries||[]).concat([[ax,az,bx,bz,H-2]])}
 // the Mountain Road: drawn as its own ribbon a little above the slope (the game's road follows the ground too closely on steep hills)
 if(N.mroad){const P=N.mroad,V=[],I=[],hw=4.6,ASP=new T.Mat({color:new Pt('#4a4f56')}),CURB=new T.Mat({color:new Pt('#b9b4aa')});
 const rib=(w,dy,m)=>{const V=[],I=[];P.forEach(([x,z],k)=>{const p0=P[Math.max(0,k-1)],p1=P[Math.min(P.length-1,k+1)],dx=p1[0]-p0[0],dz=p1[1]-p0[1],l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l;
@@ -451,7 +470,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>window.__inTunnel&&y<9.5&&window.__inTunnel(x,z)?{f:.3,c:8.6,name:null}:old0?old0(x,z,y):null}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

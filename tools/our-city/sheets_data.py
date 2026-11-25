@@ -171,3 +171,26 @@ EXAMPLE_B3 = [  # Mr. Romanek's example
   ('s', 9.2, 11, 8.6, 1, 32, '#5FA8E8', 'Food Place'),
   ('b', 15, 12, 3, 1, 7, '#E8583C', ''),
  ]
+
+# ---- THE RING (16 sheets around the first city). Same format as SHEETS; positions are squares on that sheet.
+# Extra kinds: 'gantry' = welcome sign over a road: (kind, towerA_x, towerA_y, towerB_x, towerB_y, floors, colour, sign text)
+#              'raccoon' / 'pigeonstatue' = giant statues (they turn to face the welcome sign on their sheet)
+RING_SHEETS = {
+ 'N1': [  # Mr. Romanek
+  ('gantry', 12.85, 7.35, 10.85, 9.4, 3, '#6b4a2b', 'Welcome to Raccoon Forest'),
+  ('raccoon', 14.4, 4.5, 2.6, 2.6, 0, -22, 'Raccoon Statue'),
+  ('s', 16.6, 8.9, 1.9, 2.0, 2, '#FF7AC8', 'Pigeon Souvenirs'),
+  ('s', 14.6, 10.9, 2.0, 2.0, 2, '#FF7AC8', 'Pigeon Pizza'),
+  ('b', 17.6, 11.9, 1.0, 1.0, 2, '#FF7AC8', ''),
+ ],
+ 'N5': [  # Mr. Romanek
+  ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
+  ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),
+  ('s', 1.0, 6.0, 2.0, 2.0, 3, '#FF7AC8', 'Mt. Pigeon Shop'),
+  ('b', 1.0, 9.0, 0.95, 0.95, 2, '#6FC3E8', ''),
+  ('s', 4.1, 11.0, 2.0, 2.1, 3, '#FF7AC8', 'Seeds'),
+  ('b', 3.0, 12.0, 0.95, 1.0, 2, '#8A5CC8', ''),
+  ('b', 6.0, 12.0, 1.0, 1.0, 2, '#8A5CC8', ''),
+  ('b', 7.0, 12.0, 1.0, 1.0, 2, '#8A5CC8', ''),
+ ],
+}

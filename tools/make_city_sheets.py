@@ -47,8 +47,8 @@ STREAM_W = .75
 ROUNDABOUT_R = 3.6
 # ---- the RING: 16 more sheets around the first city (5 x 5 sheets in all). Coordinates carry on past the old edges:
 # x from -20 to 80, y from -14 to 56. N1-N5 along the top, S1-S5 along the bottom, W1-W3 left, E1-E3 right.
-LOOP = [(-9, 21), (-10.5, 12), (-9, 3), (-6.5, -4), (0, -7), (10, -7.8), (20, -6.5), (30, -7.4), (40, -6.3), (50, -7.8), (60, -7), (66.5, -4),
-        (69, 3), (70.5, 12), (69, 21), (70.5, 30), (69, 39), (66.5, 46), (60, 49), (50, 50), (40, 48.6), (30, 49.8), (20, 48.6), (10, 50), (0, 49),
+LOOP = [(-9, 21), (-10.5, 12), (-9, 3), (-6.5, -4), (0, -7), (10, -7.8), (20, -6.5), (30, -7.4), (40, -6.3), (50, -7.8), (57, -5), (61, -1.5),
+        (64, 2.5), (67, 7), (70.5, 12), (69, 21), (70.5, 30), (69, 39), (66.5, 46), (60, 49), (50, 50), (40, 48.6), (30, 49.8), (20, 48.6), (10, 50), (0, 49),
         (-6.5, 46), (-9, 39), (-10.5, 30), (-9, 21)]
 RING_ROADS = [
     (MAIN, [(-19.4, -13.4), (79.4, -13.4), (79.4, 55.4), (-19.4, 55.4), (-19.4, -13.4)], 'straight'),    # new outer ring road
@@ -61,20 +61,113 @@ RING_ROADS = [
     (SMALL, [(47, .6), (49, -3.5), (47.5, -6.8)]),
     (SMALL, [(10, -7.8), (8.5, -10.5), (10.5, -13.4)]),
     (SMALL, [(-6.5, -4), (-12, -7), (-19.4, -6)]),
-    (SMALL, [(66.5, -4), (72, -8), (79.4, -7.5)]),
+    (SMALL, [(61, -1.5), (63.8, -4.5), (66, -8)], 'over'),                                          # mountain road up to the Lookout
     (SMALL, [(.6, 5), (-4, 3.5), (-9, 3)]),
     (SMALL, [(.6, 30), (-4.5, 32), (-10.5, 30)]),
     (SMALL, [(-9, 39), (-14, 41), (-19.4, 39.5)]),
     (SMALL, [(59.4, 29), (64.5, 31), (70.5, 30)]),
-    (SMALL, [(69, 3), (74, 5.5), (79.4, 4)]),
+    (SMALL, [(67, 7), (72, 8.5), (79.4, 9)]),
     (SMALL, [(70.5, 30), (75, 33.5), (79.4, 32.5)]),
     (SMALL, [(21, 41.4), (18.5, 45), (20, 48.6)]),
     (SMALL, [(50, 50), (48, 52.5), (50.5, 55.4)]),
     (SMALL, [(-6.5, 46), (-11, 50), (-9, 55.4)]),
     (SMALL, [(66.5, 46), (71, 50.5), (69, 55.4)]),
 ]
-RING_PONDS = [(4, -10.5, 1.8, 1.3), (38, -10.8, 1.7, 1.2), (-15, 12, 1.5, 2), (75, 24.5, 1.5, 1.9), (12, 52.5, 1.9, 1.3), (44, 45, 1.6, 1.2), (-14.5, -10.5, 1.4, 1.1), (75, 51.5, 1.5, 1.1), (64.5, 8.5, 1.4, 1.1), (-14.5, 47.5, 1.5, 1.1), (73.5, -2.5, 1.4, 1.1)]
-RING_STREAMS = [[(38, -10.8), (41, -10.2), (43, -11.5)], [(-15, 12), (-16, 8.5), (-14, 6.5)], [(12, 52.5), (8.5, 52), (6, 53.2)], [(75, 24.5), (76, 28), (74.5, 29.5)]]
+RING_PONDS = [(4, -10.5, 1.8, 1.3), (38, -10.8, 1.7, 1.2), (-15, 12, 1.5, 2), (12, 52.5, 1.9, 1.3), (44, 45, 1.6, 1.2), (-14.5, -10.5, 1.4, 1.1), (64.5, 8.5, 1.4, 1.1), (-14.5, 47.5, 1.5, 1.1)]
+RING_STREAMS = [[(38, -10.8), (41, -10.2), (43, -11.5)], [(-15, 12), (-16, 8.5), (-14, 6.5)], [(12, 52.5), (8.5, 52), (6, 53.2)]]
+# ---- NATURE on the ring (it spreads past the edge of the city, like real nature would)
+import math as _m, random as _r
+def blob(cx, cy, rx, ry, seed, n=90, wob=.07):
+    g = _r.Random(seed); ph = [g.random() * 6.28 for _ in range(3)]
+    return [(cx + rx * (1 + wob * (_m.sin(3 * a + ph[0]) + .6 * _m.sin(5 * a + ph[1]) + .4 * _m.sin(9 * a + ph[2]))) * _m.cos(a),
+             cy + ry * (1 + wob * (_m.sin(3 * a + ph[0]) + .6 * _m.sin(5 * a + ph[1]) + .4 * _m.sin(9 * a + ph[2]))) * _m.sin(a))
+            for a in [2 * _m.pi * k / n for k in range(n)]]
+def inside(poly, x, y):
+    c = False
+    for k in range(len(poly)):
+        (x1, y1), (x2, y2) = poly[k - 1], poly[k]
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: c = not c
+    return c
+MOUNTAIN_C = (80, -13)       # the peak is on N5, the mountain spreads off the map
+MOUNTAIN = [(blob(80, -13, 22 * f, 18 * f, 11 + k, wob=.07 - .006 * k), col, h) for k, (f, col, h) in enumerate(
+    [(1, '#CFE0A4', 0), (.8, '#B9C98C', 100), (.62, '#A9A27C', 200), (.45, '#9C948C', 300), (.3, '#C9C9CF', 400), (.17, '#FFFFFF', 500)])]
+FOREST = [(-45, -30), (9, -30), (9, -10), (1, -9.3), (-5.5, -6.8), (-10.5, -1), (-11.6, 8), (-12, 16), (-11.8, 25), (-12.6, 33), (-15, 38.5), (-45, 40)]
+FARM = [(-45, 41.6), (-12, 42.6), (-9.4, 45), (-7.5, 49), (-4, 51.5), (1, 52.5), (2, 56), (2, 75), (-45, 75)]
+RIVER = [(76, -3), (74.6, 3.6), (73.2, 8.5), (75.6, 16), (73.4, 24), (75.6, 32), (74, 39), (76.5, 45)]   # from the waterfall down to the lake
+RIVER_W = 2.0
+LAKE = (80, 52, 13, 9)       # x, y, rx, ry: the lake (with a beach) spreads off the map, bottom-right
+_g = _r.Random(5)
+FOREST_TREES = [(x, y, .45 + _g.random() * .35) for x, y in ((_g.uniform(-45, 10), _g.uniform(-30, 40)) for _ in range(5200)) if inside(FOREST, x, y)]
+LABELS = [  # (x, y, text, size) in squares
+    (70, -11.8, 'MT. PIGEON', 22), (70.5, -10.6, 'already made: don\u2019t draw here', 9), (79, -12.4, 'Peak 500 m', 10),
+    (66, -9.2, 'Lookout', 10), (71, 3.6, 'Waterfall', 10), (72, 12, 'River', 13), (72, 28, 'River', 13),
+    (69.5, 44.2, 'BEACH', 13), (78, 51.2, 'LAKE', 22), (75.5, 54.6, 'Lake Bridge', 10),
+    (-16, -1, 'FOREST', 22), (-16, 20, 'FOREST', 22), (-12, -11.6, 'FOREST', 18), (4, -12.2, 'Forest pond', 9),
+    (-15, 51.5, 'FARM', 22), (-7, 55, 'FARM', 14), (61.5, -12.3, 'Tunnel', 11), (77.6, 3.4, 'Tunnel', 11)]
+NATURE_NOTE = 'Nature (mountain, forest, farm, lake): you can add small things like a cabin, campsite, trail or lookout (max 2 floors).'
+
+def draw_nature(cv):
+    """Forest, farm, river, lake + beach (drawn under the roads)."""
+    def poly(pts):
+        p = cv.beginPath(); p.moveTo(*pts[0])
+        for q in pts[1:]: p.lineTo(*q)
+        p.close(); return p
+    cv.setFillColor(HexColor('#A9D79B')); cv.drawPath(poly(FOREST), stroke=0, fill=1)
+    for x, y, r in FOREST_TREES:
+        cv.setFillColor(HexColor('#6FB46A')); cv.setStrokeColor(HexColor('#4E8F4A')); cv.setLineWidth(.05); cv.circle(x, y, r, stroke=1, fill=1)
+    cv.saveState(); cv.clipPath(poly(FARM), stroke=0, fill=0)
+    cv.setFillColor(HexColor('#D9C98A')); cv.rect(-46, 42, 36, 34, stroke=0, fill=1)
+    g = _r.Random(3)
+    for fx in range(-45, -10, 7):
+        for fy in range(43, 76, 6):
+            c = g.choice(['#EAD98A', '#B9D77A', '#9CC46B', '#E6C06A'])
+            cv.setFillColor(HexColor(c)); cv.rect(fx + .3, fy + .3, 6.4, 5.4, stroke=0, fill=1)
+            cv.setStrokeColor(HexColor('#8A7A4A')); cv.setLineWidth(.05)
+            for k in range(1, 9): cv.line(fx + .3, fy + .3 + k * .6, fx + 6.7, fy + .3 + k * .6)
+    cv.restoreState()
+    lx, ly, rx, ry = LAKE
+    cv.setFillColor(HexColor('#F3E3B0')); cv.ellipse(lx - rx - 2.2, ly - ry - 2.2, lx + rx + 2.2, ly + ry + 2.2, stroke=0, fill=1)
+    cv.setStrokeColor(WATER); cv.setLineWidth(RIVER_W); cv.setLineCap(1)
+    cv.drawPath(smooth_path(cv, RIVER), stroke=1, fill=0)
+    cv.setFillColor(WATER); cv.setStrokeColor(WATER_D); cv.setLineWidth(.08); cv.ellipse(lx - rx, ly - ry, lx + rx, ly + ry, stroke=1, fill=1)
+
+def draw_mountain(cv):
+    """The mountain sits on top of the roads: the ring road goes through it in a tunnel."""
+    def poly(pts):
+        p = cv.beginPath(); p.moveTo(*pts[0])
+        for q in pts[1:]: p.lineTo(*q)
+        p.close(); return p
+    for pts, col, h in MOUNTAIN:
+        cv.setFillColor(HexColor(col)); cv.setStrokeColor(HexColor('#7A6A55')); cv.setLineWidth(.07)
+        cv.drawPath(poly(pts), stroke=1, fill=1)
+    # the tunnel: dashed outline of the ring road under the mountain, dark portals where it goes in
+    base = MOUNTAIN[0][0]
+    cv.setStrokeColor(HexColor('#5A4A3A')); cv.setLineWidth(.08); cv.setDash(.4, .3)
+    (px1, _, _), (_, py2, _) = tunnel_portals()
+    h = MAIN / 2
+    cv.line(px1, -13.4 - h, 79.4 + h, -13.4 - h); cv.line(79.4 + h, -13.4 - h, 79.4 + h, py2)     # outer side
+    cv.line(px1, -13.4 + h, 79.4 - h, -13.4 + h); cv.line(79.4 - h, -13.4 + h, 79.4 - h, py2)     # inner side
+    cv.setDash()
+    for (x, y, horiz) in tunnel_portals():
+        cv.setFillColor(HexColor('#3A3530'))
+        if horiz: cv.rect(x - .25, y - MAIN / 2 - .2, .5, MAIN + .4, stroke=0, fill=1)
+        else: cv.rect(x - MAIN / 2 - .2, y - .25, MAIN + .4, .5, stroke=0, fill=1)
+    # the river's waterfall
+    cv.setStrokeColor(white); cv.setLineWidth(.12)
+    for k in range(4): cv.line(74.2 + k * .25, 1.6, 74 + k * .25, 3.6)
+
+def tunnel_portals():
+    base = MOUNTAIN[0][0]; out = []
+    x = 50.0
+    while x < 79.4:
+        if inside(base, x, -13.4): out.append((x, -13.4, True)); break
+        x += .05
+    y = 20.0
+    while y > -13.4:
+        if inside(base, 79.4, y): out.append((79.4, y, False)); break
+        y -= .05
+    return out
+
 RING = {**{f'N{k + 1}': (k - 1, -1) for k in range(5)}, **{f'S{k + 1}': (k - 1, 3) for k in range(5)},
         **{f'W{k + 1}': (-1, k) for k in range(3)}, **{f'E{k + 1}': (3, k) for k in range(3)}}   # name -> (sheet column, sheet row); A1 is (0, 0)
 
@@ -97,6 +190,8 @@ def road_path(cv, pts, flags):
 def draw_city(cv, lines=True):
     """Draws river, roads and roundabout in city units (current transform: 1 unit = 1 square, y down)."""
     cv.setLineCap(1); cv.setLineJoin(1)
+    draw_nature(cv)
+    cv.setLineCap(1); cv.setLineJoin(1)
     cv.setStrokeColor(WATER); cv.setLineWidth(STREAM_W)
     for st in STREAMS + RING_STREAMS: cv.drawPath(smooth_path(cv, st), stroke=1, fill=0)
     for (px, py, rx, ry) in PONDS + RING_PONDS:
@@ -106,14 +201,21 @@ def draw_city(cv, lines=True):
     for col, extra in ((HexColor('#7E858C'), .14), (ROAD, 0)):     # dark curb first, then the road on top
         cv.setStrokeColor(col)
         for w, pts, *f in ROADS + RING_ROADS:
+            if 'over' in f: continue
             cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
         cv.setLineWidth(MAIN + extra); cv.drawPath(circ, stroke=1, fill=0)
     if lines:
         cv.setStrokeColor(ROAD_LINE); cv.setLineWidth(.07); cv.setDash(.35, .3)
         for w, pts, *f in ROADS + RING_ROADS:
-            if w == MAIN: cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
+            if w == MAIN and 'over' not in f: cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
         cv.drawPath(circ, stroke=1, fill=0); cv.setDash()
     cv.setFillColor(HexColor('#BFE5B5')); cv.circle(*TOWER_C, ROUNDABOUT_R - MAIN / 2 - .07, stroke=0, fill=1)
+    draw_mountain(cv)
+    for col, extra in ((HexColor('#7E858C'), .14), (ROAD, 0)):
+        cv.setStrokeColor(col)
+        for w, pts, *f in RING_ROADS:
+            if 'over' in f: cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
+    cv.setFillColor(HexColor('#FFD23C')); cv.setStrokeColor(INK); cv.setLineWidth(.08); cv.circle(66, -8, .7, stroke=1, fill=1)
 
 V_ROADS = (6, 13)                  # streets running up/down on every sheet (they line up from sheet to sheet)
 H_ROAD = 7                         # street running across on rows A and B
@@ -177,16 +279,20 @@ def mini_map(cv, x, y, size, here=None, ring=False):
         cv.drawCentredString(bx + s / 2, by + s * .62, name)
 
 
-def mini_map5(cv, x, y, size, here=None, done_shade=True, font=None):
+def mini_map5(cv, x, y, size, here=None, done_shade=True, font=None, ghost=False):
     sw, sh = size, size * 70 / 100       # 5 x 5 sheets, each 20 x 14 squares
     s, t = sw / 5, sh / 5
     names = {pos: n for n, pos in RING.items()}
     names.update({(c, r): f'{"ABC"[r]}{c + 1}' for r in range(3) for c in range(3)})
     for (c, r), n in names.items():
         bx, by = x + (c + 1) * s, y + (3 - r) * t
+        if ghost:
+            if n not in RING: cv.setFillColor(white); cv.setFillAlpha(.55); cv.rect(bx, by, s, t, stroke=0, fill=1); cv.setFillAlpha(1)
+            continue
         cv.setFillColor(HexColor('#FFE08A') if n == here else (HexColor('#E3E8EC') if (done_shade and n[0] in 'ABC' and len(n) == 2 and n not in RING) else white))
         cv.rect(bx, by, s, t, stroke=0, fill=1)
     cv.saveState()
+    if ghost: cv.restoreState(); cv.saveState(); cv.translate(-1e5, 0)
     clip = cv.beginPath(); clip.rect(x, y, sw, sh); cv.clipPath(clip, stroke=0, fill=0)
     cv.translate(x + s, y + 4 * t); cv.scale(s / 20, -t / 14)
     draw_city(cv, lines=False)
@@ -242,6 +348,14 @@ def grid_sheet(cv, name, title=None):
     for r in range(ROWS + 1):
         cv.setStrokeColor(GRID5 if r % 5 == 0 else GRID); cv.setLineWidth(1 if r % 5 == 0 else .6)
         cv.line(GX, GY + r * SQ, GX + COLS * SQ, GY + r * SQ)
+    # nature labels
+    for (lx, ly, txt, size) in LABELS:
+        px, py = GX + (lx - j * COLS) * SQ, GY + ROWS * SQ - (ly - i * ROWS) * SQ
+        if GX + 10 < px < GX + COLS * SQ - 10 and GY + 10 < py < GY + ROWS * SQ - 10:
+            cv.setFont('Helvetica-Bold', size); tw = cv.stringWidth(txt, 'Helvetica-Bold', size)
+            cv.setFillColor(HexColor('#FFFFFFCC') if False else white); cv.setStrokeColor(white)
+            cv.setFillAlpha(.75); cv.roundRect(px - tw / 2 - 4, py - 3, tw + 8, size + 3, 3, stroke=0, fill=1); cv.setFillAlpha(1)
+            cv.setFillColor(HexColor('#3A4A2A')); cv.drawCentredString(px, py, txt)
     cv.setStrokeColor(INK); cv.setLineWidth(2.2); cv.rect(GX, GY, COLS * SQ, ROWS * SQ, stroke=1, fill=0)
     # labels on the edge roads, and square numbers outside the grid
     cv.setFillColor(SOFT); cv.setFont('Helvetica-Bold', 8)
@@ -277,11 +391,14 @@ def instructions(cv, ring=False):
     box(x1, top - h1, col_w, h1, '1. The puzzle')
     if ring:
         mini_map5(cv, x1 + 12, top - 76 * mm, 64 * mm)
-        lines(x1 + 16 + 66 * mm, top - 40, ['N = north (top)', 'S = south (bottom)', 'W = west (left)', 'E = east (right)', '', 'The grey middle', 'is the city we', 'already built!', '', 'A winding road', 'goes all the way', 'round the ring.'], 11, 15)
+        lines(x1 + 16 + 66 * mm, top - 40, ['N = north (top)', 'S = south (bottom)', 'W = west (left)', 'E = east (right)', '', 'The grey middle', 'is the city we', 'already built!', '', 'NEW: a mountain,', 'forest, farm,', 'river and a lake!'], 11, 15)
     else:
         mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
         lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Look for ponds', 'and streams!', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)
-    lines(x1 + 14, top - h1 + 34, ['The ROADS are already printed. They bend and curve and', 'join up from sheet to sheet. Design around them!'], 10.5, 14)
+    if ring:
+        lines(x1 + 14, top - h1 + 34, ['Roads and nature are already printed. Design around them!', 'In nature you may add a cabin, campsite, trail or lookout (max 2 floors).'], 10.5, 14)
+    else:
+        lines(x1 + 14, top - h1 + 34, ['The ROADS are already printed. They bend and curve and', 'join up from sheet to sheet. Design around them!'], 10.5, 14)
     # 2. size
     x2 = m + col_w + 10 * mm
     box(x2, top - h1, col_w, h1, '2. How big is a square?')
@@ -356,13 +473,66 @@ def instructions(cv, ring=False):
     cv.drawString(x3 + 14, top2 - h2 + 18, 'Tip: draw lightly in pencil first, then colour it in!')
 
 
+def design_space():
+    """How many squares on each ring sheet are free to design (not road, water, forest, farm or mountain)."""
+    def curve(pts, straight=False, n=30):
+        out = []
+        if straight:
+            for a, b in zip(pts, pts[1:]):
+                out += [(a[0] + (b[0] - a[0]) * k / (n * 4), a[1] + (b[1] - a[1]) * k / (n * 4)) for k in range(n * 4 + 1)]
+            return out
+        for i in range(len(pts) - 1):
+            p0 = pts[i - 1] if i > 0 else pts[i]; p1 = pts[i]; p2 = pts[i + 1]; p3 = pts[i + 2] if i + 2 < len(pts) else pts[i + 1]
+            c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6); c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
+            for k in range(n + 1):
+                t = k / n; m = 1 - t
+                out.append((m ** 3 * p1[0] + 3 * m * m * t * c1[0] + 3 * m * t * t * c2[0] + t ** 3 * p2[0], m ** 3 * p1[1] + 3 * m * m * t * c1[1] + 3 * m * t * t * c2[1] + t ** 3 * p2[1]))
+        return out
+    segs = [(w / 2 + .1, curve(pts, 'straight' in f)) for w, pts, *f in ROADS + RING_ROADS] + [(STREAM_W / 2 + .1, curve(st)) for st in STREAMS + RING_STREAMS] + [(RIVER_W / 2 + .1, curve(RIVER))]
+    lx, ly, rx, ry = LAKE
+    def blocked(x, y):
+        if inside(FOREST, x, y) or inside(FARM, x, y) or inside(MOUNTAIN[0][0], x, y): return True
+        if ((x - lx) / (rx + 2.2)) ** 2 + ((y - ly) / (ry + 2.2)) ** 2 < 1: return True
+        for (px, py, prx, pry) in PONDS + RING_PONDS:
+            if ((x - px) / (prx + .7)) ** 2 + ((y - py) / (pry + .7)) ** 2 < 1: return True
+        for hw, pts in segs:
+            for (px, py) in pts:
+                if abs(px - x) < hw and abs(py - y) < hw and _m.hypot(px - x, py - y) < hw: return True
+        return False
+    out = {}
+    for n, (j, i) in RING.items():
+        out[n] = sum(1 for r in range(14) for c in range(20)
+                     if not any(blocked(j * 20 + c + a, i * 14 + r + b) for a, b in ((.5, .5), (.15, .15), (.85, .15), (.15, .85), (.85, .85))))
+    return out
+
+
 def overview(cv):
     """Teacher page: the whole 5 x 5 puzzle with every sheet's name."""
     cv.setFillColor(INK); cv.setFont('Helvetica-Bold', 30); cv.drawString(18 * mm, H - 24 * mm, 'Our City: the big puzzle (25 sheets)')
     cv.setFont('Helvetica', 13); cv.setFillColor(SOFT)
-    cv.drawString(18 * mm, H - 32 * mm, 'Grey = the first 9 sheets (already done). White = the 16 new ring sheets. The roads join up across every edge.')
-    size = min(W - 36 * mm, (H - 52 * mm) * 100 / 70)
-    mini_map5(cv, (W - size) / 2, 14 * mm, size, font=22)
+    cv.drawString(18 * mm, H - 32 * mm, 'Faded = the first 9 sheets (already done). The 16 ring sheets around them show how much room each has to design. Roads join up across every edge.')
+    size = min(W - 80 * mm, (H - 96 * mm) * 100 / 70)
+    x0, y0 = (W - size) / 2, 24 * mm
+    pad = 7   # squares of countryside shown around the city
+    k = size / 100
+    cv.saveState()
+    clip = cv.beginPath(); clip.rect(x0 - pad * k, y0 - pad * k, size + 2 * pad * k, size * .7 + 2 * pad * k); cv.clipPath(clip, stroke=0, fill=0)
+    cv.setFillColor(HexColor('#EEF3E6')); cv.rect(x0 - pad * k, y0 - pad * k, size + 2 * pad * k, size * .7 + 2 * pad * k, stroke=0, fill=1)
+    cv.translate(x0 + 20 * k, y0 + size * .7 - 14 * k); cv.scale(k, -k)
+    draw_city(cv, lines=False)
+    cv.restoreState()
+    mini_map5(cv, x0, y0, size, font=22, ghost=True)
+    free = design_space()
+    s5, t5 = size / 5, size * .7 / 5
+    for n, (c, r) in RING.items():
+        bx, by = x0 + (c + 1) * s5, y0 + (3 - r) * t5
+        txt = f'{free[n]} squares to design' if free[n] >= 60 else ('Nature sheet' if free[n] < 25 else f'{free[n]} squares · mostly nature')
+        cv.setFont('Helvetica-Bold', 10); tw = cv.stringWidth(txt, 'Helvetica-Bold', 10)
+        cv.setFillColor(white); cv.setFillAlpha(.85); cv.roundRect(bx + s5 / 2 - tw / 2 - 4, by + t5 * .55 - 30, tw + 8, 14, 3, stroke=0, fill=1); cv.setFillAlpha(1)
+        cv.setFillColor(HexColor('#2E6B3A') if free[n] < 60 else INK); cv.drawCentredString(bx + s5 / 2, by + t5 * .55 - 26, txt)
+    print('design space:', free)
+    cv.setFont('Helvetica-Oblique', 11); cv.setFillColor(SOFT)
+    cv.drawCentredString(W / 2, y0 - pad * k - 14, 'The mountain, forest, farm and lake carry on past the edge of the city, like real countryside.')
 
 
 import sys

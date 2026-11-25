@@ -45,6 +45,38 @@ PONDS = [(52, 8, 2.3, 1.6), (6, 17.5, 2.6, 1.9), (15, 37, 1.6, 1.2), (53, 35.5, 
 STREAMS = [[(24.5, 10), (22.5, 11.8), (23.5, 13.4)], [(51, 22.5), (54, 24.5), (57.5, 23.8)], [(6, 17.5), (9, 19.8), (8.5, 24.5)]]
 STREAM_W = .75
 ROUNDABOUT_R = 3.6
+# ---- the RING: 16 more sheets around the first city (5 x 5 sheets in all). Coordinates carry on past the old edges:
+# x from -20 to 80, y from -14 to 56. N1-N5 along the top, S1-S5 along the bottom, W1-W3 left, E1-E3 right.
+LOOP = [(-9, 21), (-10.5, 12), (-9, 3), (-6.5, -4), (0, -7), (10, -7.8), (20, -6.5), (30, -7.4), (40, -6.3), (50, -7.8), (60, -7), (66.5, -4),
+        (69, 3), (70.5, 12), (69, 21), (70.5, 30), (69, 39), (66.5, 46), (60, 49), (50, 50), (40, 48.6), (30, 49.8), (20, 48.6), (10, 50), (0, 49),
+        (-6.5, 46), (-9, 39), (-10.5, 30), (-9, 21)]
+RING_ROADS = [
+    (MAIN, [(-19.4, -13.4), (79.4, -13.4), (79.4, 55.4), (-19.4, 55.4), (-19.4, -13.4)], 'straight'),    # new outer ring road
+    (MAIN, LOOP),                                                                                         # winding loop through every ring sheet
+    (MAIN, [(30, .6), (28.5, -4), (31, -9.5), (30, -13.4)]),                                              # north avenue carries on
+    (MAIN, [(31, 41.4), (33, 46), (30.5, 51.5), (31, 55.4)]),                                             # south avenue carries on
+    (MAIN, [(.6, 22), (-4, 20.5), (-13.5, 23), (-19.4, 21.5)]),                                           # west
+    (MAIN, [(59.4, 17), (64, 18.5), (74, 16), (79.4, 17.5)]),                                             # east
+    (SMALL, [(17, .6), (15, -3.5), (16, -7.3)]),
+    (SMALL, [(47, .6), (49, -3.5), (47.5, -6.8)]),
+    (SMALL, [(10, -7.8), (8.5, -10.5), (10.5, -13.4)]),
+    (SMALL, [(-6.5, -4), (-12, -7), (-19.4, -6)]),
+    (SMALL, [(66.5, -4), (72, -8), (79.4, -7.5)]),
+    (SMALL, [(.6, 5), (-4, 3.5), (-9, 3)]),
+    (SMALL, [(.6, 30), (-4.5, 32), (-10.5, 30)]),
+    (SMALL, [(-9, 39), (-14, 41), (-19.4, 39.5)]),
+    (SMALL, [(59.4, 29), (64.5, 31), (70.5, 30)]),
+    (SMALL, [(69, 3), (74, 5.5), (79.4, 4)]),
+    (SMALL, [(70.5, 30), (75, 33.5), (79.4, 32.5)]),
+    (SMALL, [(21, 41.4), (18.5, 45), (20, 48.6)]),
+    (SMALL, [(50, 50), (48, 52.5), (50.5, 55.4)]),
+    (SMALL, [(-6.5, 46), (-11, 50), (-9, 55.4)]),
+    (SMALL, [(66.5, 46), (71, 50.5), (69, 55.4)]),
+]
+RING_PONDS = [(4, -10.5, 1.8, 1.3), (38, -10.8, 1.7, 1.2), (-15, 12, 1.5, 2), (75, 24.5, 1.5, 1.9), (12, 52.5, 1.9, 1.3), (44, 45, 1.6, 1.2), (-14.5, -10.5, 1.4, 1.1), (75, 51.5, 1.5, 1.1), (64.5, 8.5, 1.4, 1.1), (-14.5, 47.5, 1.5, 1.1), (73.5, -2.5, 1.4, 1.1)]
+RING_STREAMS = [[(38, -10.8), (41, -10.2), (43, -11.5)], [(-15, 12), (-16, 8.5), (-14, 6.5)], [(12, 52.5), (8.5, 52), (6, 53.2)], [(75, 24.5), (76, 28), (74.5, 29.5)]]
+RING = {**{f'N{k + 1}': (k - 1, -1) for k in range(5)}, **{f'S{k + 1}': (k - 1, 3) for k in range(5)},
+        **{f'W{k + 1}': (-1, k) for k in range(3)}, **{f'E{k + 1}': (3, k) for k in range(3)}}   # name -> (sheet column, sheet row); A1 is (0, 0)
 
 def smooth_path(cv, pts):
     """Catmull-Rom curve through pts, as Bezier curves."""
@@ -66,19 +98,19 @@ def draw_city(cv, lines=True):
     """Draws river, roads and roundabout in city units (current transform: 1 unit = 1 square, y down)."""
     cv.setLineCap(1); cv.setLineJoin(1)
     cv.setStrokeColor(WATER); cv.setLineWidth(STREAM_W)
-    for st in STREAMS: cv.drawPath(smooth_path(cv, st), stroke=1, fill=0)
-    for (px, py, rx, ry) in PONDS:
+    for st in STREAMS + RING_STREAMS: cv.drawPath(smooth_path(cv, st), stroke=1, fill=0)
+    for (px, py, rx, ry) in PONDS + RING_PONDS:
         cv.setFillColor(PARK); cv.ellipse(px - rx - .7, py - ry - .7, px + rx + .7, py + ry + .7, stroke=0, fill=1)
         cv.setFillColor(WATER); cv.setStrokeColor(WATER_D); cv.setLineWidth(.06); cv.ellipse(px - rx, py - ry, px + rx, py + ry, stroke=1, fill=1)
     circ = cv.beginPath(); circ.circle(*TOWER_C, ROUNDABOUT_R)
     for col, extra in ((HexColor('#7E858C'), .14), (ROAD, 0)):     # dark curb first, then the road on top
         cv.setStrokeColor(col)
-        for w, pts, *f in ROADS:
+        for w, pts, *f in ROADS + RING_ROADS:
             cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
         cv.setLineWidth(MAIN + extra); cv.drawPath(circ, stroke=1, fill=0)
     if lines:
         cv.setStrokeColor(ROAD_LINE); cv.setLineWidth(.07); cv.setDash(.35, .3)
-        for w, pts, *f in ROADS:
+        for w, pts, *f in ROADS + RING_ROADS:
             if w == MAIN: cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
         cv.drawPath(circ, stroke=1, fill=0); cv.setDash()
     cv.setFillColor(HexColor('#BFE5B5')); cv.circle(*TOWER_C, ROUNDABOUT_R - MAIN / 2 - .07, stroke=0, fill=1)
@@ -89,6 +121,12 @@ H_ROAD_C = 8                       # on row C it runs along the river instead
 BANK_ROW = 12                      # row C: riverbank park between the river and the bottom edge road
 PARK = HexColor('#BFE5B5')  # light green (riverbank)
 SHEETS = [r + c for r in 'ABC' for c in '123']   # A = top row of the city, C = bottom (river)
+
+
+def sheet_pos(name):
+    """(sheet column, sheet row) of a sheet; A1 = (0, 0), the ring goes from -1 to 3."""
+    if name in RING: return RING[name]
+    return int(name[1]) - 1, 'ABC'.index(name[0])
 
 
 def cell(c, r):
@@ -115,8 +153,9 @@ def star(cv, cx, cy, r, color):
     cv.drawPath(p, fill=1, stroke=1)
 
 
-def mini_map(cv, x, y, size, here=None):
-    """3x3 locator: rows A (top) to C (bottom), river on row C, tower on B2."""
+def mini_map(cv, x, y, size, here=None, ring=False):
+    """Locator map. 3x3 (A1..C3), or 5x5 with the ring sheets around it."""
+    if ring: return mini_map5(cv, x, y, size, here)
     s = size / 3
     for i, name in enumerate(SHEETS):
         r, c = i // 3, i % 3
@@ -138,6 +177,29 @@ def mini_map(cv, x, y, size, here=None):
         cv.drawCentredString(bx + s / 2, by + s * .62, name)
 
 
+def mini_map5(cv, x, y, size, here=None, done_shade=True, font=None):
+    sw, sh = size, size * 70 / 100       # 5 x 5 sheets, each 20 x 14 squares
+    s, t = sw / 5, sh / 5
+    names = {pos: n for n, pos in RING.items()}
+    names.update({(c, r): f'{"ABC"[r]}{c + 1}' for r in range(3) for c in range(3)})
+    for (c, r), n in names.items():
+        bx, by = x + (c + 1) * s, y + (3 - r) * t
+        cv.setFillColor(HexColor('#FFE08A') if n == here else (HexColor('#E3E8EC') if (done_shade and n[0] in 'ABC' and len(n) == 2 and n not in RING) else white))
+        cv.rect(bx, by, s, t, stroke=0, fill=1)
+    cv.saveState()
+    clip = cv.beginPath(); clip.rect(x, y, sw, sh); cv.clipPath(clip, stroke=0, fill=0)
+    cv.translate(x + s, y + 4 * t); cv.scale(s / 20, -t / 14)
+    draw_city(cv, lines=False)
+    cv.setFillColor(TOWER); cv.rect(TOWER_C[0] - 1, TOWER_C[1] - 1, 2, 2, stroke=0, fill=1)
+    cv.restoreState()
+    for (c, r), n in names.items():
+        bx, by = x + (c + 1) * s, y + (3 - r) * t
+        cv.setStrokeColor(INK); cv.setLineWidth(.8 if not font else 1.4); cv.rect(bx, by, s, t, stroke=1, fill=0)
+        cv.setFillColor(INK); cv.setFont('Helvetica-Bold', font or max(5, t * .34))
+        cv.drawCentredString(bx + s / 2, by + t * .55 - (font or 0) * .3, n)
+    cv.setStrokeColor(INK); cv.setLineWidth(1.6 if font else 1); cv.rect(x + s, y + t, 3 * s, 3 * t, stroke=1, fill=0)
+
+
 def grid_sheet(cv, name, title=None):
     row = name[0]
     # header
@@ -148,12 +210,17 @@ def grid_sheet(cv, name, title=None):
     cv.drawString(GX, H - 24 * mm, t); tx = GX + cv.stringWidth(t, 'Helvetica', 12)
     star(cv, tx + 7, H - 24 * mm + 4, 7, HexColor('#FFD23C')); cv.setFillColor(SOFT); cv.setFont('Helvetica', 12)
     cv.drawString(tx + 17, H - 24 * mm, '= snack shop (give it a name!)')
-    mini_map(cv, W - GX - 24 * mm, H - 27 * mm, 24 * mm, here=name)
-    cv.setFont('Helvetica', 8); cv.setFillColor(SOFT)
-    cv.drawRightString(W - GX - 26 * mm, H - 26 * mm, 'Where your sheet goes:')
+    if name in RING:
+        mini_map5(cv, W - GX - 34 * mm, H - 27 * mm, 34 * mm, here=name)
+        cv.setFont('Helvetica', 8); cv.setFillColor(SOFT)
+        cv.drawRightString(W - GX - 36 * mm, H - 26 * mm, 'Where your sheet goes:')
+    else:
+        mini_map(cv, W - GX - 24 * mm, H - 27 * mm, 24 * mm, here=name)
+        cv.setFont('Helvetica', 8); cv.setFillColor(SOFT)
+        cv.drawRightString(W - GX - 26 * mm, H - 26 * mm, 'Where your sheet goes:')
 
     # roads + river: one city map, cut into this sheet's piece
-    i, j = 'ABC'.index(row), int(name[1]) - 1
+    j, i = sheet_pos(name)
     cv.saveState()
     clip = cv.beginPath(); clip.rect(GX, GY, COLS * SQ, ROWS * SQ); cv.clipPath(clip, stroke=0, fill=0)
     cv.translate(GX - j * COLS * SQ, GY + ROWS * SQ + i * ROWS * SQ); cv.scale(SQ, -SQ)
@@ -182,15 +249,16 @@ def grid_sheet(cv, name, title=None):
     cv.drawString(GX + 5, GY + ROWS * SQ - 10, 'Roads, ponds and streams are already drawn · design around them!')
     # footer
     cv.setFont('Helvetica', 8)
-    cv.drawRightString(W - GX, 5 * mm, f'Sheet {name}  ·  Write your first name on the BACK of this sheet  ·  Mr. Romanek’s Grade 4 · Banpo Pigeon: Our City')
+    cv.drawRightString(W - GX, 5 * mm, f'Sheet {name}  ·  Write your first name on the BACK of this sheet  ·  Mr. Romanek’s Grade 4 · Pigeon Pigeon: Our City')
 
 
-def instructions(cv):
+def instructions(cv, ring=False):
     m = 18 * mm
     cv.setFillColor(INK); cv.setFont('Helvetica-Bold', 34)
     cv.drawString(m, H - 26 * mm, 'Design Our City!')
     cv.setFont('Helvetica', 14); cv.setFillColor(SOFT)
-    cv.drawString(m, H - 34 * mm, 'Everyone designs one part of the city. We put the 9 sheets together like a puzzle, and it becomes a 3D city you can fly over in Banpo Pigeon!')
+    cv.drawString(m, H - 34 * mm, 'Our city is growing! 16 new sheets go all the way around the first city. Design one, we join them like a puzzle, and you fly over it in Pigeon Pigeon!' if ring else
+                  'Everyone designs one part of the city. We put the 9 sheets together like a puzzle, and it becomes a 3D city you can fly over in Banpo Pigeon!')
 
     def box(x, y, w, h, title):
         cv.setFillColor(HexColor('#F7F9FB')); cv.setStrokeColor(INK); cv.setLineWidth(1.5)
@@ -207,8 +275,12 @@ def instructions(cv):
     # 1. the puzzle
     x1 = m; h1 = 112 * mm
     box(x1, top - h1, col_w, h1, '1. The puzzle')
-    mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
-    lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Look for ponds', 'and streams!', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)
+    if ring:
+        mini_map5(cv, x1 + 12, top - 76 * mm, 64 * mm)
+        lines(x1 + 16 + 66 * mm, top - 40, ['N = north (top)', 'S = south (bottom)', 'W = west (left)', 'E = east (right)', '', 'The grey middle', 'is the city we', 'already built!', '', 'A winding road', 'goes all the way', 'round the ring.'], 11, 15)
+    else:
+        mini_map(cv, x1 + 14, top - 82 * mm, 58 * mm)
+        lines(x1 + 14 + 62 * mm, top - 40, ['A = top row', 'B = middle row', 'C = bottom row', '', 'Look for ponds', 'and streams!', '', 'B2 has the', 'Start Tower in', 'a roundabout. The', 'pigeon takes off', 'from its roof!'], 11, 15)
     lines(x1 + 14, top - h1 + 34, ['The ROADS are already printed. They bend and curve and', 'join up from sheet to sheet. Design around them!'], 10.5, 14)
     # 2. size
     x2 = m + col_w + 10 * mm
@@ -284,10 +356,29 @@ def instructions(cv):
     cv.drawString(x3 + 14, top2 - h2 + 18, 'Tip: draw lightly in pencil first, then colour it in!')
 
 
-cv = canvas.Canvas('Our_City_design_sheets.pdf', pagesize=landscape(A3))
-cv.setTitle('Our City: design sheets'); cv.setAuthor('Mr. Romanek')
-instructions(cv); cv.showPage()
-for n in SHEETS:
-    grid_sheet(cv, n); cv.showPage()
-cv.save()
+def overview(cv):
+    """Teacher page: the whole 5 x 5 puzzle with every sheet's name."""
+    cv.setFillColor(INK); cv.setFont('Helvetica-Bold', 30); cv.drawString(18 * mm, H - 24 * mm, 'Our City: the big puzzle (25 sheets)')
+    cv.setFont('Helvetica', 13); cv.setFillColor(SOFT)
+    cv.drawString(18 * mm, H - 32 * mm, 'Grey = the first 9 sheets (already done). White = the 16 new ring sheets. The roads join up across every edge.')
+    size = min(W - 36 * mm, (H - 52 * mm) * 100 / 70)
+    mini_map5(cv, (W - size) / 2, 14 * mm, size, font=22)
+
+
+import sys
+if '--ring' in sys.argv:
+    cv = canvas.Canvas('Our_City_ring_sheets.pdf', pagesize=landscape(A3))
+    cv.setTitle('Our City: the ring (16 more sheets)'); cv.setAuthor('Mr. Romanek')
+    instructions(cv, ring=True); cv.showPage()
+    overview(cv); cv.showPage()
+    for n in RING:
+        grid_sheet(cv, n); cv.showPage()
+    cv.save()
+else:
+    cv = canvas.Canvas('Our_City_design_sheets.pdf', pagesize=landscape(A3))
+    cv.setTitle('Our City: design sheets'); cv.setAuthor('Mr. Romanek')
+    instructions(cv); cv.showPage()
+    for n in SHEETS:
+        grid_sheet(cv, n); cv.showPage()
+    cv.save()
 print('ok')

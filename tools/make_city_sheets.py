@@ -99,11 +99,11 @@ LAKE = (80, 52, 13, 9)       # x, y, rx, ry: the lake (with a beach) spreads off
 _g = _r.Random(5)
 FOREST_TREES = [(x, y, .45 + _g.random() * .35) for x, y in ((_g.uniform(-45, 10), _g.uniform(-30, 40)) for _ in range(5200)) if inside(FOREST, x, y)]
 LABELS = [  # (x, y, text, size) in squares
-    (71, -10.6, 'MT. PIGEON', 22), (71.5, -9.4, 'already made: don\u2019t draw here', 9),
+    (71, -10.6, 'MT. PIGEON (flat foothills)', 18), (71.5, -9.4, 'already made: don\u2019t draw here', 9),
     (63.5, -9.6, 'Road to the Lookout', 10), (72, 12, 'River', 13), (72, 28, 'River', 13),
     (69.5, 44.2, 'BEACH', 13), (78, 51.2, 'LAKE', 22), (75.5, 54.6, 'Lake Bridge', 10),
     (-16, -1, 'RACCOON FOREST', 20), (-16, 20, 'RACCOON FOREST', 20), (-12, -11.6, 'RACCOON FOREST', 16), (4, -12.2, 'Forest pond', 9),
-    (-15, 51.5, 'FARM', 22), (-7, 55, 'FARM', 14), (58.5, -12.3, 'Tunnel', 11), (77.6, 6, 'Tunnel', 11)]
+    (-15, 51.5, 'FARM', 22), (-7, 55, 'FARM', 14)]
 NATURE_NOTE = 'Nature (mountain, forest, farm, lake): you can add small things like a cabin, campsite, trail or lookout (max 2 floors).'
 
 def draw_nature(cv):
@@ -132,7 +132,7 @@ def draw_nature(cv):
     cv.setFillColor(WATER); cv.setStrokeColor(WATER_D); cv.setLineWidth(.08); cv.ellipse(lx - rx, ly - ry, lx + rx, ly + ry, stroke=1, fill=1)
 
 def draw_mountain(cv):
-    """The mountain sits on top of the roads: the ring road goes through it in a tunnel."""
+    """Mt. Pigeon. Inside the city grid it is flat foothills; it only starts to climb outside the city."""
     def poly(pts):
         p = cv.beginPath(); p.moveTo(*pts[0])
         for q in pts[1:]: p.lineTo(*q)
@@ -140,20 +140,6 @@ def draw_mountain(cv):
     for pts, col, h in MOUNTAIN:
         cv.setFillColor(HexColor(col)); cv.setStrokeColor(HexColor('#7A6A55')); cv.setLineWidth(.07)
         cv.drawPath(poly(pts), stroke=1, fill=1)
-    # the tunnel: dashed outline of the ring road under the mountain, dark portals where it goes in
-    base = MOUNTAIN[0][0]
-    cv.setStrokeColor(HexColor('#5A4A3A')); cv.setLineWidth(.08); cv.setDash(.4, .3)
-    (px1, _, _), (_, py2, _) = tunnel_portals()
-    h = MAIN / 2
-    cv.line(px1, -13.4 - h, 79.4 + h, -13.4 - h); cv.line(79.4 + h, -13.4 - h, 79.4 + h, py2)     # outer side
-    cv.line(px1, -13.4 + h, 79.4 - h, -13.4 + h); cv.line(79.4 - h, -13.4 + h, 79.4 - h, py2)     # inner side
-    cv.setDash()
-    for (x, y, horiz) in tunnel_portals():
-        cv.setFillColor(HexColor('#3A3530'))
-        if horiz: cv.rect(x - .25, y - MAIN / 2 - .2, .5, MAIN + .4, stroke=0, fill=1)
-        else: cv.rect(x - MAIN / 2 - .2, y - .25, MAIN + .4, .5, stroke=0, fill=1)
-    # the river's waterfall
-    cv.setStrokeColor(white); cv.setLineWidth(.12)
 
 
 def tunnel_portals():
@@ -214,7 +200,7 @@ def draw_city(cv, lines=True):
     for col, extra in ((HexColor('#7E858C'), .14), (ROAD, 0)):
         cv.setStrokeColor(col)
         for w, pts, *f in RING_ROADS:
-            if 'over' in f: cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
+            cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
     pass
 
 V_ROADS = (6, 13)                  # streets running up/down on every sheet (they line up from sheet to sheet)

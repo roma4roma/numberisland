@@ -16,8 +16,12 @@ RX, RY = 82, 72
 g = random.Random(11); PH = [g.random() * 6.28 for _ in range(3)]
 PROFILE = [(1, 0), (.8, 60), (.62, 130), (.45, 200), (.3, 260), (.17, 305), (0, 330)]   # wide and gradual, rounded top
 def mountain_h(x, z):
-    """height in metres at world metres (x, z)"""
+    """height in metres at world metres (x, z). The whole city grid stays FLAT: the mountain only rises outside it."""
     X, Z = x / M, z / M
+    dx_ = max(-20 - X, 0, X - 80); dz_ = max(-14 - Z, 0, Z - 56)
+    ramp = min(1, max(0, (math.hypot(dx_, dz_) - 2) / 10)); ramp = ramp * ramp * (3 - 2 * ramp)
+    return raw_h(X, Z) * ramp
+def raw_h(X, Z):
     a = math.atan2((Z - cy) / RY, (X - cx) / RX)
     w = 1 + .025 * (math.sin(3 * a + PH[0]) + .6 * math.sin(5 * a + PH[1]) + .4 * math.sin(9 * a + PH[2]))
     r = math.hypot((X - cx) / RX, (Z - cy) / RY) / w
@@ -98,10 +102,8 @@ for name, items in RING_SHEETS.items():
             continue
         it = {'k': kind, 'x': round((ox + c) * M, 1), 'z': round((oy + r) * M, 1), 'w': round(w * M, 1), 'd': round(d * M, 1), 'f': fl,
               'c': None if kind in ('raccoon', 'pigeonstatue') else col, 'n': label, 's': name}
-        if kind in ('raccoon', 'pigeonstatue'):   # statues look at the welcome sign on their sheet
-            g0 = [q for q in items if q[0] == 'gantry'][0]
-            tx_, tz_ = (ox + (g0[1] + g0[3]) / 2) * M, (oy + (g0[2] + g0[4]) / 2) * M
-            it['rot'] = round(math.atan2(tx_ - (it['x'] + it['w'] / 2), tz_ - (it['z'] + it['d'] / 2)), 3)
+        if kind in ('raccoon', 'pigeonstatue'):
+            it['rot'] = round(math.atan2(300 - (it['x'] + it['w'] / 2), 210 - (it['z'] + it['d'] / 2)), 3)   # face the middle of the city
         C['items'].append(it); keepout.append((it['x'] - 6, it['z'] - 6, it['w'] + 12, it['d'] + 12))
     C['done'].append(name)
 def kept_out(x, z): return any(a < x < a + w and b < z < b + d for a, b, w, d in keepout)

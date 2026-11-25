@@ -1,7 +1,7 @@
 import math, importlib.util, sys
 spec=importlib.util.spec_from_file_location('m','make_city_sheets.py')
 src=open('make_city_sheets.py').read()
-src=src[:src.index("cv = canvas.Canvas(")]
+src=src[:src.index("def design_space(")] if "def design_space(" in src else src[:src.index("cv = canvas.Canvas(")]
 ns={}; exec(src, ns)
 def curve(pts, straight=False, n=40):
     out=[]

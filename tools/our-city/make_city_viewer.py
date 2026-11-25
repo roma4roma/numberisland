@@ -3,6 +3,7 @@ usage: python3 make_city_viewer.py OUR_CITY_PIGEON.html OUT.html
 OUR_CITY_PIGEON.html = output of make_pigeon_city.py run on the original Banpo Pigeon file (no math patch)."""
 import sys
 src, out = sys.argv[1:3]
+BIG = '--big' in sys.argv   # the city with the ring + countryside: see further, more trees
 s = open(src, encoding='utf-8').read()
 
 CSS = """<style>
@@ -40,5 +41,12 @@ s = s.replace('</body>', HTML + '\n</body>')
 i = s.index('</style>') + len('</style>')
 s = s[:i] + CSS + s[i:]
 s = s.replace('<title>Pigeon Pigeon</title>', '<title>Our City · 3D</title>')
+if BIG:
+    for a, b in [('$t.fog=new Co(cf,260,1e3)', '$t.fog=new Co(cf,1500,4200)'), ('ue=new tn(65,1,.15,1500)', 'ue=new tn(65,1,.5,7000)'),
+                 ('let p=330*330,g=0;', 'let p=2600*2600,g=0;'), ('t=6000,e=new ce(.18,.25,4,5,1,!0)', 't=12000,e=new ce(.18,.25,4,5,1,!0)')]:
+        assert s.count(a) == 1, a
+        s = s.replace(a, b)
+    s = s.replace("const S={yaw:.6,pitch:.62,dist:520,", "const S={yaw:.6,pitch:.66,dist:1350,")
+    s = s.replace(",25,900)", ",25,2600)").replace("clamp(S.tx-cy*dx*k-sy*dy*k,-50,650)", "clamp(S.tx-cy*dx*k-sy*dy*k,-450,1050)").replace("clamp(S.tz+sy*dx*k-cy*dy*k,-50,470)", "clamp(S.tz+sy*dx*k-cy*dy*k,-350,780)")
 open(out, 'w', encoding='utf-8').write(s)
 print('ok')

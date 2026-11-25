@@ -99,7 +99,7 @@ LAKE = (80, 52, 13, 9)       # x, y, rx, ry: the lake (with a beach) spreads off
 _g = _r.Random(5)
 FOREST_TREES = [(x, y, .45 + _g.random() * .35) for x, y in ((_g.uniform(-45, 10), _g.uniform(-30, 40)) for _ in range(5200)) if inside(FOREST, x, y)]
 LABELS = [  # (x, y, text, size) in squares
-    (70, -11.8, 'MT. PIGEON', 22), (70.5, -10.6, 'already made: don\u2019t draw here', 9), (79, -12.4, 'Peak 500 m', 10),
+    (70, -11.8, 'MT. PIGEON', 22), (70.5, -10.6, 'already made: don\u2019t draw here', 9), (79, -12.4, 'Peak 350 m', 10),
     (66, -9.2, 'Lookout', 10), (71, 3.6, 'Waterfall', 10), (72, 12, 'River', 13), (72, 28, 'River', 13),
     (69.5, 44.2, 'BEACH', 13), (78, 51.2, 'LAKE', 22), (75.5, 54.6, 'Lake Bridge', 10),
     (-16, -1, 'FOREST', 22), (-16, 20, 'FOREST', 22), (-12, -11.6, 'FOREST', 18), (4, -12.2, 'Forest pond', 9),

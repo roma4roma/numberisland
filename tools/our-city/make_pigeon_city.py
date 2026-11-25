@@ -206,17 +206,35 @@ for r in C['roads']:
     for a in range(0, len(flat), 2):
         if not pts or math.hypot(flat[a] - pts[-2], flat[a + 1] - pts[-1]) > .3: pts += flat[a:a + 2]
     if r['main']:
-        roads.append([r['w'], 1, pts, NAMES[mi % len(NAMES)], 0, 2]); mi += 1
+        roads.append([r['w'], 1, pts, r.get('name') or NAMES[mi % len(NAMES)], 0, 2]); mi += 1
     else:
-        roads.append([r['w'], 0, pts, 'Lane', 0, 1])
+        roads.append([r['w'], 0, pts, r.get('name') or 'Lane', 0, 1])
 ring = []
 for t in range(49):
     a = 2 * math.pi * t / 48; ring += [round(TX + C['rr'] * math.cos(a), 1), round(TZ + C['rr'] * math.sin(a), 1)]
 roads.append([C['mainw'], 1, ring, 'Roundabout', 0, 2])
 
 # street trees along the lanes (kept off buildings by the engine's own check when walking)
-terrain = {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
-city = {'home': -1, 'bounds': [-40.0, -40.0, 640.0, 460.0], 'buildings': buildings, 'roads': roads, 'areas': areas,
+terrain = C.get('terrain') or {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
+NAT = C.get('nature')
+def mountain_flat(q):
+    T_ = C['terrain']; i_ = round((q[0] - T_['x0']) / T_['step']); j_ = round((q[1] - T_['z0']) / T_['step'])
+    return all(T_['dm'][min(T_['nz'] - 1, max(0, j_ + b_)) * T_['nx'] + min(T_['nx'] - 1, max(0, i_ + a_))] < 5 for a_ in (-2, 0, 2) for b_ in (-2, 0, 2))
+if NAT:   # the ring's countryside: river + lake are water, forest trees, signs
+    R, hw = [q for q in NAT['river'] if mountain_flat(q)], NAT['riverW'] / 2   # flat water only below the waterfall
+    Lp, Rp = [], []
+    for a in range(len(R)):
+        p0, p1 = R[max(0, a - 1)], R[min(len(R) - 1, a + 1)]
+        dx, dz = p1[0] - p0[0], p1[1] - p0[1]; l = math.hypot(dx, dz) or 1
+        Lp.append((R[a][0] - dz / l * hw, R[a][1] + dx / l * hw)); Rp.append((R[a][0] + dz / l * hw, R[a][1] - dx / l * hw))
+    areas.append([1, ccw([v for q in Lp + Rp[::-1] for v in q])])
+    lx, lz, lrx, lrz = NAT['lake']
+    areas.append([1, ellipse(lx, lz, lrx, lrz, 64)])
+    trees += NAT['trees']
+    face = lambda x, z: round(math.atan2(300 - x, 210 - z), 3)
+    for x, z, n in [(626, -28, 'Mt. Pigeon'), (688, 420, 'Pigeon Lake'), (-118, 432, 'Pigeon Farm'), (-128, 70, 'Pigeon Forest')]:
+        parksigns.append([x, z, face(x, z), n])
+city = {'home': -1, 'bounds': C.get('bounds') or [-40.0, -40.0, 640.0, 460.0], 'nature': NAT, 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
         'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'planes': PLANES, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
@@ -361,6 +379,50 @@ if(az){cl(cx-2.2,cz-20,cx+2.2,cz+16.5,y+2.1);cl(cx-15,cz-1.8,cx+15,cz+3.8,y-.6)}
 for(const[a,b,c,d,top]of extra){const i0=Math.max(0,Math.floor((a-Yt)/Zt)),i1=Math.min(fe-1,Math.floor((c-Yt)/Zt)),j0=Math.max(0,Math.floor((b-jt)/Zt)),j1=Math.min(Ke-1,Math.floor((d-jt)/Zt));for(let zz=j0;zz<=j1;zz++)for(let xx=i0;xx<=i1;xx++){const q=zz*fe+xx;$i[q]<top&&($i[q]=top)}}}
 for(const[k,x,z,w,d]of ie.deco||[])k==='pool'?pool(x,z,w,d):k==='waterpark'&&waterpark(x,z,w,d);
 for(const P of ie.planes||[])plane(...P);
+
+if(ie.nature){const N=ie.nature;
+const addSolid=(a,b,c,d,top)=>{const i0=Math.max(0,Math.floor((a-Yt)/Zt)),i1=Math.min(fe-1,Math.floor((c-Yt)/Zt)),j0=Math.max(0,Math.floor((b-jt)/Zt)),j1=Math.min(Ke-1,Math.floor((d-jt)/Zt));for(let zz=j0;zz<=j1;zz++)for(let xx=i0;xx<=i1;xx++){const q=zz*fe+xx;$i[q]<top&&($i[q]=top)}};
+const seg=(x0,z0,x1,z1,w,h,y,c,m)=>{const L=Math.hypot(x1-x0,z1-z0);const b=new T.Mesh(new T.Box(w,h,L+.3),m||mat(c));b.position.set((x0+x1)/2,y,(z0+z1)/2);b.rotation.y=Math.atan2(x1-x0,z1-z0);$t.add(b);return b};
+// tunnels: road, walls, roof, lights, stone portals
+const LAMP=new Be({color:new Pt('#fff2b0')});
+for(const P of N.tunnels){for(let k=1;k<P.length;k++){const[a,b]=P[k-1],[c,d]=P[k];seg(a,b,c,d,12.5,.3,.25,'#3a3f46');const L=Math.hypot(c-a,d-b),nx=-(d-b)/L,nz=(c-a)/L;
+for(const s of[-1,1])seg(a+nx*s*7.6,b+nz*s*7.6,c+nx*s*7.6,d+nz*s*7.6,.6,9,4.5,'#8b8f94');seg(a,b,c,d,16,.6,9.2,'#6d7177');if(k%4===0)seg(a,b,a+(c-a)*.08,b+(d-b)*.08,1.2,.2,8.8,null,LAMP)}
+for(const e of[0,1]){const q=e?P[P.length-1]:P[0],r=e?P[P.length-2]:P[1],yaw=Math.atan2(q[0]-r[0],q[1]-r[1]),g=new T.Group();g.position.set(q[0],0,q[1]);g.rotation.y=yaw;$t.add(g);
+for(const s of[-1,1])box(5,11,3,'#9a9590',s*10.3,5.5,0,g);box(26,4,3,'#9a9590',0,12.5,0,g);box(26,1,3.4,'#7a7570',0,14.8,0,g);const t2=new T.Mesh(new T.Box(15.6,9,.2),new Be({color:new Pt('#111418')}));t2.position.set(0,4.5,-1.6);g.add(t2)}}
+const TS=[];for(const P of N.tunnels)for(let k=1;k<P.length;k++)TS.push([P[k-1][0],P[k-1][1],P[k][0],P[k][1]]);
+const inTunnel=(x,z)=>{for(const[a,b,c,d]of TS){const dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<56)return!0}return!1};
+window.__inTunnel=inTunnel;
+// the waterfall: a cascade running down the mountain where the river starts
+{const R=N.river,pts=R.filter(([x,z])=>ne(x,z)>1.2);if(pts.length>1){const cv=document.createElement('canvas');cv.width=64;cv.height=256;const c2=cv.getContext('2d');c2.fillStyle='#bfe9ff';c2.fillRect(0,0,64,256);for(let k=0;k<70;k++){c2.fillStyle=k%3?'#ffffff':'#8fd3f5';c2.fillRect(Math.random()*64,Math.random()*256,2+Math.random()*5,14+Math.random()*30)}
+const tx=new Pe(cv);tx.wrapS=tx.wrapT=1e3;tx.colorSpace=me;const V=[],U=[],I=[];let acc=0;const hw=N.riverW/2+1;
+pts.forEach(([x,z],k)=>{const p0=pts[Math.max(0,k-1)],p1=pts[Math.min(pts.length-1,k+1)],dx=p1[0]-p0[0],dz=p1[1]-p0[1],l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l,y=ne(x,z)+4;if(k)acc+=Math.hypot(x-pts[k-1][0],z-pts[k-1][1]);
+V.push(x+nx*hw,y,z+nz*hw,x-nx*hw,y,z-nz*hw);U.push(0,acc/25,1,acc/25);if(k){const o=(k-1)*2;I.push(o,o+1,o+2,o+1,o+3,o+2)}});
+const gm=new oe;gm.setAttribute('position',new Ut(V,3));gm.setAttribute('uv',new Ut(U,2));gm.setIndex(I);gm.computeVertexNormals();
+const wm=new Be({map:tx,transparent:!0,opacity:.92,side:2});$t.add(new T.Mesh(gm,wm));const end=pts[pts.length-1];
+const mist=[];for(let k=0;k<7;k++){const m=new T.Mesh(new T.Sph(2+Math.random()*2,10,8),new T.Mat({color:new Pt('#ffffff'),transparent:!0,opacity:.45}));$t.add(m);mist.push([m,Math.random()*6])}
+LIVE.push(dt=>{tx.offset.y-=dt*1.6;for(const[m,o]of mist){const t=(performance.now()/1e3+o)%3;m.position.set(end[0]+Math.sin(o*3)*6,ne(end[0],end[1])+1+t*2.5,end[1]+Math.cos(o*3)*6);m.scale.setScalar(.6+t*.4);m.material.opacity=.45*(1-t/3)}})}}
+// the Mountain Road: drawn as its own ribbon a little above the slope (the game's road follows the ground too closely on steep hills)
+if(N.mroad){const P=N.mroad,V=[],I=[],hw=4.6,ASP=new T.Mat({color:new Pt('#4a4f56')}),CURB=new T.Mat({color:new Pt('#b9b4aa')});
+const rib=(w,dy,m)=>{const V=[],I=[];P.forEach(([x,z],k)=>{const p0=P[Math.max(0,k-1)],p1=P[Math.min(P.length-1,k+1)],dx=p1[0]-p0[0],dz=p1[1]-p0[1],l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l;
+const y=Math.max(ne(x+nx*w,z+nz*w),ne(x-nx*w,z-nz*w),ne(x,z))+dy;V.push(x+nx*w,y,z+nz*w,x-nx*w,y,z-nz*w);if(k){const o=(k-1)*2;I.push(o,o+2,o+1,o+1,o+2,o+3)}});
+const g=new oe;g.setAttribute('position',new Ut(V,3));g.setIndex(I);g.computeVertexNormals();const m2=new T.Mesh(g,m);m2.material.side=2;$t.add(m2)};
+rib(hw+1,.9,CURB);rib(hw,1.05,ASP);
+for(let k=2;k<P.length;k+=3){const[x,z]=P[k],y=Math.max(ne(x,z),ne(x+3,z),ne(x-3,z),ne(x,z+3),ne(x,z-3))+1.12;box(.3,.03,2.2,'#ffd23c',x,y,z).rotation.y=Math.atan2(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1])}}
+// the lookout at the top of the mountain road
+{const[x,z]=N.lookout,y=ne(x,z),g=new T.Group();g.position.set(x,y,z);$t.add(g);for(const[a,b]of[[-3.5,-3.5],[3.5,-3.5],[-3.5,3.5],[3.5,3.5]])box(.5,4,.5,'#7a4f2c',a,2,b,g);box(8.4,.5,8.4,'#a0703f',0,4.2,0,g);
+for(const[a,b,w,d]of[[0,-4,8.4,.15],[0,4,8.4,.15],[-4,0,.15,8.4],[4,0,.15,8.4]])box(w,1.1,d,'#ffffff',a,5,b,g);const rf=new T.Mesh(new T.Cone(6.4,2.6,4),mat('#d94b3c'));rf.rotation.y=Math.PI/4;rf.position.y=9;g.add(rf);
+for(const[a,b]of[[-3.5,-3.5],[3.5,-3.5],[-3.5,3.5],[3.5,3.5]])box(.3,3.4,.3,'#7a4f2c',a,6.1,b,g);const sc=new T.Mesh(new T.Cyl(.25,.4,1.6,10),mat('#2f3a44'));sc.position.set(0,5.6,2.2);sc.rotation.x=-1.1;g.add(sc);addSolid(x-4.2,z-4.2,x+4.2,z+4.2,y+4.5)}
+// farm: crop fields, a red barn and a silo
+{const tex=['#e9d27a','#9cc46b','#c7df8a','#e6a04a'].map((c,k)=>{const cv=document.createElement('canvas');cv.width=cv.height=128;const x2=cv.getContext('2d');x2.fillStyle=c;x2.fillRect(0,0,128,128);x2.fillStyle=k===3?'#7aa04a':'rgba(90,70,30,.35)';for(let r=0;r<128;r+=16)x2.fillRect(0,r,128,k===3?6:4);if(k===3){x2.fillStyle='#f08a24';for(let q=0;q<40;q++){x2.beginPath();x2.arc(Math.random()*128,Math.floor(Math.random()*8)*16+3,4,0,7);x2.fill()}}const t=new Pe(cv);t.wrapS=t.wrapT=1e3;t.repeat.set(4,4);t.colorSpace=me;return new T.Mat({map:t})});
+for(const[x,z,w,d,k]of N.fields){const pl=new T.Mesh(new Hn(w,d),tex[k]);pl.rotation.x=-Math.PI/2;if(k%2)pl.rotation.z=Math.PI/2*0;pl.position.set(x+w/2,ne(x+w/2,z+d/2)+.09,z+d/2);$t.add(pl)}
+if(N.barn){const[x,z]=N.barn,y=ne(x,z),g=new T.Group();g.position.set(x,y,z);$t.add(g);box(18,9,24,'#c0392b',0,4.5,0,g);const sh=new T.Shape();sh.moveTo(-10,0);sh.lineTo(10,0);sh.lineTo(0,7);sh.lineTo(-10,0);
+const rf=new T.Mesh(new T.Ext(sh,{depth:26,bevelEnabled:!1}),mat('#5a3a2a'));rf.position.set(0,9,-13);g.add(rf);box(7,7,.3,'#ffffff',0,3.5,12.1,g);box(6,6,.4,'#8e2a20',0,3.2,12.2,g);
+const si=new T.Mesh(new T.Cyl(3.6,3.6,18,16),mat('#b8c4ce'));si.position.set(14,9,-6);g.add(si);const dm=new T.Mesh(new T.Sph(3.6,16,8,0,6.3,0,1.6),mat('#8a96a8'));dm.position.set(14,18,-6);g.add(dm);addSolid(x-9,z-12,x+9,z+12,y+14);addSolid(x+10.4,z-9.6,x+17.6,z-2.4,y+21.6)}}
+// the beach: umbrellas and towels on the city side, swan boats on the lake
+{const[lx,lz,rx,rz]=N.lake;const cols=['#ff5a5a','#ffd23c','#5ac8ff','#7fe08a','#ff8ad8'];for(let k=0;k<9;k++){const a=Math.PI*.95+k*.075*Math.PI,x=lx+Math.cos(a)*(rx+11),z=lz+Math.sin(a)*(rz+11);umbrella(x,z,cols[k%5])}
+for(let k=0;k<3;k++){const g=new T.Group();box(3,1.2,4.4,'#ffffff',0,.6,0,g);const nk=new T.Mesh(new T.Cyl(.35,.45,3,8),mat('#ffffff'));nk.position.set(0,2.2,1.8);nk.rotation.x=-.2;g.add(nk);const hd=new T.Mesh(new T.Sph(.6,10,8),mat('#ffffff'));hd.position.set(0,3.7,2.1);g.add(hd);const bk=new T.Mesh(new T.Cone(.25,.7,8),mat('#f28c28'));bk.rotation.x=Math.PI/2;bk.position.set(0,3.6,2.8);g.add(bk);$t.add(g);
+let t=k*2.1;LIVE.push(dt=>{t+=dt*.05;const x=lx+Math.cos(t)*rx*.55,z=lz+Math.sin(t)*rz*.5;g.position.set(x,.35+Math.sin(t*40)*.08,z);g.rotation.y=Math.atan2(-Math.sin(t)*rx,Math.cos(t)*rz)})}}}
+
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'&&elephant(x,z,w,d);
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);
@@ -386,6 +448,19 @@ for(let k=0;k<5;k++){let s0=t+.08+k*.07+Math.random()*.04,o=i.createOscillator()
 rep('function d_(){', WET + 'function d_(){')
 rep('F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)', '(()=>{if(F.grounded){const w=isWet(F.x,F.z);w&&!F.wet&&(xn("\\u{1F4A6} Wet bird! \\u{1F4A6}"),splashSound());F.wet=w}else F.wet=!1})(),F.bank=Vn(F.bank,F.grounded?0:s*.55,5,i)')
 rep('bi=en.spaceAt;', 'bi=en.spaceAt;{const SB=ie.skybridges||[];if(SB.length){const old=bi;bi=(x,z,y)=>{for(const[x0,z0,x1,z1,lo,hi]of SB)if(x>x0&&x<x1&&z>z0&&z<z1)return y<(lo+hi)/2?{f:He(x,z),c:lo,name:null}:{f:hi,c:1e4,name:null};return old?old(x,z,y):null}}}')
+if NAT:
+    rep('{let i=new Ft({color:12245655}),t=(o,a,c,l,f,h)=>{let u=[],p=[];for(let _=0;_<f;_++)for(let m=0;m<l;m++){let d=o+m*c,E=a+_*c;u.push(d,ne(d,E)+h(d,E),E)}',
+        '{let i=new Ft({color:16777215,vertexColors:!0}),t=(o,a,c,l,f,h)=>{let u=[],p=[],cc=[];for(let _=0;_<f;_++)for(let m=0;m<l;m++){let d=o+m*c,E=a+_*c,y=ne(d,E);u.push(d,y+h(d,E),E);const k=groundCol(d,E,y);cc.push(k.r,k.g,k.b)}')
+    rep('g.setAttribute("position",new Ut(u,3)),g.setIndex(p)', 'g.setAttribute("position",new Ut(u,3)),g.setAttribute("color",new Ut(cc,3)),g.setIndex(p)')
+    rep('function d_(){', r'''function groundCol(x,z,y){const N=ie.nature,G=groundCol.c||(groundCol.c={grass:new Pt('#bad997'),forest:new Pt('#86b86f'),farm:new Pt('#c9b77a'),sand:new Pt('#f0dfa8'),hill:new Pt('#a3bb7c'),rock:new Pt('#a49a7c'),grey:new Pt('#8f8a86'),snow:new Pt('#ffffff')}),inP=(P,x,z)=>{let c=!1;for(let a=0,b=P.length-1;a<P.length;b=a++){const[xa,za]=P[a],[xb,zb]=P[b];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}return c};
+if(!N)return G.grass;const[lx,lz,rx,rz]=N.lake,b=N.beach;if(((x-lx)/(rx+b))**2+((z-lz)/(rz+b))**2<1)return G.sand;if(y<6){if(inP(N.forest,x,z))return G.forest;if(inP(N.farm,x,z))return G.farm;return G.grass}
+const st=[[6,G.grass],[70,G.hill],[160,G.rock],[240,G.grey],[275,G.grey],[300,G.snow]];for(let k=1;k<st.length;k++)if(y<st[k][0]){const t=(y-st[k-1][0])/(st[k][0]-st[k-1][0]);return st[k-1][1].clone().lerp(st[k][1],t)}return G.snow}
+function d_(){''')
+    rep('F.y=Math.min(x,420)', 'F.y=Math.min(x,800)')
+    rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
+    rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
+    # the tunnel: room to fly through under the mountain
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>window.__inTunnel&&y<9.5&&window.__inTunnel(x,z)?{f:.3,c:8.6,name:null}:old0?old0(x,z,y):null}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

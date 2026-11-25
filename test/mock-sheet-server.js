@@ -8,6 +8,8 @@ Sheet.prototype.getLastRow = function () { let n = this.data.length; while (n > 
 Sheet.prototype.getLastColumn = function () { return Math.max(0, ...this.data.map(r => { let n = r.length; while (n > 0 && (r[n - 1] === '' || r[n - 1] == null)) n--; return n; })); };
 Sheet.prototype.getDataRange = function () { return this.getRange(1, 1, this.getLastRow() || 1, this.getLastColumn() || 1); };
 Sheet.prototype.clearContents = function () { this.data = []; return this; };
+Sheet.prototype.clear = function () { this.data = []; return this; };
+Sheet.prototype.getMaxRows = function () { return Math.max(1000, this.data.length); };
 Sheet.prototype.getParent = function () { return ss; };
 Sheet.prototype.getRange = function (r, c, nr = 1, nc = 1) {
   const sh = this;
@@ -18,6 +20,7 @@ Sheet.prototype.getRange = function (r, c, nr = 1, nc = 1) {
     setValue(v) { return this.setValues([[v]]); },
     setValues(vals) { vals.forEach((row, i) => { const ri = r - 1 + i; while (sh.data.length <= ri) sh.data.push([]); row.forEach((v, j) => { sh.data[ri][c - 1 + j] = v; }); }); return this; },
     setFontWeight() { return this; }, setNumberFormat() { return this; }, insertCheckboxes() { return this; },
+    breakApart() { return this; }, setBackground() { return this; }, setWrap() { return this; }, setFontColor() { return this; }, setVerticalAlignment() { return this; }, setHorizontalAlignment() { return this; }, setFontSize() { return this; },
     setBackgrounds(b) { sh.bg = b; return this; },
     clearContent() { for (let i = 0; i < nr; i++) { const row = sh.data[r - 1 + i]; if (row) for (let j = 0; j < nc; j++) row[c - 1 + j] = ''; } return this; }
   };
@@ -53,7 +56,7 @@ let down = false; const stash = {};
 http.createServer((req, res) => {
   const cors = { 'Access-Control-Allow-Origin': '*' };
   if (req.url.startsWith('/dump')) { res.writeHead(200, { ...cors, 'Content-Type': 'application/json' }); return res.end(JSON.stringify(Object.fromEntries(Object.entries(sheets).map(([k, v]) => [k, v.data])))); }
-  if (req.url.startsWith('/set')) { const q = new URL(req.url, 'http://x').searchParams; const sh = sheets[q.get('tab')]; sh.data[+q.get('r') - 1][+q.get('c') - 1] = q.get('v') === 'true' ? true : q.get('v') === 'false' ? false : q.get('v'); res.writeHead(200, cors); return res.end('ok'); }
+  if (req.url.startsWith('/set')) { const q = new URL(req.url, 'http://x').searchParams; const sh = sheets[q.get('tab')]; while (sh.data.length < +q.get('r')) sh.data.push([]); sh.data[+q.get('r') - 1][+q.get('c') - 1] = q.get('v') === 'true' ? true : q.get('v') === 'false' ? false : /^-?\d+(\.\d+)?$/.test(q.get('v')) ? +q.get('v') : q.get('v'); res.writeHead(200, cors); return res.end('ok'); }
   if (req.url.startsWith('/newyear')) { ctx.newSchoolYear(); res.writeHead(200, cors); return res.end(JSON.stringify(copies)); }
   if (req.url.startsWith('/clock')) { const t = new URL(req.url, 'http://x').searchParams.get('t'); clockOffset = t ? new Date(t).getTime() - Date.now() : 0; res.writeHead(200, cors); return res.end('ok'); }
   if (req.url.startsWith('/down')) { down = true; res.writeHead(200, cors); return res.end('down'); }

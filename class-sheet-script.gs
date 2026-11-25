@@ -360,35 +360,81 @@ var EXTRA_ROWS = [
   ['Row to Math Island: facts', '2-12', 'Which times tables to use, like 2-12, or 2-9, or 3,4,6,7,8. Each student gets more of the facts they find hard.'],
   ['Row to Math Island: kinds', '× ÷', 'Type  × ÷  for both,  × only  or  ÷ only.']
 ];
+/* The Settings tab is read by the NAME in column A, not the row number, so rows can be moved,
+   and blank rows or notes added, without breaking anything. */
+var BASE_ROWS = [
+  ['Boss Battle day', 'Friday', 'The day Boss Battle opens. Type Monday, Tuesday, Wednesday, Thursday, Friday, or Any day.'],
+  ['Boss HP per student', BOSS_HP_PER_STUDENT, 'How tough the weekly boss is. A bigger number makes it harder.'],
+  ['Coin rate', 1, '1 = normal coins. 2 = double coins. 0.5 = half coins.'],
+  ['Data version (do not change)', 1, 'Goes up by itself when you start a new school year.']
+];
+var ALL_ROWS = BASE_ROWS.concat(EXTRA_ROWS);                       // the order readSettings_ uses (v[0], v[1] ...)
+var SETTING_SECTIONS = [
+  ['🏝️ Everyday', ['Coin rate', 'Today\'s challenge', 'Island visits', 'Top 3 lists', 'Idea box', 'Students can change their code']],
+  ['🚣 Row to Math Island (daily boat ride)', ['Row to Math Island', 'Row to Math Island: questions', 'Row to Math Island: facts', 'Row to Math Island: kinds']],
+  ['⏰ Play times', ['Play days', 'Play hours', 'Can always play', 'Hide from top 3']],
+  ['🔢 Practice numbers (all games)', ['× and ÷ facts: first number', '× and ÷ facts: second number', '+ and − numbers']],
+  ['👾 Boss Battle', ['Boss Battle day', 'Boss Battle hours', 'Boss HP per student', 'Boss hits needed for the prize', 'No-school Fridays (boss skips)',
+                     'Boss questions', 'Boss × and ÷: first number', 'Boss × and ÷: second number', 'Boss + and − numbers']],
+  ['🏁 Race Day', ['Race Day', 'Race Day results time', 'Race Day prize', 'Race Day questions', 'Race Day × and ÷: first number', 'Race Day × and ÷: second number', 'Race Day + and − numbers']],
+  ['🏫 Don\'t Get Caught! (classroom game)', ['Classroom game plays per day', 'Classroom game questions', 'Classroom game seconds per question']],
+  ['🗂️ Sheet upkeep', ['Keep activity for (days)', 'Data version (do not change)']]
+];
+function settingsMap_(sh) {
+  var map = {}, last = sh.getLastRow();
+  if (last < 1) return map;
+  sh.getRange(1, 1, last, 2).getValues().forEach(function (r) { var k = String(r[0]).trim(); if (k && !(k in map)) map[k] = r[1]; });
+  return map;
+}
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
   if (sh) {
-    EXTRA_ROWS.forEach(function (row, i) {
-      if (String(sh.getRange(6 + i, 1).getValue()) !== row[0]) {
-        sh.getRange(6 + i, 2).setNumberFormat('@'); // plain text, so 2-9 doesn't turn into a date
-        sh.getRange(6 + i, 1, 1, 3).setValues([row]);
-      }
-    });
-    return sh;
+    var map = settingsMap_(sh);
+    var ok = (SETTING_SECTIONS[0][0] in map) && ALL_ROWS.every(function (r) { return r[0] in map; });
+    if (ok) return sh;                                              // already organised: leave the teacher's layout alone
+    return buildSettings_(sh, map);
   }
   var hp = BOSS_HP_PER_STUDENT, boss = ss.getSheetByName(TABS.boss);
   if (boss) { var old = Number(boss.getRange(1, 6).getValue()); if (old > 0) hp = old; } // keep a value set in the older version
-  sh = ss.insertSheet(TABS.settings);
-  sh.getRange(1, 1, 5, 3).setValues([
-    ['Setting', 'Value', 'What it does'],
-    ['Boss Battle day', 'Friday', 'The day Boss Battle opens. Type Monday, Tuesday, Wednesday, Thursday, Friday, or Any day.'],
-    ['Boss HP per student', hp, 'How tough the weekly boss is. A bigger number makes it harder.'],
-    ['Coin rate', 1, '1 = normal coins. 2 = double coins. 0.5 = half coins.'],
-    ['Data version (do not change)', 1, 'Goes up by itself when you start a new school year.']
-  ]);
-  sh.getRange(6, 2, EXTRA_ROWS.length, 1).setNumberFormat('@');
-  sh.getRange(6, 1, EXTRA_ROWS.length, 3).setValues(EXTRA_ROWS);
-  sh.getRange(1, 1, 1, 3).setFontWeight('bold'); sh.setFrozenRows(1);
-  sh.setColumnWidth(1, 230); sh.setColumnWidth(2, 120); sh.setColumnWidth(3, 520);
+  return buildSettings_(ss.insertSheet(TABS.settings), { 'Boss HP per student': hp });
+}
+/* (Re)builds the tab in sections, keeping every value already typed in. */
+function buildSettings_(sh, map) {
+  var help = {}, dflt = {}, known = {};
+  ALL_ROWS.forEach(function (r) { dflt[r[0]] = r[1]; help[r[0]] = r[2]; known[r[0]] = 1; });
+  SETTING_SECTIONS.forEach(function (sec) { known[sec[0]] = 1; });
+  known['Setting'] = 1; known['📝 Your other notes'] = 1;
+  var keep = function (label) {
+    if (!(label in map)) return dflt[label];
+    var x = map[label];
+    return x instanceof Date ? text_(x, '') : x;                    // 2-9 that Sheets turned into a date goes back to 2-9
+  };
+  var rows = [['Setting', 'Value', 'What it does']], heads = [];
+  SETTING_SECTIONS.forEach(function (sec) {
+    rows.push(['', '', '']);
+    heads.push(rows.length + 1); rows.push([sec[0], '', '']);
+    sec[1].forEach(function (label) { rows.push([label, keep(label), help[label]]); });
+  });
+  var extra = Object.keys(map).filter(function (k) { return !known[k]; });   // anything the teacher added: keep it
+  if (extra.length) {
+    rows.push(['', '', '']); heads.push(rows.length + 1); rows.push(['📝 Your other notes', '', '']);
+    extra.forEach(function (k) { rows.push([k, map[k] instanceof Date ? text_(map[k], '') : map[k], '']); });
+  }
+  sh.clear(); try { sh.getRange(1, 1, sh.getMaxRows(), 3).breakApart(); } catch (e) {}
+  sh.getRange(1, 2, rows.length, 1).setNumberFormat('@');           // plain text, so 2-9 doesn't turn into a date
+  sh.getRange(1, 1, rows.length, 3).setValues(rows.map(function (r) { return [r[0], r[1] == null ? '' : r[1], r[2] || '']; }));
+  sh.getRange(1, 1, rows.length, 3).setVerticalAlignment('middle').setWrap(true);
+  sh.getRange(1, 1, 1, 3).setFontWeight('bold').setBackground('#1e2a33').setFontColor('#ffffff');
+  sh.setFrozenRows(1);
+  heads.forEach(function (r) { sh.getRange(r, 1, 1, 3).setBackground('#ffe9a8').setFontWeight('bold').setFontSize(12); });
+  sh.getRange(2, 2, rows.length - 1, 1).setBackground(null).setFontWeight('bold').setHorizontalAlignment('center');
+  heads.forEach(function (r) { sh.getRange(r, 2).setBackground('#ffe9a8'); });
+  sh.setColumnWidth(1, 260); sh.setColumnWidth(2, 140); sh.setColumnWidth(3, 560);
   return sh;
 }
 function readSettings_(ss) {
-  var v = settingsTab_(ss).getRange(2, 2, 4 + EXTRA_ROWS.length, 1).getValues().map(function (r) { return r[0]; });
+  var map = settingsMap_(settingsTab_(ss));
+  var v = ALL_ROWS.map(function (r) { return r[0] in map ? map[r[0]] : r[1]; });
   return { bossDay: String(v[0] || 'Friday'), bossHp: Number(v[1]) > 0 ? Number(v[1]) : BOSS_HP_PER_STUDENT,
            coinRate: Number(v[2]) > 0 ? Number(v[2]) : 1, version: Number(v[3]) > 0 ? Number(v[3]) : 1,
            islandVisits: !/^(off|no|false|0)$/i.test(String(v[4]).trim()),
@@ -463,8 +509,8 @@ function newSchoolYear() {
     var sh = ss.getSheetByName(name);
     if (sh && sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, Math.max(1, sh.getLastColumn())).clearContent();
   });
-  var st = settingsTab_(ss);
-  st.getRange(5, 2).setValue((Number(st.getRange(5, 2).getValue()) || 1) + 1);
+  var st = settingsTab_(ss), col = st.getRange(1, 1, st.getLastRow(), 1).getValues();
+  for (var r = 0; r < col.length; r++) if (String(col[r][0]).trim() === 'Data version (do not change)') { var c = st.getRange(r + 1, 2); c.setValue((Number(c.getValue()) || 1) + 1); break; }
   ui.alert('Done! This year\'s progress was saved as "' + copy.getName() + '" in your Google Drive. Now update the Roster with your new class.');
 }
 

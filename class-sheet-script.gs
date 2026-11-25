@@ -354,7 +354,11 @@ var EXTRA_ROWS = [
   ['No-school Fridays (boss skips)', '12-18, 12-25, 1-1', 'Fridays with no school, like 12-18, 12-25, 1-1. Those weeks are skipped, so no boss is missed. Separate dates with commas.'],
   ['Classroom game plays per day', 2, 'How many times each student can play "Don\'t Get Caught!" each day. 0 = no limit. Names under "Can always play" have no limit.'],
   ['Classroom game questions', 'Mixed', 'Mixed = random × ÷ + − at each student\'s level. Or list the kinds, like: × ÷   or   + −   (uses the number ranges above).'],
-  ['Classroom game seconds per question', 15, 'How many seconds students get to answer each question in "Don\'t Get Caught!". Running out of time is a strike.']
+  ['Classroom game seconds per question', 15, 'How many seconds students get to answer each question in "Don\'t Get Caught!". Running out of time is a strike.'],
+  ['Row to Math Island', 'On', 'On = once a day, students row a boat to the island by answering questions before they can play. Off = no boat. Names under "Can always play" skip it.'],
+  ['Row to Math Island: questions', 20, 'How many right answers it takes to row across (a wrong answer just gets a new question).'],
+  ['Row to Math Island: facts', '2-12', 'Which times tables to use, like 2-12, or 2-9, or 3,4,6,7,8. Each student gets more of the facts they find hard.'],
+  ['Row to Math Island: kinds', '× ÷', 'Type  × ÷  for both,  × only  or  ÷ only.']
 ];
 function settingsTab_(ss) {
   var sh = ss.getSheetByName(TABS.settings);
@@ -399,7 +403,9 @@ function readSettings_(ss) {
            activityDays: String(v[28]).trim() === '' ? 7 : Math.max(0, Number(v[28]) || 0),
            bossNeed: String(v[29]).trim() === '' ? 20 : Math.max(0, Math.round(Number(v[29]) || 0)),
            bossSkip: text_(v[30], ''),
-           classPlays: String(v[31]).trim() === '' ? 2 : Math.max(0, Math.round(Number(v[31]) || 0)), classTypes: text_(v[32], 'Mixed'), classSecs: Number(v[33]) || 15 };
+           classPlays: String(v[31]).trim() === '' ? 2 : Math.max(0, Math.round(Number(v[31]) || 0)), classTypes: text_(v[32], 'Mixed'), classSecs: Number(v[33]) || 15,
+           boatOn: !/^(off|no|false|0)$/i.test(String(v[34]).trim()), boatQs: Number(v[35]) > 0 ? Math.round(Number(v[35])) : 20,
+           boatFacts: text_(v[36], '2-12'), boatTypes: text_(v[37], '× ÷') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {

@@ -390,6 +390,21 @@ button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; 
 .race-car { position: absolute; left: 2%; top: 50%; transform: translate(-50%, -50%) scaleX(-1); font-size: 54px; transition: left .35s ease; z-index: 3; }
 .race-mark { position: absolute; top: 4px; transform: translateX(-50%); font-size: 18px; text-align: center; line-height: 1; z-index: 2; opacity: .9; }
 .race-mark small { display: block; font-size: 10px; font-weight: 800; color: #fff; white-space: nowrap; }
+.boat-head { text-align: center; } .boat-head h2 { margin: 4px 0; } .boat-head p { margin: 0 0 8px; font-weight: 700; }
+.boat-sea { position: relative; height: 190px; border-radius: 20px; overflow: hidden; background: linear-gradient(#bfe8ff 0 52%, #3fa9e0 52% 100%); box-shadow: inset 0 -6px 0 #2b8cc4; }
+.b-water { position: absolute; left: -40px; right: -40px; top: 50%; height: 16px; background: repeating-radial-gradient(circle at 20px -6px, transparent 0 14px, #ffffff99 15px 17px, transparent 18px 40px); background-size: 40px 16px; animation: bwave 3s linear infinite; }
+@keyframes bwave { to { transform: translateX(40px); } }
+.b-sun { position: absolute; right: 16px; top: 8px; font-size: 34px; }
+.b-cloud { position: absolute; font-size: 30px; opacity: .9; animation: bcloud 40s linear infinite; } .b-cloud.c1 { top: 10px; left: 10%; } .b-cloud.c2 { top: 34px; left: 55%; animation-duration: 55s; }
+@keyframes bcloud { to { transform: translateX(120px); } }
+.b-isl { position: absolute; right: 2%; bottom: 46px; font-size: 92px; line-height: 1; }
+.b-boat { position: absolute; left: 3%; bottom: 62px; font-size: 54px; line-height: 1; transition: left .6s ease-out; animation: bbob 1.6s ease-in-out infinite; }
+@keyframes bbob { 50% { transform: translateY(5px) rotate(-3deg); } }
+.b-boat.wobble { animation: bwob .5s ease-in-out 2; } @keyframes bwob { 25% { transform: rotate(-14deg); } 75% { transform: rotate(12deg); } }
+.b-splash { position: absolute; bottom: 70px; font-size: 26px; pointer-events: none; opacity: 0; } .b-splash.go { animation: bspl .7s ease-out; } @keyframes bspl { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-26px); } }
+.boat-bar { height: 12px; border-radius: 99px; background: #ffffff55; margin: 10px 4px 12px; overflow: hidden; } .boat-bar i { display: block; height: 100%; width: 0; background: var(--sun, #ffd23c); transition: width .5s; }
+.boat-done { text-align: center; padding: 8px 0 20px; } .boat-done .big { font-size: 64px; } .boat-done p { font-size: 20px; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .b-water, .b-cloud, .b-boat { animation: none; } }
 .race-flash { min-height: 24px; text-align: center; font-weight: 800; font-size: 18px; margin-top: 6px; }
 .race-flash.good { color: #7CE38B; } .race-flash.bad { color: #FF8F80; }
 #raceTime.hurry { background: var(--coral); color: #fff; }
@@ -919,6 +934,17 @@ img.emo { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125
     </section>
 
     <!-- Hub -->
+    <section id="scr-boat" hidden>
+      <div class="boat-head"><h2>🚣 Row to Math Island!</h2><p id="boatSub"></p></div>
+      <div class="boat-sea" id="boatSea" aria-hidden="true">
+        <span class="b-sun">☀️</span><span class="b-cloud c1">☁️</span><span class="b-cloud c2">☁️</span>
+        <span class="b-isl">🏝️</span><span class="b-boat" id="boatBoat">🚣</span>
+        <div class="b-water"></div><div class="b-splash" id="boatSplash"></div>
+      </div>
+      <div class="boat-bar"><i id="boatFill"></i></div>
+      <div id="boatArea"></div>
+    </section>
+
     <section id="scr-hub" hidden>
       <p id="syncStatus" aria-live="polite"></p>
       <div class="hub-head">
@@ -1036,7 +1062,7 @@ const TEACHER = 'Mr. Romanek'; // shown around the game
 const CLASS_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxBGj1Bd8BZhVjb7ia4wGrT3oNzbjIii0qxEi4LsmdEy5DE8WNbypQhKGP0hBJaug/exec';
 /* Version check: the published build has its own id, and version.txt on the website holds the newest id.
    When a newer game is online, the hub says so and reloads itself (never in the middle of a game). */
-const BUILD_ID = '202611241446';
+const BUILD_ID = '202611260642';
 let lastVersionCheck = 0, newVersion = null;
 async function checkVersion(force) {
   if (BUILD_ID === 'dev' || newVersion === 'reloading' || !/^https?:/.test(location.protocol)) return;
@@ -1763,6 +1789,7 @@ function applySettings(st) {
   const before = JSON.stringify(store.settings || {});
   store.settings = st; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
   if (before !== JSON.stringify(st) && currentScreen === 'hub') renderGameGrid();
+  if (currentScreen === 'boat' && boatRun && P() && (!boatSet().on || boatExempt(P()))) { boatRun = null; padClear(); openHub(); }   // teacher turned the boat off
   enforceHours(); showCodeButton();
   const was = JSON.parse(before || '{}').islandVisits;
   if (was !== st.islandVisits && currentScreen === 'shop' && shopTab === 'island' && !islandEdit) openShop('island');
@@ -2028,7 +2055,7 @@ function cheer(text, host) {
 /* =========================================================
    Screens
    ========================================================= */
-const SCREENS = ['who', 'hub', 'game', 'results', 'shop', 'badges', 'teacher', 'progress'];
+const SCREENS = ['who', 'boat', 'hub', 'game', 'results', 'shop', 'badges', 'teacher', 'progress'];
 let currentScreen = 'who';
 /* ---------- School hours: the teacher sets play days and hours on the Settings tab (uses the tablet's clock) ---------- */
 const DAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -2461,12 +2488,96 @@ function refreshFromSheet(force) {
   setTimeout(checkLastWeekBoss, 4000);
 }
 
+/* ---------- Row to Math Island: a short daily times-table warm-up before the hub ----------
+   Teacher controls (Settings tab): on/off, how many questions, which facts (2-12), × and/or ÷.
+   Facts the student finds hard (from the times table chart and missed facts) come up more often.
+   A wrong answer never shows the answer: the boat wobbles and a new question comes. */
+const BOAT_BONUS = 20;
+function boatSet() {
+  const s = store.settings || {};
+  const kinds = kindsFrom(s.boatTypes) || new Set(['mult', 'div']); kinds.delete('add'); kinds.delete('sub'); kinds.delete('t4tens');
+  return { on: s.boatOn == null ? true : !!s.boatOn, n: Math.max(1, Math.min(100, Math.round(Number(s.boatQs) || 20))),
+           nums: parseNums(s.boatFacts, 0, 20) || from2to12, kinds: kinds.size ? [...kinds] : ['mult', 'div'] };
+}
+function boatExempt(p) {
+  const me = String((p && (p.sheetName || p.name)) || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return !!me && String((store.settings || {}).alwaysPlay || '').split(/[,;]/).some(n => n.trim() && n.trim().toLowerCase().replace(/\s+/g, ' ') === me);
+}
+function boatNeeded(p) { return !!p && boatSet().on && !boatExempt(p) && p.boatDay !== dayKey(); }
+let boatRun = null;
+function boatPick(p, nums, recent) {
+  const missed = new Set((p.missed || []).map(m => m.text)), pool = [];
+  for (const a of nums) for (const b of nums) {
+    const key = a + 'x' + b; if (recent.includes(key)) continue;
+    const st = factState(p, a, b), weak = missed.has(`${a} × ${b}`) || missed.has(`${a * b} ÷ ${a}`) || missed.has(`${a * b} ÷ ${b}`);
+    pool.push({ a, b, key, w: weak ? 6 : st === 'learning' ? 4 : st === 'new' ? 3 : 1 });
+  }
+  let r = Math.random() * pool.reduce((n, x) => n + x.w, 0);
+  for (const x of pool) { r -= x.w; if (r <= 0) return x; }
+  return pool[0] || { a: 2, b: 2, key: '2x2' };
+}
+function boatStart() {
+  const p = P(), S = boatSet();
+  clearTimers(); $('#gameBody').innerHTML = ''; padClear();
+  const prog = p.boatProg && p.boatProg.day === dayKey() ? p.boatProg.n : 0;   // carry on if they left part way
+  boatRun = { need: S.n, n: Math.min(prog, S.n - 1), S, recent: [], q: null, wrong: 0 };
+  $('#boatSub').textContent = `Hi ${p.name}! Answer ${S.n} questions to row across. Every right answer is one stroke. 🌊`;
+  $('#boatArea').innerHTML = `<div class="play with-pad"><div><div class="aq" id="boatQ"></div><div class="answer-row"><div class="slot" id="boatAns"></div></div><div class="race-flash" id="boatFlash"></div></div>${padHTML()}</div>`;
+  show('boat'); boatDraw(); boatNext();
+  refreshFromSheet();
+}
+function boatDraw() {
+  const R = boatRun, f = R.n / R.need;
+  $('#boatBoat').style.left = (3 + f * 68) + '%';
+  $('#boatFill').style.width = Math.round(f * 100) + '%';
+  $('#boatSplash').style.left = `calc(${(3 + f * 68)}% - 18px)`;
+}
+function boatNext() {
+  const R = boatRun; if (!R) return;
+  const p = P(), f = boatPick(p, R.S.nums, R.recent), kind = pick(R.S.kinds);
+  R.recent.push(f.key); if (R.recent.length > 4) R.recent.shift();
+  R.q = kind === 'div' ? { skill: 'div', a: f.a, b: f.b, answer: f.b, text: `${f.a * f.b} ÷ ${f.a}`, op: '÷', shown: Date.now() }
+                       : { skill: 'mult', a: f.a, b: f.b, answer: f.a * f.b, text: `${f.a} × ${f.b}`, shown: Date.now() };
+  $('#boatQ').textContent = `${R.q.text} = ?`;
+  $('#boatAns').textContent = '';
+  padBind([{ el: $('#boatAns'), max: 3, placeholder: '?' }], () => {
+    const v = Pad.fields[0].value; if (v === '' || boatRun !== R) return;
+    Pad.locked = true;
+    const q = R.q, ok = +v === q.answer, fl = $('#boatFlash');
+    if (q.skill === 'mult') { p.tt = p.tt || {}; const k = q.a + 'x' + q.b, rec = p.tt[k] || [0, 0, 0]; if (ok) { rec[0]++; if (Date.now() - q.shown <= 4000) rec[2]++; } else rec[1]++; p.tt[k] = rec; }
+    record(q.skill, ok); noteFact(q, q.skill, ok);
+    if (ok) {
+      R.n++; p.boatProg = { day: dayKey(), n: R.n }; save(); sfx('ok');
+      fl.textContent = pick(['Stroke! 🚣', 'Nice rowing!', '+1 stroke', 'Keep going!']); fl.className = 'race-flash good';
+      const sp = $('#boatSplash'); sp.textContent = '💦'; sp.classList.remove('go'); void sp.offsetWidth; sp.classList.add('go');
+      boatDraw();
+      if (R.n >= R.need) return later(boatArrive, 700);
+    } else {
+      R.wrong++; sfx('bad'); fl.textContent = pick(['🌊 A wave! Try this one.', '🌊 Whoops, splash! Next one.', '🌊 Wobbly boat! Keep rowing.']); fl.className = 'race-flash bad';
+      const b = $('#boatBoat'); b.classList.remove('wobble'); void b.offsetWidth; b.classList.add('wobble');
+    }
+    later(() => { if (boatRun === R) { fl.textContent = ''; fl.className = 'race-flash'; boatNext(); } }, ok ? 350 : 1100);
+  });
+}
+function boatArrive() {
+  const R = boatRun; if (!R) return; boatRun = null; padClear();
+  const p = P(); p.boatDay = dayKey(); p.boatProg = null;
+  reward(BOAT_BONUS, 20); sfx('level');
+  logActivity('Row to Math Island', `${R.need} right${R.wrong ? `, ${R.wrong} to practice` : ''}`, 3, null);
+  save(); scheduleSync();
+  $('#boatArea').innerHTML = `<div class="boat-done"><div class="big">🏝️🎉</div><p>You made it to Math Island!</p><p>🪙 +${fmt(BOAT_BONUS)} arrival bonus</p>
+    <button type="button" class="btn" id="boatGo">🏝️ Go to the island</button></div>`;
+  cheer('Land ho!', $('#boatSea'));
+  $('#boatGo').addEventListener('click', openHub);
+}
+
 /* ---------- Hub ---------- */
 function openHub() {
   try { pigeonResult(); } catch (e) {}
   trackTime(); stopArcade(); clearTimers();
   const p = P(); if (!p) return renderWho();
   ensureProfile(p);
+  if (boatNeeded(p)) return boatStart();
   $('#hubAvatar').innerHTML = avatarHTML(p, 76);
   $('#hubName').textContent = p.name;
   const li = levelInfo(p.xp);
@@ -2618,7 +2729,7 @@ function padPress(k) {
   padRender();
 }
 document.addEventListener('keydown', e => {
-  if (currentScreen !== 'game') return;
+  if (currentScreen !== 'game' && currentScreen !== 'boat') return;
   if (arcade && arcade.running) return arcadeKey(e);
   if (!Pad.fields.length) {
     if (e.key === 'Enter' && $('#explainGo')) { e.preventDefault(); $('#explainGo').click(); }

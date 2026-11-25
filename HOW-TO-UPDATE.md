@@ -84,3 +84,6 @@ node test/mock-sheet-server.js class-sheet-script.gs     # fake sheet on port 87
 - The hub shows a status pill at the top ("Updating with your class…" / "✅ Up to date").
   - It checks the sheet when the game opens and every minute on the hub.
   - It shows a pop-up when the teacher turns on a new game.
+
+- **Row to Math Island** (daily gate): the first time each day a student opens the hub, they row a boat to the island by answering questions (`boatStart` in `source/number-island.html`). Every right answer is one stroke; a wrong answer wobbles the boat and gives a new question (the answer is never shown). Facts the student finds hard (times table chart + missed facts) come up more often. Arriving gives a 20-coin bonus (plus the usual 2 coins per right answer). Settings tab: `Row to Math Island` (On/Off), `questions` (20), `facts` (2-12), `kinds` (× ÷). Names under "Can always play" skip it. If they leave part way, they carry on from the same spot that day.
+

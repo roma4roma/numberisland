@@ -171,11 +171,11 @@ for it in C['items']:
     elif k == 'redpanda':
         deco.append([k, x, z, w, d, c, n])
         solids.append([x + 1.5, z + 1.5, x + w - 1.5, z + d - 1.5, min(w, d) / 11 * 10.5 + 1.4])
-    elif k in ('raccoon', 'cat', 'L67', 'LOL', 'pigeonstatue'):
+    elif k in ('raccoon', 'cat', 'L67', 'LOL', 'pigeonstatue', 'pig'):
         deco.append([k, x, z, w, d, c, n, it.get('rot')])
-        h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22, 'pigeonstatue': 30}[k]
-        m = min(w, d) / 26 if k in ('raccoon', 'cat', 'pigeonstatue') else 1
-        r = (13 * max(.7, m)) if k in ('raccoon', 'cat', 'pigeonstatue') else None
+        h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22, 'pigeonstatue': 30, 'pig': 22}[k]
+        m = min(w, d) / 26 if k in ('raccoon', 'cat', 'pigeonstatue', 'pig') else 1
+        r = (13 * max(.7, m)) if k in ('raccoon', 'cat', 'pigeonstatue', 'pig') else None
         if r: solids.append([cx - r, cz - r, cx + r, cz + r, h * max(.7, m)])
         else: solids.append([x + 1, z + 1, x + w - 1, z + d - 1, h])
     elif k in ('dock', 'bridge'):
@@ -277,6 +277,11 @@ parts.forEach(([sh,c],i)=>{const m=new T.Mesh(new T.Ext(sh,{depth:3,bevelEnabled
 const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=-.5;$t.add(g)}
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
+else if(k==='pig'){const g=new T.Group(),S=Math.min(w,d)/26,P='#f7a8b8',D='#e8879c';const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
+add(new T.Box(24,3,24),'#cfc8b8',0,1.5,0);add(new T.Sph(8,24,18),P,0,12,0,1,.9,1.35);[[-4,-6],[4,-6],[-4,6],[4,6]].forEach(([a,b])=>{add(new T.Cyl(1.8,1.6,6,10),P,a,6,b);add(new T.Cyl(1.7,1.7,.8,10),'#8a5a4a',a,3.4,b)});
+add(new T.Sph(5.8,20,16),P,0,15,11);add(new T.Cyl(2.4,2.6,2,16),D,0,14.2,16.3).rotation.x=Math.PI/2;[-1,1].forEach(s=>{add(new T.Sph(.5,8,6),'#8a3a4a',s*.9,14.3,17.35);add(new T.Sph(.8,10,8),'#1e2124',s*2.4,17,15.5);add(new T.Sph(.45,8,6),'#ffffff',s*2.5,17.3,16.1);
+const e=add(new T.Cone(2,3.2,10),D,s*3.6,20.2,9.5);e.rotation.z=-s*.5;e.rotation.x=.4});for(let k=0;k<6;k++){const t=k/5;add(new T.Sph(.7,8,6),D,Math.sin(t*9)*1.2,14+t*2.5,-11-Math.cos(t*9)*1.2)}
+g.scale.setScalar(Math.max(.7,S));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f!=null?f:0;$t.add(g)}
 else if(k==='pigeonstatue'){const g=new T.Group(),S=Math.min(w,d)/26;const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
 add(new T.Box(24,3,24),'#cfc8b8',0,1.5,0);add(new T.Box(20,2,20),'#b9b2a2',0,4,0);
 add(new T.Sph(7,24,18),'#8a96a8',0,15,-1,1,1.05,1.45);add(new T.Sph(5.2,20,16),'#5fb39a',0,19.5,4.5,1,1.1,.9);add(new T.Sph(4.6,20,16),'#6d7b90',0,24.5,7);

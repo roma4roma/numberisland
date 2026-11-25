@@ -101,8 +101,8 @@ for name, items in RING_SHEETS.items():
             gantries.append([round(ax, 1), round(az, 1), round(bx, 1), round(bz, 1), fl * 3.2, col, label]); keepout += [(ax - 9, az - 9, 18, 18), (bx - 9, bz - 9, 18, 18)]
             continue
         it = {'k': kind, 'x': round((ox + c) * M, 1), 'z': round((oy + r) * M, 1), 'w': round(w * M, 1), 'd': round(d * M, 1), 'f': fl,
-              'c': None if kind in ('raccoon', 'pigeonstatue') else col, 'n': label, 's': name}
-        if kind in ('raccoon', 'pigeonstatue'):
+              'c': None if kind in ('raccoon', 'pigeonstatue', 'pig') else col, 'n': label, 's': name}
+        if kind in ('raccoon', 'pigeonstatue', 'pig'):
             it['rot'] = round(math.atan2(300 - (it['x'] + it['w'] / 2), 210 - (it['z'] + it['d'] / 2)), 3)   # face the middle of the city
         C['items'].append(it); keepout.append((it['x'] - 6, it['z'] - 6, it['w'] + 12, it['d'] + 12))
     C['done'].append(name)
@@ -119,12 +119,20 @@ for z in range(-300, 400, 8):
 # ---- farm fields
 FARM = [(x * M, z * M) for x, z in ns['FARM']]
 fields = []; barn = None
-for fx in range(-450, -100, 70):
+for fx in range(-450, -90, 70):
     for fz in range(430, 750, 60):
         mx, mz = fx + 35, fz + 30
-        if not inside(FARM, mx, mz) or near_road(mx, mz, 30): continue
-        if barn is None and -200 < mx < -100 and mz < 560: barn = [mx, mz]; continue
+        if not inside(FARM, mx, mz) or near_road(mx, mz, 30) or kept_out(mx, mz): continue
+        if any(((mx - px) / (rx + 45)) ** 2 + ((mz - pz) / (ry + 40)) ** 2 < 1 for px, pz, rx, ry in ponds): continue
         fields.append([fx + 3, fz + 3, 64, 54, len(fields) % 4])
+# smaller fields fill the farm squares on the sheets (S1 etc.), like the rows printed there
+for fx in range(-188, -90, 24):
+    for fz in range(424, 556, 22):
+        mx, mz = fx + 11, fz + 10
+        if not inside(FARM, mx, mz) or near_road(mx, mz, 13) or kept_out(mx, mz): continue
+        if any(f[0] <= mx <= f[0] + f[2] and f[1] <= mz <= f[1] + f[3] for f in fields): continue
+        if any(((mx - px) / (rx + 14)) ** 2 + ((mz - pz) / (ry + 14)) ** 2 < 1 for px, pz, rx, ry in ponds): continue
+        fields.append([fx + 1, fz + 1, 22, 20, (fx // 24 + fz // 22) % 4])
 # ---- river + lake
 RIV = [[round(p[0] * M, 1), round(p[1] * M, 1)] for p in curve(ns['RIVER'], n=80)]
 lx, ly, lrx, lry = ns['LAKE']

@@ -61,7 +61,7 @@ RING_ROADS = [
     (SMALL, [(47, .6), (49, -3.5), (47.5, -6.8)]),
     (SMALL, [(10, -7.8), (8.5, -10.5), (10.5, -13.4)]),
     (SMALL, [(-6.5, -4), (-12, -7), (-19.4, -6)]),
-    (SMALL, [(61, -1.5), (63.8, -4.5), (66, -8)], 'over'),                                          # mountain road up to the Lookout
+    (SMALL, [(61, -1.5), (63.8, -4.5), (66, -8), (69, -15), (78, -19.5), (86, -18.5), (82, -24.5), (88, -29)], 'over'),                                          # mountain road up to the Lookout
     (SMALL, [(.6, 5), (-4, 3.5), (-9, 3)]),
     (SMALL, [(.6, 30), (-4.5, 32), (-10.5, 30)]),
     (SMALL, [(-9, 39), (-14, 41), (-19.4, 39.5)]),
@@ -88,8 +88,8 @@ def inside(poly, x, y):
         (x1, y1), (x2, y2) = poly[k - 1], poly[k]
         if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: c = not c
     return c
-MOUNTAIN_C = (80, -13)       # the peak is on N5, the mountain spreads off the map
-MOUNTAIN = [(blob(80, -13, 22 * f, 18 * f, 11 + k, wob=.07 - .006 * k), col, h) for k, (f, col, h) in enumerate(
+MOUNTAIN_C = (125, -55)       # the peak is on N5, the mountain spreads off the map
+MOUNTAIN = [(blob(125, -55, 82 * f, 72 * f, 11 + k, wob=.025 - .002 * k), col, h) for k, (f, col, h) in enumerate(
     [(1, '#CFE0A4', 0), (.8, '#B9C98C', 100), (.62, '#A9A27C', 200), (.45, '#9C948C', 300), (.3, '#C9C9CF', 400), (.17, '#FFFFFF', 500)])]
 FOREST = [(-45, -30), (9, -30), (9, -10), (1, -9.3), (-5.5, -6.8), (-10.5, -1), (-11.6, 8), (-12, 16), (-11.8, 25), (-12.6, 33), (-15, 38.5), (-45, 40)]
 FARM = [(-45, 41.6), (-12, 42.6), (-9.4, 45), (-7.5, 49), (-4, 51.5), (1, 52.5), (2, 56), (2, 75), (-45, 75)]
@@ -99,11 +99,11 @@ LAKE = (80, 52, 13, 9)       # x, y, rx, ry: the lake (with a beach) spreads off
 _g = _r.Random(5)
 FOREST_TREES = [(x, y, .45 + _g.random() * .35) for x, y in ((_g.uniform(-45, 10), _g.uniform(-30, 40)) for _ in range(5200)) if inside(FOREST, x, y)]
 LABELS = [  # (x, y, text, size) in squares
-    (70, -11.8, 'MT. PIGEON', 22), (70.5, -10.6, 'already made: don\u2019t draw here', 9), (79, -12.4, 'Peak 350 m', 10),
-    (66, -9.2, 'Lookout', 10), (71, 3.6, 'Waterfall', 10), (72, 12, 'River', 13), (72, 28, 'River', 13),
+    (71, -10.6, 'MT. PIGEON', 22), (71.5, -9.4, 'already made: don\u2019t draw here', 9),
+    (63.5, -9.6, 'Road to the Lookout', 10), (72, 12, 'River', 13), (72, 28, 'River', 13),
     (69.5, 44.2, 'BEACH', 13), (78, 51.2, 'LAKE', 22), (75.5, 54.6, 'Lake Bridge', 10),
     (-16, -1, 'FOREST', 22), (-16, 20, 'FOREST', 22), (-12, -11.6, 'FOREST', 18), (4, -12.2, 'Forest pond', 9),
-    (-15, 51.5, 'FARM', 22), (-7, 55, 'FARM', 14), (61.5, -12.3, 'Tunnel', 11), (77.6, 3.4, 'Tunnel', 11)]
+    (-15, 51.5, 'FARM', 22), (-7, 55, 'FARM', 14), (58.5, -12.3, 'Tunnel', 11), (77.6, 6, 'Tunnel', 11)]
 NATURE_NOTE = 'Nature (mountain, forest, farm, lake): you can add small things like a cabin, campsite, trail or lookout (max 2 floors).'
 
 def draw_nature(cv):
@@ -154,7 +154,7 @@ def draw_mountain(cv):
         else: cv.rect(x - MAIN / 2 - .2, y - .25, MAIN + .4, .5, stroke=0, fill=1)
     # the river's waterfall
     cv.setStrokeColor(white); cv.setLineWidth(.12)
-    for k in range(4): cv.line(74.2 + k * .25, 1.6, 74 + k * .25, 3.6)
+
 
 def tunnel_portals():
     base = MOUNTAIN[0][0]; out = []
@@ -215,7 +215,7 @@ def draw_city(cv, lines=True):
         cv.setStrokeColor(col)
         for w, pts, *f in RING_ROADS:
             if 'over' in f: cv.setLineWidth(w + extra); cv.drawPath(road_path(cv, pts, f), stroke=1, fill=0)
-    cv.setFillColor(HexColor('#FFD23C')); cv.setStrokeColor(INK); cv.setLineWidth(.08); cv.circle(66, -8, .7, stroke=1, fill=1)
+    pass
 
 V_ROADS = (6, 13)                  # streets running up/down on every sheet (they line up from sheet to sheet)
 H_ROAD = 7                         # street running across on rows A and B

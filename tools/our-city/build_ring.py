@@ -11,14 +11,14 @@ M = 10.0   # metres per square
 
 # ---- the mountain: heights follow the bands printed on the sheets (0, 100 ... 500 m)
 cx, cy = ns['MOUNTAIN_C']
-RX, RY = 22, 18
+RX, RY = 82, 72
 g = random.Random(11); PH = [g.random() * 6.28 for _ in range(3)]
-PROFILE = [(1, 0), (.8, 70), (.62, 150), (.45, 225), (.3, 285), (.17, 325), (0, 350)]   # broad shoulders, rounded top
+PROFILE = [(1, 0), (.8, 60), (.62, 130), (.45, 200), (.3, 260), (.17, 305), (0, 330)]   # wide and gradual, rounded top
 def mountain_h(x, z):
     """height in metres at world metres (x, z)"""
     X, Z = x / M, z / M
     a = math.atan2((Z - cy) / RY, (X - cx) / RX)
-    w = 1 + .07 * (math.sin(3 * a + PH[0]) + .6 * math.sin(5 * a + PH[1]) + .4 * math.sin(9 * a + PH[2]))
+    w = 1 + .025 * (math.sin(3 * a + PH[0]) + .6 * math.sin(5 * a + PH[1]) + .4 * math.sin(9 * a + PH[2]))
     r = math.hypot((X - cx) / RX, (Z - cy) / RY) / w
     if r >= 1: return 0.0
     for (r0, h0), (r1, h1) in zip(PROFILE, PROFILE[1:]):
@@ -28,7 +28,7 @@ def mountain_h(x, z):
             return h0 + (h1 - h0) * t
     return PROFILE[-1][1]
 
-T = {'x0': -700, 'z0': -700, 'step': 10, 'nx': 201, 'nz': 181}
+T = {'x0': -700, 'z0': -1400, 'step': 10, 'nx': 291, 'nz': 221}
 T['dm'] = [round(mountain_h(T['x0'] + i * T['step'], T['z0'] + j * T['step']) * 10) for j in range(T['nz']) for i in range(T['nx'])]
 # carve a level shelf for the Mountain Road so it sits on the slope (the game smooths the ground, so carve wide)
 _mr = [w_pts for w_pts in ns['RING_ROADS'] if 'over' in w_pts[2:]][0]
@@ -109,10 +109,10 @@ RIV = [[round(p[0] * M, 1), round(p[1] * M, 1)] for p in curve(ns['RIVER'], n=80
 lx, ly, lrx, lry = ns['LAKE']
 nature = {'forest': FOREST, 'farm': FARM, 'fields': fields, 'barn': barn, 'river': RIV, 'riverW': ns['RIVER_W'] * M,
           'lake': [lx * M, ly * M, lrx * M, lry * M], 'beach': 22, 'mountain': [cx * M, cy * M, RX * M, RY * M],
-          'lookout': [660, -80], 'tunnels': tunnels, 'trees': trees,
+          'lookout': [880, -290], 'tunnels': tunnels, 'trees': trees,
           'mroad': [[round(x, 1), round(z, 1)] for x, z in _line]}
 C.update({'roads': roads, 'streams': streams, 'ponds': ponds, 'terrain': T, 'nature': nature,
-          'bounds': [-420.0, -330.0, 1020.0, 750.0]})
+          'bounds': [-420.0, -1000.0, 1900.0, 750.0]})
 json.dump(C, open(os.path.join(HERE, 'city_ring.json'), 'w'))
 print('ring ok:', len(roads), 'roads,', len(tunnels), 'tunnel(s),', len(trees), 'forest trees,', len(fields), 'fields, barn', barn,
       '| peak', max(T['dm']) / 10, 'm')

@@ -392,19 +392,10 @@ for(const s of[-1,1])box(5,11,3,'#9a9590',s*10.3,5.5,0,g);box(26,4,3,'#9a9590',0
 const TS=[];for(const P of N.tunnels)for(let k=1;k<P.length;k++)TS.push([P[k-1][0],P[k-1][1],P[k][0],P[k][1]]);
 const inTunnel=(x,z)=>{for(const[a,b,c,d]of TS){const dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<56)return!0}return!1};
 window.__inTunnel=inTunnel;
-// the waterfall: a cascade running down the mountain where the river starts
-{const R=N.river,pts=R.filter(([x,z])=>ne(x,z)>1.2);if(pts.length>1){const cv=document.createElement('canvas');cv.width=64;cv.height=256;const c2=cv.getContext('2d');c2.fillStyle='#bfe9ff';c2.fillRect(0,0,64,256);for(let k=0;k<70;k++){c2.fillStyle=k%3?'#ffffff':'#8fd3f5';c2.fillRect(Math.random()*64,Math.random()*256,2+Math.random()*5,14+Math.random()*30)}
-const tx=new Pe(cv);tx.wrapS=tx.wrapT=1e3;tx.colorSpace=me;const V=[],U=[],I=[];let acc=0;const hw=N.riverW/2+1;
-pts.forEach(([x,z],k)=>{const p0=pts[Math.max(0,k-1)],p1=pts[Math.min(pts.length-1,k+1)],dx=p1[0]-p0[0],dz=p1[1]-p0[1],l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l,y=ne(x,z)+4;if(k)acc+=Math.hypot(x-pts[k-1][0],z-pts[k-1][1]);
-V.push(x+nx*hw,y,z+nz*hw,x-nx*hw,y,z-nz*hw);U.push(0,acc/25,1,acc/25);if(k){const o=(k-1)*2;I.push(o,o+1,o+2,o+1,o+3,o+2)}});
-const gm=new oe;gm.setAttribute('position',new Ut(V,3));gm.setAttribute('uv',new Ut(U,2));gm.setIndex(I);gm.computeVertexNormals();
-const wm=new Be({map:tx,transparent:!0,opacity:.92,side:2});$t.add(new T.Mesh(gm,wm));const end=pts[pts.length-1];
-const mist=[];for(let k=0;k<7;k++){const m=new T.Mesh(new T.Sph(2+Math.random()*2,10,8),new T.Mat({color:new Pt('#ffffff'),transparent:!0,opacity:.45}));$t.add(m);mist.push([m,Math.random()*6])}
-LIVE.push(dt=>{tx.offset.y-=dt*1.6;for(const[m,o]of mist){const t=(performance.now()/1e3+o)%3;m.position.set(end[0]+Math.sin(o*3)*6,ne(end[0],end[1])+1+t*2.5,end[1]+Math.cos(o*3)*6);m.scale.setScalar(.6+t*.4);m.material.opacity=.45*(1-t/3)}})}}
 // the Mountain Road: drawn as its own ribbon a little above the slope (the game's road follows the ground too closely on steep hills)
 if(N.mroad){const P=N.mroad,V=[],I=[],hw=4.6,ASP=new T.Mat({color:new Pt('#4a4f56')}),CURB=new T.Mat({color:new Pt('#b9b4aa')});
 const rib=(w,dy,m)=>{const V=[],I=[];P.forEach(([x,z],k)=>{const p0=P[Math.max(0,k-1)],p1=P[Math.min(P.length-1,k+1)],dx=p1[0]-p0[0],dz=p1[1]-p0[1],l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l;
-const y=Math.max(ne(x+nx*w,z+nz*w),ne(x-nx*w,z-nz*w),ne(x,z))+dy;V.push(x+nx*w,y,z+nz*w,x-nx*w,y,z-nz*w);if(k){const o=(k-1)*2;I.push(o,o+2,o+1,o+1,o+2,o+3)}});
+const W2=hw+1.5,y=Math.max(ne(x+nx*W2,z+nz*W2),ne(x-nx*W2,z-nz*W2),ne(x,z))+dy;V.push(x+nx*w,y,z+nz*w,x-nx*w,y,z-nz*w);if(k){const o=(k-1)*2;I.push(o,o+2,o+1,o+1,o+2,o+3)}});
 const g=new oe;g.setAttribute('position',new Ut(V,3));g.setIndex(I);g.computeVertexNormals();const m2=new T.Mesh(g,m);m2.material.side=2;$t.add(m2)};
 rib(hw+1,.9,CURB);rib(hw,1.05,ASP);
 for(let k=2;k<P.length;k+=3){const[x,z]=P[k],y=Math.max(ne(x,z),ne(x+3,z),ne(x-3,z),ne(x,z+3),ne(x,z-3))+1.12;box(.3,.03,2.2,'#ffd23c',x,y,z).rotation.y=Math.atan2(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1])}}
@@ -454,7 +445,7 @@ if NAT:
     rep('g.setAttribute("position",new Ut(u,3)),g.setIndex(p)', 'g.setAttribute("position",new Ut(u,3)),g.setAttribute("color",new Ut(cc,3)),g.setIndex(p)')
     rep('function d_(){', r'''function groundCol(x,z,y){const N=ie.nature,G=groundCol.c||(groundCol.c={grass:new Pt('#bad997'),forest:new Pt('#86b86f'),farm:new Pt('#c9b77a'),sand:new Pt('#f0dfa8'),hill:new Pt('#a3bb7c'),rock:new Pt('#a49a7c'),grey:new Pt('#8f8a86'),snow:new Pt('#ffffff')}),inP=(P,x,z)=>{let c=!1;for(let a=0,b=P.length-1;a<P.length;b=a++){const[xa,za]=P[a],[xb,zb]=P[b];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}return c};
 if(!N)return G.grass;const[lx,lz,rx,rz]=N.lake,b=N.beach;if(((x-lx)/(rx+b))**2+((z-lz)/(rz+b))**2<1)return G.sand;if(y<6){if(inP(N.forest,x,z))return G.forest;if(inP(N.farm,x,z))return G.farm;return G.grass}
-const st=[[6,G.grass],[70,G.hill],[160,G.rock],[240,G.grey],[275,G.grey],[300,G.snow]];for(let k=1;k<st.length;k++)if(y<st[k][0]){const t=(y-st[k-1][0])/(st[k][0]-st[k-1][0]);return st[k-1][1].clone().lerp(st[k][1],t)}return G.snow}
+const st=[[6,G.grass],[60,G.hill],[150,G.rock],[230,G.grey],[275,G.grey],[300,G.snow]];for(let k=1;k<st.length;k++)if(y<st[k][0]){const t=(y-st[k-1][0])/(st[k][0]-st[k-1][0]);return st[k-1][1].clone().lerp(st[k][1],t)}return G.snow}
 function d_(){''')
     rep('F.y=Math.min(x,420)', 'F.y=Math.min(x,800)')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon

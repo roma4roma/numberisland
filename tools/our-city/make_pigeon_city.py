@@ -372,6 +372,8 @@ def rep(a, b, count=1):
     assert n == count, (a[:70], n)
     s = s.replace(a, b)
 
+# no Seoul subway exits (Gangnam / Nonhyeon stations sit inside the bigger map)
+rep('[10,-17.2,4.6,1]]}],t=[.359,.933]', '[10,-17.2,4.6,1]]}].filter(()=>!1),t=[.359,.933]')
 # no Seoul underpasses
 rep('var Ko=null,Er=[[[-441,-98.4],[-440.5,-94.4],[-475.9,-58.5],[-477.9,-56.5]],[[-478.5,-37.3],[-473,-34.5],[-431,-46.4],[-425.7,-47.4]]]', 'var Ko=null,Er=[]')
 # light grassy ground instead of grey city ground

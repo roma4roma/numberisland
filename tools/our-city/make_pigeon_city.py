@@ -288,6 +288,68 @@ for t in range(49):
     a = 2 * math.pi * t / 48; ring += [round(TX + C['rr'] * math.cos(a), 1), round(TZ + C['rr'] * math.sin(a), 1)]
 roads.append([C['mainw'], 1, ring, 'Roundabout', 0, 2])
 
+# round off sharp corners: each bend of more than ~20 degrees becomes a smooth curve (radius 18 m main, 12 m lanes)
+def _fillet(P, R, avoid):
+    P = [tuple(q) for q in P]
+    closed = len(P) > 3 and math.dist(P[0], P[-1]) < .5
+    def turn(k, Q):
+        a_, b_, c_ = Q[k - 1], Q[k], Q[k + 1]
+        u = (b_[0] - a_[0], b_[1] - a_[1]); v = (c_[0] - b_[0], c_[1] - b_[1])
+        lu, lv = math.hypot(*u), math.hypot(*v)
+        if lu < 1e-6 or lv < 1e-6: return 0
+        return math.acos(max(-1, min(1, (u[0] * v[0] + u[1] * v[1]) / lu / lv)))
+    if closed:   # start the loop half-way along a straight bit so no corner sits at the seam
+        Q = P[:-1]; n = len(Q)
+        ang = []
+        for k in range(n):
+            a_, b_, c_ = Q[k - 1], Q[k], Q[(k + 1) % n]
+            ang.append(turn(1, [a_, b_, c_]))
+        if max(ang) < .35: return [v for q in P for v in q]
+        corners = [k for k in range(n) if ang[k] > .35]
+        far = max(range(n), key=lambda k: min(min(abs(k - c), n - abs(k - c)) for c in corners))
+        Q = Q[far:] + Q[:far]; P = Q + [Q[0]]
+    D = [0.0]
+    for k in range(1, len(P)): D.append(D[-1] + math.dist(P[k - 1], P[k]))
+    cs = [(k, turn(k, P)) for k in range(1, len(P) - 1)]
+    cs = [(k, t) for k, t in cs if t > .35]
+    if not cs: return [v for q in P for v in q]
+    def at(d):
+        d = max(0, min(D[-1], d))
+        for k in range(1, len(P)):
+            if D[k] >= d:
+                t = (d - D[k - 1]) / ((D[k] - D[k - 1]) or 1)
+                return (P[k - 1][0] + (P[k][0] - P[k - 1][0]) * t, P[k - 1][1] + (P[k][1] - P[k - 1][1]) * t)
+        return P[-1]
+    cut = []
+    for i, (k, t) in enumerate(cs):
+        d = R * math.tan(t / 2)
+        prev = D[cs[i - 1][0]] if i else 0; nxt = D[cs[i + 1][0]] if i + 1 < len(cs) else D[-1]
+        lim_a = (D[k] - prev) * (.48 if i else .9); lim_b = (nxt - D[k]) * (.48 if i + 1 < len(cs) else .9)
+        d = min(d, lim_a, lim_b)
+        for e in avoid:   # another road joins near this corner: keep the curve short of it
+            de = math.dist(P[k], e)
+            if de < d + 6: d = min(d, de - 8)
+        if d > .5: cut.append((D[k] - d, D[k] + d, P[k]))
+    out = []; ci = 0; k = 0
+    while k < len(P):
+        if ci < len(cut) and D[k] >= cut[ci][0]:
+            A, B, Cn = at(cut[ci][0]), at(cut[ci][1]), cut[ci][2]
+            m = max(4, int((cut[ci][1] - cut[ci][0]) / 2.5))
+            for j in range(m + 1):
+                t = j / m
+                out.append(((1 - t) ** 2 * A[0] + 2 * (1 - t) * t * Cn[0] + t * t * B[0], (1 - t) ** 2 * A[1] + 2 * (1 - t) * t * Cn[1] + t * t * B[1]))
+            while k < len(P) and D[k] <= cut[ci][1]: k += 1
+            ci += 1
+            continue
+        out.append(P[k]); k += 1
+    return [round(v, 2) for q in out for v in q]
+_ends = [(r_[2][i_], r_[2][i_ + 1]) for r_ in roads for i_ in (0, len(r_[2]) - 2)]
+for r_ in roads:
+    if r_[3] == 'Roundabout': continue
+    P_ = [(r_[2][i_], r_[2][i_ + 1]) for i_ in range(0, len(r_[2]), 2)]
+    own = {P_[0], P_[-1]}
+    r_[2] = _fillet(P_, 18 if r_[1] else 12, [e for e in _ends if e not in own])
+
 # street trees along the lanes (kept off buildings by the engine's own check when walking)
 terrain = C.get('terrain') or {'x0': -700, 'z0': -700, 'step': 20, 'nx': 101, 'nz': 91, 'dm': [0] * (101 * 91)}
 NAT = C.get('nature')
@@ -320,7 +382,19 @@ if NAT:   # the ring's countryside: river + lake are water, forest trees, signs
         return c
     def wet(x, z): return ((x - lx) / (lrx + 3)) ** 2 + ((z - lz) / (lrz + 3)) ** 2 < 1 or in_poly(RIVPOLY, x, z)
     BH, RAMP, GR = 7.5, 26.0, 2.0
-    spans, cells = [], {}
+    # roads that end out in the water stop at the bank instead of hanging in mid-air
+    for r_ in roads:
+        P_ = [(r_[2][i_], r_[2][i_ + 1]) for i_ in range(0, len(r_[2]), 2)]
+        if len(P_) < 2 or r_[3] == 'Roundabout': continue
+        for rev in (0, 1):
+            if wet(*P_[-1]):
+                k_ = len(P_) - 1
+                while k_ > 0 and wet(*P_[k_]): k_ -= 1
+                P_ = P_[:k_ + 1]
+            P_ = P_[::-1]
+        r_[2] = [v for q in P_ for v in q] if len(P_) >= 2 else r_[2]
+    # every road as 2 m samples with its distance along the road
+    RD = []
     for rw, major, pts, *_ in roads:
         P_ = [(pts[i_], pts[i_ + 1]) for i_ in range(0, len(pts), 2)]
         S_ = []
@@ -328,27 +402,87 @@ if NAT:   # the ring's countryside: river + lake are water, forest trees, signs
             L_ = math.hypot(b_[0] - a_[0], b_[1] - a_[1]); n_ = max(1, int(L_ / 2))
             S_ += [(a_[0] + (b_[0] - a_[0]) * t_ / n_, a_[1] + (b_[1] - a_[1]) * t_ / n_) for t_ in range(n_)]
         S_.append(P_[-1])
+        D_ = [0.0]
+        for k_ in range(1, len(S_)): D_.append(D_[-1] + math.hypot(S_[k_][0] - S_[k_ - 1][0], S_[k_][1] - S_[k_ - 1][1]))
         W_ = [wet(x_, z_) for x_, z_ in S_]
-        if not any(W_): continue
-        D_ = [0.0] * len(S_); acc = 0
-        for k_ in range(1, len(S_)): acc += math.hypot(S_[k_][0] - S_[k_ - 1][0], S_[k_][1] - S_[k_ - 1][1]); D_[k_] = acc
-        wd = [D_[k_] for k_ in range(len(S_)) if W_[k_]]
-        H_ = []
-        for k_ in range(len(S_)):
-            dd = min(abs(D_[k_] - q_) for q_ in wd) - 4          # a little flat bit past the bank
-            t_ = 1 if dd <= 0 else max(0, 1 - dd / RAMP)
-            H_.append(round(BH * t_ * t_ * (3 - 2 * t_), 2))
+        src = []   # [from, to, height]: flat at that height, smooth ramps down either side
+        k_ = 0
+        while k_ < len(S_):
+            if W_[k_]:
+                j_ = k_
+                while j_ + 1 < len(S_) and W_[j_ + 1]: j_ += 1
+                src.append([D_[k_] - 4, D_[j_] + 4, BH]); k_ = j_ + 1
+            else: k_ += 1
+        RD.append({'w': rw, 'major': major, 'S': S_, 'D': D_, 'src': src, 'jn': {}})
+    def Hat(R_, d):
+        h = 0
+        for a_, b_, hh in list(R_['src']) + list(R_['jn'].values()):
+            dd = max(a_ - d, d - b_, 0); t_ = max(0, 1 - dd / RAMP); h = max(h, hh * t_ * t_ * (3 - 2 * t_))
+        return h
+    # junctions: where a road's end meets another road, both share one height there (so side roads ramp up too)
+    JN = []
+    for ia, A_ in enumerate(RD):
+        for end in (0, -1):
+            ex, ez = A_['S'][end]
+            best = None
+            for ib, B_ in enumerate(RD):
+                if ib == ia: continue
+                for k_, (x_, z_) in enumerate(B_['S']):
+                    dd = math.hypot(x_ - ex, z_ - ez)
+                    if dd < B_['w'] / 2 + 1.5 and (best is None or dd < best[0]): best = (dd, ib, k_)
+            if best: JN.append((ia, A_['D'][end], best[1], RD[best[1]]['D'][best[2]]))
+    for it_ in range(6):
+        for ia, da, ib, db in JN:
+            h = max(Hat(RD[ia], da), Hat(RD[ib], db))
+            if h > .05:
+                RD[ia]['jn'][(ib, round(db))] = [da - RD[ib]['w'] / 2 - 1, da + RD[ib]['w'] / 2 + 1, h]
+                RD[ib]['jn'][(ia, round(da))] = [db - RD[ia]['w'] / 2 - 1, db + RD[ia]['w'] / 2 + 1, h]
+    for R_ in RD: R_['H'] = [round(Hat(R_, d), 2) for d in R_['D']]
+    def deck(R_): return R_['w'] / 2 + (5.4 if R_['major'] else 1.0)
+    def on_other(x, z, me):
+        for ib, B_ in enumerate(RD):
+            if ib == me: continue
+            lim = (B_['w'] / 2 + (5.2 if B_['major'] else .5)) ** 2
+            for x_, z_ in B_['S'][::1]:
+                if (x_ - x) ** 2 + (z_ - z) ** 2 < lim: return True
+        return False
+    # the height grid: each 2 m cell takes the height of the road it is most "inside"
+    best = {}
+    for ia, R_ in enumerate(RD):
+        if max(R_['H']) < .05: continue
+        reach = deck(R_) + 1
+        for (x_, z_), h_ in zip(R_['S'], R_['H']):
+            for ci in range(int((x_ - reach) // GR), int((x_ + reach) // GR) + 1):
+                for cj in range(int((z_ - reach) // GR), int((z_ + reach) // GR) + 1):
+                    dd = math.hypot(ci * GR + GR / 2 - x_, cj * GR + GR / 2 - z_)
+                    if dd < reach:
+                        sc = dd - R_['w'] / 2
+                        if (ci, cj) not in best or sc < best[(ci, cj)][0] - .01 or (abs(sc - best[(ci, cj)][0]) <= .01 and h_ > best[(ci, cj)][1]):
+                            best[(ci, cj)] = (sc, h_)
+    # any road near a raised cell also claims cells (so a flat road next to a ramp stays flat)
+    for ia, R_ in enumerate(RD):
+        if max(R_['H']) >= .05: continue
+        reach = deck(R_) + 1
+        for (x_, z_) in R_['S']:
+            for ci in range(int((x_ - reach) // GR), int((x_ + reach) // GR) + 1):
+                for cj in range(int((z_ - reach) // GR), int((z_ + reach) // GR) + 1):
+                    if (ci, cj) in best:
+                        dd = math.hypot(ci * GR + GR / 2 - x_, cj * GR + GR / 2 - z_); sc = dd - R_['w'] / 2
+                        if sc < best[(ci, cj)][0] - .01: best[(ci, cj)] = (sc, 0)
+    cells = {k_: v_[1] for k_, v_ in best.items() if v_[1] > .02}
+    spans = []
+    for ia, R_ in enumerate(RD):
         cur = []
-        for k_ in range(len(S_)):
-            if H_[k_] > .05:
-                cur.append([round(S_[k_][0], 1), round(S_[k_][1], 1), H_[k_]])
-                r_ = rw / 2 + 7
-                for ci in range(int((S_[k_][0] - r_) // GR), int((S_[k_][0] + r_) // GR) + 1):
-                    for cj in range(int((S_[k_][1] - r_) // GR), int((S_[k_][1] + r_) // GR) + 1):
-                        if math.hypot(ci * GR + GR / 2 - S_[k_][0], cj * GR + GR / 2 - S_[k_][1]) < r_:
-                            cells[(ci, cj)] = max(cells.get((ci, cj), 0), H_[k_])
-            elif cur: spans.append([rw / 2, cur]); cur = []
-        if cur: spans.append([rw / 2, cur])
+        dh = deck(R_)
+        for k_ in range(len(R_['S'])):
+            if R_['H'][k_] > .05:
+                x_, z_ = R_['S'][k_]
+                p0, p1 = R_['S'][max(0, k_ - 1)], R_['S'][min(len(R_['S']) - 1, k_ + 1)]
+                tx, tz = p1[0] - p0[0], p1[1] - p0[1]; tl = math.hypot(tx, tz) or 1; nx_, nz_ = -tz / tl, tx / tl
+                fl = [0 if on_other(x_ + nx_ * sd * dh, z_ + nz_ * sd * dh, ia) else 1 for sd in (-1, 1)]
+                cur.append([round(x_, 1), round(z_, 1), R_['H'][k_], fl[0], fl[1]])
+            elif cur: spans.append([R_['w'] / 2, cur, round(dh, 2)]); cur = []
+        if cur: spans.append([R_['w'] / 2, cur, round(dh, 2)])
     if cells:
         i0 = min(c[0] for c in cells); i1 = max(c[0] for c in cells); j0 = min(c[1] for c in cells); j1 = max(c[1] for c in cells)
         nxg, nzg = i1 - i0 + 1, j1 - j0 + 1
@@ -654,9 +788,9 @@ for(const[a,b,c,r]of[[0,5.2,0,2.6],[1.4,4.6,.6,1.8],[-1.3,4.7,-.4,1.9],[.2,6.4,-
 for(let q=0;q<16;q++){const a=rnd()*6.3,h=3.6+rnd()*3.2,r=1.8+rnd()*.9,m=new T.Mesh(new T.Sph(.26,8,6),mat('#d9262a'));m.position.set(Math.cos(a)*r,h,Math.sin(a)*r);g.add(m)}
 for(let q=0;q<4;q++){const m=new T.Mesh(new T.Sph(.26,8,6),mat('#d9262a'));m.position.set(-2+rnd()*4,.25,-2+rnd()*4);g.add(m)}}
 // bridges: deck slab, railings and support piers along every raised stretch of road
-for(const[hw,P]of BRS){for(let i=1;i<P.length;i++){const[a,b,ha]=P[i-1],[c,d,hc]=P[i],L=Math.hypot(c-a,d-b);if(L<.3||Math.max(ha,hc)<.6)continue;const ux=(c-a)/L,uz=(d-b)/L,nx=-uz,nz=ux,mx=(a+c)/2,mz=(b+d)/2,h=(ha+hc)/2;
-const y0=ne(mx,mz)+h,yaw=Math.atan2(ux,uz),pit=Math.atan2(hc-ha,L);const sl=box(hw*2+2.4,1.1,L+.25,'#8d8a85',mx,y0-.5,mz);sl.rotation.order='YXZ';sl.rotation.y=yaw;sl.rotation.x=-pit;
-for(const s of[-1,1]){const r=box(.3,1,L+.25,'#e9e4d6',mx+nx*s*(hw+1),y0+.75,mz+nz*s*(hw+1));r.rotation.order='YXZ';r.rotation.y=yaw;r.rotation.x=-pit}
+for(const[hw,P,dh0]of BRS){const dh=dh0||hw+1.2;for(let i=1;i<P.length;i++){const[a,b,ha,la,ra]=P[i-1],[c,d,hc,lc,rc]=P[i],L=Math.hypot(c-a,d-b);if(L<.3||Math.max(ha,hc)<.6)continue;const ux=(c-a)/L,uz=(d-b)/L,nx=-uz,nz=ux,mx=(a+c)/2,mz=(b+d)/2,h=(ha+hc)/2;
+const y0=ne(mx,mz)+h,yaw=Math.atan2(ux,uz),pit=Math.atan2(hc-ha,L);const sl=box(dh*2,1.1,L+.25,'#8d8a85',mx,y0-.5,mz);sl.rotation.order='YXZ';sl.rotation.y=yaw;sl.rotation.x=-pit;
+for(const[s,f]of[[-1,la!==0&&lc!==0],[1,ra!==0&&rc!==0]]){if(!f)continue;const r=box(.3,1,L+.25,'#e9e4d6',mx+nx*s*(dh-.15),y0+.65,mz+nz*s*(dh-.15));r.rotation.order='YXZ';r.rotation.y=yaw;r.rotation.x=-pit}
 if(i%9===0&&h>3)for(const s of[-1,1])box(1.4,h,1.4,'#b9b4aa',mx+nx*s*(hw-1),ne(mx,mz)+h/2-.6,mz+nz*s*(hw-1))}}
 // the river boat: back and forth between the mountain and the lake; birds can ride on its deck
 if(N.boat&&N.boat.length>1){const P=N.boat,seg=[];let tot=0;for(let k=1;k<P.length;k++){const L=Math.hypot(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]);seg.push([P[k-1],P[k],L,tot]);tot+=L}
@@ -711,12 +845,31 @@ const fx=Math.sin(f)*2,fz=Math.cos(f)*2,hf=window.__JP(px+fx,pz+fz,f),hb=window.
 window.__JP=(x,z,f)=>{for(const[cx,cz,ux,uz,hw]of RA){const dx=x-cx,dz=z-cz,lat=Math.abs(dx*uz-dz*ux);if(lat>hw+1)continue;const s=Math.sin(f)*ux+Math.cos(f)*uz>0?1:-1,t=(dx*ux+dz*uz)*s;
 if(t>-UP&&t<=0)return RH*(t+UP)/UP;if(t>0&&t<FLY){const k=t/FLY;return RH*(1-k)+4*PK*k*(1-k)}}return 0}}
 // the Mountain Road: drawn as its own ribbon a little above the slope (the game's road follows the ground too closely on steep hills)
-if(N.mroad){const P=N.mroad,V=[],I=[],hw=4.6,ASP=new T.Mat({color:new Pt('#4a4f56')}),CURB=new T.Mat({color:new Pt('#b9b4aa')});
-const rib=(w,dy,m)=>{const V=[],I=[];P.forEach(([x,z],k)=>{const p0=P[Math.max(0,k-1)],p1=P[Math.min(P.length-1,k+1)],dx=p1[0]-p0[0],dz=p1[1]-p0[1],l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l;
-const W2=hw+1.5,y=Math.max(ne(x+nx*W2,z+nz*W2),ne(x-nx*W2,z-nz*W2),ne(x,z))+dy;V.push(x+nx*w,y,z+nz*w,x-nx*w,y,z-nz*w);if(k){const o=(k-1)*2;I.push(o,o+2,o+1,o+1,o+2,o+3)}});
-const g=new oe;g.setAttribute('position',new Ut(V,3));g.setIndex(I);g.computeVertexNormals();const m2=new T.Mesh(g,m);m2.material.side=2;$t.add(m2)};
-rib(hw+1,.9,CURB);rib(hw,1.05,ASP);
-for(let k=2;k<P.length;k+=3){const[x,z]=P[k],y=Math.max(ne(x,z),ne(x+3,z),ne(x-3,z),ne(x,z+3),ne(x,z-3))+1.12;box(.3,.03,2.2,'#ffd23c',x,y,z).rotation.y=Math.atan2(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1])}}
+if(N.mroad){const P=N.mroad,n=P.length,hw=4.6,SH=1.3;
+// one smooth height for the road (the ground grid is coarse, so follow it loosely and never dip under it)
+const NR=P.map((_,k)=>{const a=P[Math.max(0,k-3)],b=P[Math.min(n-1,k+3)],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz)||1;return[-dz/l,dx/l]});
+const G=P.map(([x,z],k)=>{const[nx,nz]=NR[k];let m=Math.max(ne(x,z),(N.mroadh||[])[k]||0);for(const o of[-hw-SH,-hw/2,hw/2,hw+SH])m=Math.max(m,ne(x+nx*o,z+nz*o));return m});
+// where it crosses another road: a level crossing at that road's height
+const XR=P.map(([x,z])=>{for(const[w,,F]of ie.roads)for(let i=2;i<F.length;i+=2){const a=F[i-2],b=F[i-1],dx=F[i]-a,dz=F[i+1]-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;if(Math.hypot(a+dx*t-x,b+dz*t-z)<w/2+1.5)return 1}return 0});
+const W=6;let M=G.map((_,k)=>{let m=-1e9;for(let j=Math.max(0,k-W);j<=Math.min(n-1,k+W);j++)m=Math.max(m,XR[j]?-1e9:G[j]);return XR[k]?ne(P[k][0],P[k][1]):m});
+let Y=M.slice();for(let it=0;it<2;it++){const Z=Y.slice();for(let k=0;k<n;k++){if(XR[k]){Y[k]=Z[k];continue}let s=0,c=0;for(let j=Math.max(0,k-W);j<=Math.min(n-1,k+W);j++){s+=Z[j];c++}Y[k]=Math.max(s/c,XR[k]?0:G[k])}}Y=Y.map((y,k)=>y+(XR[k]?.33:.3));
+// start just outside the ring road so the two road surfaces do not overlap
+let K0=0;while(K0<n-2&&Math.hypot(P[K0][0]-P[0][0],P[K0][1]-P[0][1])<6.6)K0++;
+const strip=(o0,o1,dy,col,every)=>{const V=[],I=[];let q=0;for(let k=0;k<n;k++){const[x,z]=P[k],[nx,nz]=NR[k],y=Y[k]+dy;V.push(x+nx*o0,y,z+nz*o0,x+nx*o1,y,z+nz*o1);if(k>K0){const o=(k-1)*2;if(!every||Math.floor(k/every)%2===0)I.push(o,o+2,o+1,o+1,o+2,o+3)}}
+const g=new oe;g.setAttribute('position',new Ut(V,3));g.setIndex(I);g.computeVertexNormals();const m=new Dt(g,new Ft({color:col,side:2}));$t.add(m);return m};
+strip(-hw-SH,hw+SH,-.02,11776169);                       // shoulders (same grey as the city's sidewalks)
+strip(-hw,hw,0,5198423);                                  // asphalt (same as the city's roads)
+strip(-.37,-.07,.03,15909424);strip(.07,.37,.03,15909424); // double yellow centre line
+strip(-hw+.25,-hw+.45,.03,15658732);strip(hw-.45,hw-.25,.03,15658732); // white edge lines
+// retaining wall under each edge, down into the slope, so the road never floats
+for(const s of[-1,1]){const V=[],I=[];for(let k=0;k<n;k++){const[x,z]=P[k],[nx,nz]=NR[k],ex=x+nx*s*(hw+SH),ez=z+nz*s*(hw+SH);V.push(ex,Y[k]-.02,ez,ex,Math.min(Y[k]-.02,ne(ex,ez))-1.5,ez);if(k>K0&&!XR[k]&&!XR[k-1]){const o=(k-1)*2;I.push(o,o+2,o+1,o+1,o+2,o+3)}}
+const g=new oe;g.setAttribute('position',new Ut(V,3));g.setIndex(I);g.computeVertexNormals();$t.add(new Dt(g,new Ft({color:10524028,side:2})))}
+// guard rails: a steel band on posts along both sides (open at the bottom and at the lookout)
+{const RM=new Ft({color:13424094,side:2}),k0=14,k1=n-10;for(const s of[-1,1]){const V=[],I=[];for(let k=k0;k<=k1;k++){const[x,z]=P[k],[nx,nz]=NR[k],o=s*(hw+SH-.25),ex=x+nx*o,ez=z+nz*o;V.push(ex,Y[k]+.55,ez,ex,Y[k]+.85,ez);const nearX=j=>{for(let d=-4;d<=4;d++)if(XR[j+d])return 1;return 0};if(k>k0&&!nearX(k)&&!nearX(k-1)){const q=(k-k0-1)*2;I.push(q,q+2,q+1,q+1,q+2,q+3)}}
+const g=new oe;g.setAttribute('position',new Ut(V,3));g.setIndex(I);g.computeVertexNormals();$t.add(new Dt(g,RM))}
+const posts=[];for(let k=k0;k<=k1;k+=3)for(const s of[-1,1]){let nx0=0;for(let d=-4;d<=4;d++)XR[k+d]&&(nx0=1);if(nx0)continue;const[x,z]=P[k],[nx,nz]=NR[k],o=s*(hw+SH-.25);posts.push([x+nx*o,Y[k],z+nz*o])}
+const im=new on(new Bt(.14,.8,.14).translate(0,.4,0),new Ft({color:8421504}),posts.length),Q=new ee;posts.forEach(([x,y,z],i)=>{Q.makeTranslation(x,y,z);im.setMatrixAt(i,Q)});$t.add(im)}
+window.__mroad={P,Y,hw:hw+SH}}
 // the lookout at the top of the mountain road
 {const[x,z]=N.lookout,y=ne(x,z),g=new T.Group();g.position.set(x,y,z);$t.add(g);for(const[a,b]of[[-3.5,-3.5],[3.5,-3.5],[-3.5,3.5],[3.5,3.5]])box(.5,4,.5,'#7a4f2c',a,2,b,g);box(8.4,.5,8.4,'#a0703f',0,4.2,0,g);
 for(const[a,b,w,d]of[[0,-4,8.4,.15],[0,4,8.4,.15],[-4,0,.15,8.4],[4,0,.15,8.4]])box(w,1.1,d,'#ffffff',a,5,b,g);const rf=new T.Mesh(new T.Cone(6.4,2.6,4),mat('#d94b3c'));rf.rotation.y=Math.PI/4;rf.position.y=9;g.add(rf);
@@ -923,7 +1076,9 @@ function d_(){''')
     # bridges: roads (and cars) rise over the river so the boat fits underneath
     rep('var Ko=null,Er=[]', 'var BRG=ie.bridges||{},BRS=BRG.spans||[],BRH=(x,z)=>{if(!BRG.h)return 0;const fx=(x-BRG.x0)/BRG.r-.5,fz=(z-BRG.z0)/BRG.r-.5,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>a<0||b<0||a>=BRG.nx||b>=BRG.nz?0:BRG.h[b*BRG.nx+a];return(g(i,j)*(1-u)+g(i+1,j)*u)*(1-v)+(g(i,j+1)*(1-u)+g(i+1,j+1)*u)*v};window.__BRS=BRS;window.__BRH=BRH;var Ko=null,Er=[]')
     rep('Ko=y?(P,L)=>Gi(L):null;', 'Ko=y?(P,L)=>Gi(L):BRH;')
-    rep('}else{let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),g>=4){', '}else{Ko=BRH;let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),Ko=null,g>=4){')
+    rep('}else{let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),g>=4){for(let R of[-1,1])h(Ae(m,R*(g/2-.35)),.15,.24,o);Kl.push({w:g,flat:m})}}', '}else{Ko=BRH;let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),g>=4){for(let R of[-1,1])h(Ae(m,R*(g/2-.35)),.15,.24,o);Kl.push({w:g,flat:m})}Ko=null}')
+    rep('A=ne(E,S),w=ne(y,R);i.push(E,A+.2,S', 'A=ne(E,S)+(Ko?Ko(E,S):0),w=ne(y,R)+(Ko?Ko(y,R):0);i.push(E,A+.2,S')
+    rep('m=.2,d=E=>m+ne(E[0],E[1]);', 'm=.2,d=E=>m+ne(E[0],E[1])+(Ko?Ko(E[0],E[1]):0);')
     # a 4th kind of snack: apples
     rep('r_={convenience:0,cafe:1,bakery:2}', 'r_={convenience:0,cafe:1,bakery:2,apple:3}')
     rep('[[f,14259775]]],u=[0,0,0]', '[[f,14259775]],[[new Le(.62,14,10),14164010],[new ce(.06,.06,.4,6).translate(0,.68,0),5913652],[new Le(.26,8,6).scale(1.4,.4,.8).translate(.28,.8,0),4891194]]],u=[0,0,0,0]')
@@ -933,7 +1088,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.L/2&&lz>=m.fz+.4&&lz<m.D/2+2.6){const fl=lz<=m.D/2?1.4:1.4*Math.max(0,1-(lz-m.D/2)/2.6);return y<fl+m.H-.6?{f:fl,c:1.4+m.H-.1,name:null}:{f:m.top+5,c:1e4,name:null}}if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.L/2&&lz>=m.fz+.4&&lz<m.D/2+2.6){const fl=lz<=m.D/2?1.4:1.4*Math.max(0,1-(lz-m.D/2)/2.6);return y<fl+m.H-.6?{f:fl,c:1.4+m.H-.1,name:null}:{f:m.top+5,c:1e4,name:null}}if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P,dh]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(dh||hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}{const MR=window.__mroad;if(MR){if(!MR.bb){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const[px,pz]of MR.P){a=Math.min(a,px);b=Math.min(b,pz);c=Math.max(c,px);d=Math.max(d,pz)}MR.bb=[a-8,b-8,c+8,d+8]}const B=MR.bb;if(x>B[0]&&x<B[2]&&z>B[1]&&z<B[3]){let bd=1e9,bk=-1;for(let k=0;k<MR.P.length;k++){const dx=MR.P[k][0]-x,dz=MR.P[k][1]-z,q=dx*dx+dz*dz;q<bd&&(bd=q,bk=k)}if(bd<MR.hw*MR.hw&&y>MR.Y[bk]-3)return{f:MR.Y[bk],c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

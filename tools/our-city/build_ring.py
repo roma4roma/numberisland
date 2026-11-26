@@ -19,8 +19,13 @@ def mountain_h(x, z):
     """height in metres at world metres (x, z). The whole city grid stays FLAT: the mountain only rises outside it."""
     X, Z = x / M, z / M
     dx_ = max(-20 - X, 0, X - 80); dz_ = max(-14 - Z, 0, Z - 56)
-    ramp = min(1, max(0, (math.hypot(dx_, dz_) - 2) / 10)); ramp = ramp * ramp * (3 - 2 * ramp)
-    return raw_h(X, Z) * ramp
+    # foothills: next to the city the ground rises gently (about 1 in 8), getting steeper further out,
+    # and blends smoothly into the real mountain shape (so no cliff wall facing the city)
+    d = math.hypot(dx_, dz_) * M
+    if d <= 15: return 0.0
+    cap = .12 * (d - 15) + .0006 * (d - 15) ** 2
+    r, k = raw_h(X, Z), 8.0
+    return max(0.0, -k * math.log(math.exp(-r / k) + math.exp(-cap / k)))
 def raw_h(X, Z):
     a = math.atan2((Z - cy) / RY, (X - cx) / RX)
     w = 1 + .025 * (math.sin(3 * a + PH[0]) + .6 * math.sin(5 * a + PH[1]) + .4 * math.sin(9 * a + PH[2]))
@@ -38,7 +43,35 @@ T['dm'] = [round(mountain_h(T['x0'] + i * T['step'], T['z0'] + j * T['step']) * 
 # carve a level shelf for the Mountain Road so it sits on the slope (the game smooths the ground, so carve wide)
 _mr = [w_pts for w_pts in ns['RING_ROADS'] if 'over' in w_pts[2:]][0]
 _line = [(x * M, z * M) for x, z in curve(_mr[1], n=60)]
+def _radius(P, k, w=4):
+    a, b, c = P[max(0, k - w)], P[k], P[min(len(P) - 1, k + w)]
+    A, B, C = math.dist(a, b), math.dist(b, c), math.dist(a, c)
+    ar = abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) / 2
+    return A * B * C / (4 * ar) if ar > 1e-6 else 1e9
+# open up hairpins: a 9 m road needs bends of at least ~16 m radius
+for _it in range(3000):
+    tight = [k for k in range(4, len(_line) - 4) if _radius(_line, k) < 16]
+    if not tight: break
+    L_ = list(_line)
+    for k in {j for t in tight for j in range(max(1, t - 12), min(len(_line) - 1, t + 13))}:
+        _line[k] = ((L_[k - 1][0] + 2 * L_[k][0] + L_[k + 1][0]) / 4, (L_[k - 1][1] + 2 * L_[k][1] + L_[k + 1][1]) / 4)
+# even spacing again (about 1.2 m)
+_D = [0.0]
+for k in range(1, len(_line)): _D.append(_D[-1] + math.dist(_line[k - 1], _line[k]))
+_n = int(_D[-1] / 1.2); _rs = []; j = 0
+for i in range(_n + 1):
+    d = _D[-1] * i / _n
+    while j < len(_D) - 2 and _D[j + 1] < d: j += 1
+    t = (d - _D[j]) / ((_D[j + 1] - _D[j]) or 1)
+    _rs.append((_line[j][0] + (_line[j + 1][0] - _line[j][0]) * t, _line[j][1] + (_line[j + 1][1] - _line[j][1]) * t))
+_line = _rs
 _prof = [mountain_h(x, z) for x, z in _line]
+# the road's own height: follows the ground but never steeper than 15% (cuts in or builds up where needed)
+_ds = [0] + [math.dist(_line[k - 1], _line[k]) for k in range(1, len(_line))]
+for _pass in range(3):
+    for k in range(1, len(_prof)): _prof[k] = min(max(_prof[k], _prof[k - 1] - .15 * _ds[k]), _prof[k - 1] + .15 * _ds[k])
+    for k in range(len(_prof) - 2, -1, -1): _prof[k] = min(max(_prof[k], _prof[k + 1] - .15 * _ds[k + 1]), _prof[k + 1] + .15 * _ds[k + 1])
+_prof[0] = 0.0
 for j in range(T['nz']):
     for i in range(T['nx']):
         x, z = T['x0'] + i * T['step'], T['z0'] + j * T['step']
@@ -46,8 +79,8 @@ for j in range(T['nz']):
         d = math.hypot(_line[best][0] - x, _line[best][1] - z)
         if d < 30:
             q = j * T['nx'] + i; target = _prof[best] * 10
-            t = 0 if d < 14 else (d - 14) / 16
-            T['dm'][q] = round(min(T['dm'][q], target + (T['dm'][q] - target) * t))
+            t = 0 if d < 13 else (d - 13) / 17; t = t * t * (3 - 2 * t)
+            T['dm'][q] = round(target + (T['dm'][q] - target) * t)
 
 # ---- roads: the ring roads join the city's roads; the outer ring road goes into a tunnel under the mountain
 roads = list(C['roads'])
@@ -160,7 +193,7 @@ lx, ly, lrx, lry = ns['LAKE']
 nature = {'forest': FOREST, 'farm': FARM, 'fields': fields, 'barn': barn, 'river': RIV, 'riverW': ns['RIVER_W'] * M,
           'lake': [lx * M, ly * M, lrx * M, lry * M], 'beach': 22, 'mountain': [cx * M, cy * M, RX * M, RY * M],
           'lookout': [880, -290], 'tunnels': tunnels, 'trees': trees,
-          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'gantries': gantries, 'ramps': ramps, 'apples': [[float(x), float(z)] for x, z in apples]}
+          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'mroadh': [round(h, 2) for h in _prof], 'gantries': gantries, 'ramps': ramps, 'apples': [[float(x), float(z)] for x, z in apples]}
 C.update({'roads': roads, 'streams': streams, 'ponds': ponds, 'terrain': T, 'nature': nature,
           'bounds': [-420.0, -1000.0, 1900.0, 750.0]})
 json.dump(C, open(os.path.join(HERE, 'city_ring.json'), 'w'))

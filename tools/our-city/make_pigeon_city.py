@@ -176,6 +176,12 @@ for it in C['items']:
             parksigns.append([round(mx - nx * 1.2, 1), round(mz - nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
         if k == 'waterpark':   # the slide tower is solid (you can land on top)
             solids.append([x + w * .3 - 3, z + 3, x + w * .3 + 3, z + 9, 13])
+    elif k == 'stand':   # little snack stand (kiosk with a striped awning)
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        deco.append([k, x, z, w, d, c, n, round(math.atan2(nx, nz), 3)])
+        solids.append([x + .5, z + .5, x + w - .5, z + d - .5, 3.6])
+        kind = random.choice(['cafe', 'bakery', 'convenience'])
+        snacks.append([kind, {'cafe': 'Star Coffee Stand', 'bakery': 'Star Treats Stand', 'convenience': 'Star Snack Stand'}[kind], round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
     elif k == 'fishing':   # a wooden fishing pier: people fishing, a snack stand at the land end
         deco.append([k, x, z, w, d, c, n])
         solids.append([x + .5, z + .5, x + w - .5, z + d - .5, 1.6])
@@ -597,6 +603,14 @@ LIVE.push(()=>{const t=performance.now()/1e3+ph,by=.55+Math.sin(t*2)*.07-(Math.s
 // a fish jumps now and then
 const fish=new T.Mesh(new T.Sph(.45,10,8),mat('#f2a541'));fish.scale.set(.5,.6,1.3);$t.add(fish);let ft=rnd()*6;LIVE.push(dt=>{ft+=dt;const c=ft%6;if(c<1){const s0=ex+nx*7+tx*((Math.floor(ft/6)%3)-1)*4,s1=ez+nz*7+tz*((Math.floor(ft/6)%3)-1)*4;fish.visible=!0;fish.position.set(s0+tx*(c*3-1.5),.4+Math.sin(c*Math.PI)*2.2,s1+tz*(c*3-1.5));fish.rotation.y=Math.atan2(tx,tz);fish.rotation.x=(c-.5)*1.6}else fish.visible=!1})}
 for(const[k,x,z,w,d]of ie.deco||[])k==='fishing'&&fishing(x,z,w,d);
+
+// little snack stands: a kiosk with a striped awning and a snack on the counter
+{const AW=[['#ff5a5a','#ffffff'],['#3b8fd9','#ffffff'],['#2e9e5b','#ffffff'],['#ffd23c','#ff7a3c'],['#ff8ad8','#ffffff']];let q=0;
+for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){if(k!=='stand')continue;const g=new T.Group();g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g);const[a,b]=AW[q++%AW.length];
+box(4,2.2,3,'#f4efe4',0,1.1,-.3,g);box(4.2,.25,1,'#a8743f',0,1.25,1.4,g);box(3.4,1.1,.1,'#3a3f48',0,1.9,1.21,g);
+for(let i=0;i<6;i++){const s=box(.7,.12,1.8,i%2?b:a,-1.75+i*.7,3,.7,g);s.rotation.x=.35}box(4.3,1.2,.12,a,0,3.5,-1.8,g);box(4.3,.12,3.4,b,0,4.1,-.3,g);
+const it=new T.Mesh(new T.Sph(.3,10,8),mat(['#f2b23c','#e8463c','#7a4f2c','#ff8ad8'][q%4]));it.position.set(.8,1.55,1.4);g.add(it)}}
+
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'?elephant(x,z,w,d):k==='basketball'?basketball(x,z,w,d):k==='playground'?playground(x,z,w,d):k==='bigcats'&&bigcats(x,z,w,d);
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);

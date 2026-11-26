@@ -312,6 +312,18 @@ RING_SHEETS = {
   ('towerride', 15.0, 9.0, 2.1, 2.05, 10, None, 'Tower Ride'),               # a drop tower, 10 floors high
   ('s', 15.05, 12.0, 2.0, 1.0, 2, '#3B2A6A', 'Arcade'),
  ],
+ 'W3': [
+  ('b', 11.05, 1.0, 3.8, 1.0, 3, '#F08A3C', ''),                     # orange buildings around the little green park
+  ('p', 14.95, 0.1, 1.85, 1.9, 0, None, ''),
+  ('b', 16.95, 1.0, 1.8, 1.0, 3, '#F08A3C', ''),
+  ('b', 14.95, 2.0, 1.85, 0.9, 3, '#F08A3C', ''),
+  ('b', 7.2, 5.8, 1.0, 2.0, 2, '#E8E2D6', ''),
+  ('b', 7.15, 7.85, 2.05, 2.85, 4, '#D9D4CA', ''),
+  ('stadium', 13.0, 4.8, 6.1, 8.0, 0, None, 'RomaCity Raccoons Stadium'),   # American football: the RomaCity Raccoons
+  ('stand', 12.15, 5.15, 0.7, 0.7, 1, None, 'Raccoon Snacks'),
+  ('stand', 12.15, 7.05, 0.7, 0.7, 1, None, 'Touchdown Hot Dogs'),
+  ('stand', 12.15, 8.95, 0.7, 0.7, 1, None, 'End Zone Popcorn'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

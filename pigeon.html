@@ -100,7 +100,7 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="loading">Building Our City…</div>
+<div id="loading">Building RomaCity…</div>
 
 <div id="title">
   <div class="card" id="cardChoose">
@@ -123,8 +123,8 @@
       <circle cx="60" cy="96" r="3" fill="#e0782f"/>
     </svg>
     <h1>Pigeon Pigeon</h1>
-    <div class="ko">Our City · designed by our class</div>
-    <p class="intro">Take off from the top of the Start Tower and fly over the city our class designed. Land anywhere and waddle around! Collect 🍜 ☕ 🥐 outside the shops.</p>
+    <div class="ko">RomaCity · designed by our class</div>
+    <p class="intro">Take off from the top of the Start Tower and fly over RomaCity, the city our class designed. Land anywhere and waddle around! Collect 🍜 ☕ 🥐 outside the shops.</p>
     <p class="intro mathnote">🧮 Every snack asks a math question. Right answer = <b>extra flying time</b> (a surprise: 5 seconds to 1 minute)! Wrong answer, and the snack flies away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>
     <div class="modes"><button class="back">←</button><button id="start">Fly!</button></div>
     <div class="phonehint">Drag on the left to steer · hold <b>Faster</b> on the right</div>
@@ -148,8 +148,8 @@
       <circle cx="60" cy="96" r="3" fill="#2f5f9e"/>
     </svg>
     <h1>Pigeon Person</h1>
-    <div class="ko">Our City · designed by our class</div>
-    <p class="intro">Start next to the Start Tower and explore the city our class designed on foot. Collect 🍜 ☕ 🥐 outside the shops.</p>
+    <div class="ko">RomaCity · designed by our class</div>
+    <p class="intro">Start next to the Start Tower and explore RomaCity, the city our class designed, on foot. Collect 🍜 ☕ 🥐 outside the shops.</p>
     <p class="intro mathnote">🧮 Every snack asks a math question. Right answer = <b>extra time</b> (a surprise: 5 seconds to 1 minute)! Wrong answer, and the snack runs away.<br>🪙 Every snack you get right = <b>10 coins</b> on Math Island.</p>
     <div class="modes"><button class="back">←</button><button id="startWalk">Walk!</button></div>
     <div class="phonehint">Drag on the left to walk · hold <b>Run</b> on the right</div>
@@ -4073,6 +4073,56 @@ const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc
 for(const[t,P]of ie.areas||[]){if(t!==1)continue;let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;for(let k=0;k<P.length;k+=2){x0=Math.min(x0,P[k]);x1=Math.max(x1,P[k]);z0=Math.min(z0,P[k+1]);z1=Math.max(z1,P[k+1])}
 for(let z=z0-2;z<=z1+2;z+=Zt)for(let x=x0-2;x<=x1+2;x+=Zt){let c=!1;for(let a=0,b=P.length-2;a<P.length;b=a,a+=2){const xa=P[a],za=P[a+1],xb=P[b],zb=P[b+1];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}c&&mark(x,z)}}
 const BG=ie.bridges||{};if(BG.h)for(let j=0;j<BG.nz;j++)for(let i=0;i<BG.nx;i++)BG.h[j*BG.nx+i]>.3&&mark(BG.x0+(i+.5)*BG.r,BG.z0+(j+.5)*BG.r)}
+// RomaCity Raccoons logo: a raccoon face in a gold ring with the team name around it
+function raccoonLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#f2b705';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#24262b';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
+c.fillStyle='#24262b';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
+const arc=(t,top)=>{const R=r*.89,ws=[...t].map(ch=>c.measureText(ch).width*1.08),T=ws.reduce((a,b)=>a+b,0)/R;let a=top?-Math.PI/2-T/2:Math.PI/2+T/2;[...t].forEach((ch,i)=>{const da=ws[i]/R/2;a+=top?da:-da;c.save();c.rotate(a);c.translate(R,0);c.rotate(top?Math.PI/2:-Math.PI/2);c.fillText(ch,0,0);c.restore();a+=top?da:-da})};
+arc('ROMACITY',1);arc('RACCOONS',0);for(const k of[-1,1]){c.beginPath();c.arc(k*r*.89,0,r*.035,0,7);c.fill()}
+const s=r*.0075;c.scale(s,s);
+for(const k of[-1,1]){c.fillStyle='#8d949c';c.beginPath();c.moveTo(k*62,-18);c.lineTo(k*50,-78);c.lineTo(k*12,-40);c.closePath();c.fill();c.fillStyle='#16171a';c.beginPath();c.moveTo(k*52,-28);c.lineTo(k*47,-62);c.lineTo(k*26,-40);c.closePath();c.fill()}
+c.fillStyle='#a9b0b8';c.beginPath();c.ellipse(0,4,70,52,0,0,7);c.fill();
+c.fillStyle='#f4f4f4';c.beginPath();c.moveTo(-70,8);c.quadraticCurveTo(-44,56,0,52);c.quadraticCurveTo(44,56,70,8);c.quadraticCurveTo(34,26,0,28);c.quadraticCurveTo(-34,26,-70,8);c.fill();
+c.beginPath();c.ellipse(-24,-20,22,8,-.25,0,7);c.ellipse(24,-20,22,8,.25,0,7);c.fill();
+c.fillStyle='#16171a';c.beginPath();c.ellipse(-30,0,30,16,-.18,0,7);c.fill();c.beginPath();c.ellipse(30,0,30,16,.18,0,7);c.fill();c.fillRect(-12,-8,24,14);
+for(const k of[-1,1]){c.fillStyle='#ffffff';c.beginPath();c.arc(k*28,-1,8,0,7);c.fill();c.fillStyle='#16171a';c.beginPath();c.arc(k*26,0,4.5,0,7);c.fill();c.fillStyle='#f2b705';c.beginPath();c.arc(k*29,-3,1.8,0,7);c.fill()}
+c.fillStyle='#f4f4f4';c.beginPath();c.ellipse(0,30,24,17,0,0,7);c.fill();c.fillStyle='#16171a';c.beginPath();c.ellipse(0,20,10,7,0,0,7);c.fill();
+c.strokeStyle='#16171a';c.lineWidth=3;c.beginPath();c.moveTo(0,26);c.lineTo(0,34);c.moveTo(-9,38);c.quadraticCurveTo(0,44,9,38);c.stroke();c.restore()}
+const logoTex=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createElement('canvas');cv.width=cv.height=256;raccoonLogo(cv.getContext('2d'),128,128,124);t=new Pe(cv);t.colorSpace=me;return t}})();
+// American football stadium: turf field with yard lines and end zones, stands on all four sides, goal posts, lights, scoreboard
+function stadium(x,z,w,d,n){const g=new T.Group(),W2=w/2-1,D2=d/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N,GOLD='#f2b705',DARK='#2f3238';
+const cv=document.createElement('canvas'),PX=16;cv.width=FW*2*PX;cv.height=FL*2*PX;const c=cv.getContext('2d');
+c.fillStyle='#3d8a38';c.fillRect(0,0,cv.width,cv.height);const fx0=3*PX,fx1=cv.width-3*PX,fy0=3*PX,fy1=cv.height-3*PX,ez=5*PX,gl0=fy0+ez,gl1=fy1-ez,yd=(gl1-gl0)/10;
+for(let i=0;i<10;i++){c.fillStyle=i%2?'#4fa547':'#46993f';c.fillRect(fx0,gl0+i*yd,fx1-fx0,yd)}
+c.fillStyle=DARK;c.fillRect(fx0,fy0,fx1-fx0,ez);c.fillRect(fx0,gl1,fx1-fx0,ez);
+c.strokeStyle='#ffffff';c.lineWidth=5;c.strokeRect(fx0,fy0,fx1-fx0,fy1-fy0);c.lineWidth=3;for(let i=0;i<=10;i++){c.beginPath();c.moveTo(fx0,gl0+i*yd);c.lineTo(fx1,gl0+i*yd);c.stroke()}
+c.lineWidth=2;for(let i=1;i<50;i++){if(i%5===0)continue;const yy=gl0+i*yd/5;for(const hx of[fx0+6,fx0+.38*(fx1-fx0),fx0+.62*(fx1-fx0),fx1-6]){c.beginPath();c.moveTo(hx-5,yy);c.lineTo(hx+5,yy);c.stroke()}}
+c.fillStyle='#ffffff';c.font=`bold ${PX*1.5}px Arial`;c.textAlign='center';c.textBaseline='middle';
+for(let i=1;i<10;i++){const t=String(10*(i<=5?i:10-i)),yy=gl0+i*yd;for(const[sx,rot]of[[fx0+PX*2.4,Math.PI/2],[fx1-PX*2.4,-Math.PI/2]]){c.save();c.translate(sx,yy);c.rotate(rot);c.fillText(t,0,0);c.restore()}}
+c.fillStyle=GOLD;c.font=`900 ${PX*2.7}px Arial Black, Arial`;c.save();c.translate(cv.width/2,fy0+ez/2);c.rotate(Math.PI);c.fillText('RACCOONS',0,0);c.restore();c.fillText('ROMACITY',cv.width/2,gl1+ez/2);
+raccoonLogo(c,cv.width/2,cv.height/2,PX*4.3);
+const ft=new Pe(cv);ft.colorSpace=me;ft.anisotropy=4;const fm=new T.Mesh(new Hn(FW*2,FL*2),new T.Mat({map:ft}));fm.rotation.x=-Math.PI/2;fm.position.y=.13;g.add(fm);
+for(let i=0;i<N;i++){const hw=FW+i*ss,hl=FL+i*es,h=.9+i*.45,col=i===0?'#e9e4d6':i%2?DARK:GOLD;
+for(const s of[-1,1]){box(ss,h,2*(hl+es),col,s*(hw+ss/2),h/2,0,g);box(2*(hw+ss),h,es,col,0,h/2,s*(hl+es/2),g)}}
+const WH=10;for(const s of[-1,1]){box(.7,WH,2*D2+.7,DARK,s*W2,WH/2,0,g);box(2*W2+.7,WH,.7,DARK,0,WH/2,s*D2,g);box(.8,.9,2*D2+.8,GOLD,s*W2,WH-.45,0,g);box(2*W2+.8,.9,.8,GOLD,0,WH-.45,s*D2,g)}
+// banners on the outside walls
+const bc=document.createElement('canvas');bc.width=1024;bc.height=160;const b=bc.getContext('2d');b.fillStyle='#24262b';b.fillRect(0,0,1024,160);b.fillStyle=GOLD;b.fillRect(0,0,1024,10);b.fillRect(0,150,1024,10);
+raccoonLogo(b,80,80,66);raccoonLogo(b,944,80,66);b.fillStyle='#ffffff';b.font='900 58px Arial Black, Arial';b.textAlign='center';b.textBaseline='middle';b.fillText('ROMACITY RACCOONS',512,84);
+const bt=new Pe(bc);bt.colorSpace=me;const bm=new Be({map:bt});
+for(const s of[-1,1]){const L=Math.min(2*D2-6,58),pl=new T.Mesh(new Hn(L,L*160/1024),bm);pl.position.set(s*(W2+.37),6,0);pl.rotation.y=s*Math.PI/2;g.add(pl)}
+for(const s of[-1,1]){const lg=new T.Mesh(new Hn(7,7),new Be({map:logoTex(),transparent:!0}));lg.position.set(0,5.5,s*(D2+.37));lg.rotation.y=s>0?0:Math.PI;g.add(lg)}
+// goal posts (yellow) at the back of each end zone
+for(const s of[-1,1]){const v=s*(FL-3);const p=new T.Mesh(new ce(.15,.15,3.2,8),mat('#ffd200'));p.position.set(0,1.6,v+s*.8);g.add(p);box(.25,.25,1,'#ffd200',0,3.2,v+s*.4,g);box(5.6,.25,.25,'#ffd200',0,3.2,v,g);
+for(const k of[-1,1]){const u=new T.Mesh(new ce(.1,.1,6,8),mat('#ffd200'));u.position.set(k*2.8,6.2,v);g.add(u)}}
+// scoreboard over the north stand
+{const sc=document.createElement('canvas');sc.width=512;sc.height=224;const q=sc.getContext('2d');q.fillStyle='#0d0e10';q.fillRect(0,0,512,224);q.strokeStyle=GOLD;q.lineWidth=8;q.strokeRect(4,4,504,216);
+raccoonLogo(q,92,112,74);q.textAlign='left';q.textBaseline='middle';q.fillStyle='#ffffff';q.font='bold 30px Arial';q.fillText('RACCOONS',190,52);q.fillText('VISITORS',190,118);
+q.fillStyle='#ffcf33';q.font='bold 46px Courier New, monospace';q.textAlign='right';q.fillText('67',488,52);q.fillText('7',488,118);q.fillStyle='#ff6b4a';q.font='bold 26px Courier New, monospace';q.textAlign='center';q.fillText('QTR 4   0:42   GO RACCOONS!',340,184);
+const st=new Pe(sc);st.colorSpace=me;const v=-D2;box(18.6,8.6,.8,'#1b1c20',0,16,v,g);const f=new T.Mesh(new Hn(18,7.9),new Be({map:st}));f.position.set(0,16,v+.42);g.add(f);
+for(const k of[-1,1])box(.6,3,.6,'#555b63',k*6,11.5,v,g)}
+// light towers in the corners
+for(const a of[-1,1])for(const s of[-1,1]){const px=a*(W2-1.6),pz=s*(D2-1.6),p=new T.Mesh(new ce(.3,.45,24,8),mat('#8d949c'));p.position.set(px,12,pz);g.add(p);
+const hd=new T.Group();hd.position.set(px,24.5,pz);hd.rotation.y=Math.atan2(-px,-pz);g.add(hd);box(5,3,.5,'#3a3d44',0,0,0,hd);for(let i=0;i<3;i++)for(let j=0;j<2;j++){const l=new T.Mesh(new Hn(1.3,1.1),new Be({color:16777200}));l.position.set(-1.6+i*1.6,-.6+j*1.3,.27);hd.add(l)}}
+g.position.set(x+w/2,0,z+d/2);$t.add(g)}
 const n0=$t.children.length;
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
@@ -4141,6 +4191,7 @@ for(const yy of[30,36]){const wdw=new T.Mesh(new T.Sph(1.1,14,10),mat('#2f6fdf')
 const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv.getContext('2d');c2.fillStyle='#f4f4f4';c2.fillRect(0,0,128,512);c2.fillStyle='#1f3a93';c2.font='bold 80px sans-serif';c2.textAlign='center';'OURCITY'.split('').forEach((ch,i)=>c2.fillText(ch,64,70+i*66));
 const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
 const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
+else if(k==='stadium')stadium(x,z,w,d,n);
 else if(k==='roof67'){letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);const g=$t.children[$t.children.length-1];g.position.y=f;g.rotation.y=0}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
@@ -4171,6 +4222,22 @@ part(g,new T.Box(.48,.62,.28),shirt,0,1.18,0);part(g,new T.Box(.5,.2,.3),'#22262
 const arms=[-1,1].map(s=>{const p=pivot(g,s*.31,1.45,0);part(p,new T.Box(.13,.6,.14),shirt,0,-.28,0);part(p,new T.Sph(.08,8,6),skin,0,-.62,0);return p});
 part(g,new T.Sph(.2,12,10),skin,0,1.68,0);part(g,new T.Sph(.21,12,10),['#2b1d14','#111','#6b4426','#c9a15a'][Math.floor(rnd()*4)],0,1.74,-.04,1,.7,1);
 $t.add(g);return{g,legs,arms}}
+// a game on at the stadium: a crowd in the stands and two teams playing, with the ball flying back and forth
+function footballGame(x,z,w,d){const cx=x+w/2,cz=z+d/2,W2=w/2-1,D2=d/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N;
+const spots=[];for(let i=1;i<N;i++){const hw=FW+i*ss+ss/2,hl=FL+i*es+es/2,y=.9+i*.45;for(let v=-hl+.6;v<=hl-.6;v+=.8)for(const s of[-1,1])rnd()<.6&&spots.push([cx+s*hw,y,cz+v]);
+for(let u=-hw+1;u<hw-.6;u+=.8)for(const s of[-1,1])rnd()<.6&&spots.push([cx+u,y,cz+s*hl])}
+const COL=['#f2b705','#f2b705','#f2b705','#2f3238','#2f3238','#a9b0b8','#ffffff','#e8463c'],SK=['#f1c7a0','#d9a47a','#a86f4a','#f6d6b8'],Q=new ee;
+const body=new on(new T.Box(.46,.75,.36).translate(0,.37,0),new Ft({color:16777215}),spots.length),head=new on(new T.Box(.3,.3,.3).translate(0,.92,0),new Ft({color:16777215}),spots.length);
+spots.forEach(([a,b,c],k)=>{Q.makeTranslation(a,b,c);body.setMatrixAt(k,Q);head.setMatrixAt(k,Q);body.setColorAt(k,new Pt(COL[Math.floor(rnd()*COL.length)]));head.setColorAt(k,new Pt(SK[Math.floor(rnd()*SK.length)]))});$t.add(body);$t.add(head);
+const team=[],mk=(shirt,helm,u,v,face)=>{const p=person(shirt);const hm=new T.Mesh(new T.Sph(.25,10,8),mat(helm));hm.position.y=1.74;p.g.add(hm);box(.04,.3,.04,'#ffffff',0,1.72,.24,p.g);p.g.rotation.y=face;team.push({p,u,v,ph:rnd()*6,a:1+rnd()*2.5})};
+[[-8,-4],[-4,-2],[0,-6],[4,-2],[8,-4],[-2,-12],[3,-16]].forEach(([u,v])=>mk('#f2b705','#2f3238',u,v,0));
+[[-8,4],[-4,2],[0,3],[4,2],[8,4],[-5,10],[5,14]].forEach(([u,v])=>mk('#e8463c','#ffffff',u,v,Math.PI));
+const ball=new T.Mesh(new T.Sph(.2,10,8),mat('#7a3f1d'));ball.scale.set(1,1,1.7);$t.add(ball);
+// cheerleaders by the sideline
+for(let i=0;i<4;i++){const p=person(i%2?'#2f3238':'#f2b705');p.g.position.set(cx-FW+1.2,.13,cz-6+i*4);p.g.rotation.y=Math.PI/2;team.push({p,u:-FW+1.2,v:-6+i*4,ph:i,a:0,cheer:1})}
+let t=0;LIVE.push(dt=>{t+=dt;for(const q of team){const P=q.p;if(q.cheer){const k=Math.abs(Math.sin(t*3+q.ph));P.g.position.y=.13+k*.4;P.arms.forEach(a=>a.rotation.x=-2.6-k*.4);continue}
+P.g.position.x=cx+q.u+Math.sin(t*.9+q.ph)*q.a;P.g.position.z=cz+q.v+Math.sin(t*.6+q.ph*2)*q.a*.8;const sw=Math.sin(t*9+q.ph)*.7;P.legs[0].rotation.x=sw;P.legs[1].rotation.x=-sw;P.arms[0].rotation.x=-sw;P.arms[1].rotation.x=sw}
+const L=3.5,k=(t%L)/L,dir=Math.floor(t/L)%2?1:-1,v=dir*-14+dir*28*k;ball.position.set(cx+Math.sin(t*.4)*5,1.7+Math.sin(k*Math.PI)*10,cz+v);ball.rotation.z+=dt*10;ball.rotation.y=0})}
 function soccer(x,z,w,d){const long=w>=d,L=(long?w:d)-6,Wd=(long?d:w)-6,cx=x+w/2,cz=z+d/2;
 const P=(u,v)=>long?[cx+u,cz+v]:[cx+v,cz+u];   // u = along the pitch, v = across
 const ball=new T.Mesh(new T.Sph(.22,12,10),mat('#ffffff'));$t.add(ball);const B={u:0,v:0,tu:0,tv:0,sp:0,h:0};
@@ -4555,6 +4622,7 @@ let fs=76;while(c2.measureText(n).width>480&&fs>30){fs-=4;c2.font='bold '+fs+'px
 else{const it=new T.Mesh(new T.Sph(.3,10,8),mat(['#f2b23c','#e8463c','#7a4f2c','#ff8ad8'][q%4]));it.position.set(.8,1.55,1.4);g.add(it)}}}
 
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'?elephant(x,z,w,d):k==='basketball'?basketball(x,z,w,d):k==='playground'?playground(x,z,w,d):k==='bigcats'&&bigcats(x,z,w,d);
+for(const[k,x,z,w,d]of ie.deco||[])k==='stadium'&&footballGame(x,z,w,d);
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);
 for(const o of[-2.1,2.1]){const p=new T.Mesh(new T.Cyl(.12,.12,2.7,8),mat('#7a4f2c'));p.position.set(o,1.35,0);g.add(p)}

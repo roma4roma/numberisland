@@ -15,7 +15,7 @@ CSS = """<style>
 #vwHelp{position:fixed;top:12px;right:12px;z-index:60;font:600 12px system-ui,sans-serif;color:#1e2a33;background:#fffd;border-radius:10px;padding:6px 10px;text-align:right}
 </style>"""
 HTML = """<div id="vw"></div>
-<div id="vwTop">Our City · 3D<small>designed by Mr. Romanek's Grade 4</small></div>
+<div id="vwTop">RomaCity · 3D<small>designed by Mr. Romanek's Grade 4</small></div>
 <div id="vwHelp">Drag to spin · pinch or scroll to zoom<br>Two fingers or right-drag to move · H hides this</div>
 
 <script>
@@ -40,7 +40,7 @@ assert s.count('</style>') >= 1 and s.count('</body>') == 1
 s = s.replace('</body>', HTML + '\n</body>')
 i = s.index('</style>') + len('</style>')
 s = s[:i] + CSS + s[i:]
-s = s.replace('<title>Pigeon Pigeon</title>', '<title>Our City · 3D</title>')
+s = s.replace('<title>Pigeon Pigeon</title>', '<title>RomaCity · 3D</title>')
 if BIG:
     for a, b in [('$t.fog=new Co(cf,260,1e3)', '$t.fog=new Co(cf,1500,4200)'), ('ue=new tn(65,1,.15,1500)', 'ue=new tn(65,1,.5,7000)'),
                  ('let p=330*330,g=0;', 'let p=2600*2600,g=0;'), ('t=6000,e=new ce(.18,.25,4,5,1,!0)', 't=12000,e=new ce(.18,.25,4,5,1,!0)')]:

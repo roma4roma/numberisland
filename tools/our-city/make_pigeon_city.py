@@ -509,6 +509,8 @@ def rep(a, b, count=1):
 # no Seoul subway exits (Gangnam / Nonhyeon stations sit inside the bigger map)
 rep('[10,-17.2,4.6,1]]}],t=[.359,.933]', '[10,-17.2,4.6,1]]}].filter(()=>!1),t=[.359,.933]')
 # no Seoul underpasses
+# camera: only aim down at the floor inside real indoor spaces (with a ceiling), not over roads, bridges, statues or boats
+rep('b&&b.f<F.y-.2&&(xr.y=b.f+(f?1.2:.45))', 'b&&b.c<1e3&&b.f<F.y-.2&&(xr.y=b.f+(f?1.2:.45))')
 rep('var Ko=null,Er=[[[-441,-98.4],[-440.5,-94.4],[-475.9,-58.5],[-477.9,-56.5]],[[-478.5,-37.3],[-473,-34.5],[-431,-46.4],[-425.7,-47.4]]]', 'var Ko=null,Er=[]')
 # light grassy ground instead of grey city ground
 rep('let i=new Ft({color:9407881}),t=(o,a,c,l,f,h)=>', 'let i=new Ft({color:12245655}),t=(o,a,c,l,f,h)=>')

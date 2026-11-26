@@ -208,14 +208,10 @@ for it in C['items']:
             parksigns.append([round(mx - nx * 1.2, 1), round(mz - nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
     elif k == 'redpanda':
         deco.append([k, x, z, w, d, c, n])
-        solids.append([x + 1.5, z + 1.5, x + w - 1.5, z + d - 1.5, min(w, d) / 11 * 10.5 + 1.4])
+        # (collision comes from the statue's real shape, worked out in the game)
     elif k in ('raccoon', 'cat', 'L67', 'LOL', 'pigeonstatue', 'pig', 'stickman'):
         deco.append([k, x, z, w, d, c, n, it.get('rot')])
-        h = {'raccoon': 34, 'cat': 34, 'L67': 22, 'LOL': 22, 'pigeonstatue': 30, 'pig': 22, 'stickman': 26}[k]
-        m = min(w, d) / 26 if k in ('raccoon', 'cat', 'pigeonstatue', 'pig', 'stickman') else 1
-        r = (13 * max(.7, m)) if k in ('raccoon', 'cat', 'pigeonstatue', 'pig', 'stickman') else None
-        if r: solids.append([cx - r, cz - r, cx + r, cz + r, h * max(.7, m)])
-        else: solids.append([x + 1, z + 1, x + w - 1, z + d - 1, h])
+        # collision comes from the statue's real shape (a fine height map made in the game), not a box
     elif k in ('dock', 'bridge'):
         deco.append([k, x, z, w, d, c, n, f])
 
@@ -334,6 +330,7 @@ const SIX=[ring(4.5,5,2.2,4.5),shp([[.2,5],[2.4,5],[6,15],[3.6,15.6]])],SEVEN=sh
 function letters(x,z,w,d,parts){const g=new T.Group();box(Math.max(w,8),2,Math.max(d,6),'#cfc8b8',0,1,0,g);const step=11,st=-(parts.length-1)*step/2;
 parts.forEach(([sh,c],i)=>{const m=new T.Mesh(new T.Ext(sh,{depth:3,bevelEnabled:!0,bevelSize:.4,bevelThickness:.4,bevelSegments:2}),mat(c));m.position.set(st+i*step-4.5,2,-1.5);g.add(m)});
 const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=-.5;$t.add(g)}
+const n0=$t.children.length;
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
 else if(k==='barn'){const g=new T.Group(),R='#b8322a',Wt='#fbf6ec',RF='#4a3b36';const long=w>=d,len=(long?w:d)-1.2,wid=(long?d:w)-1.2,H=Math.max(7,wid*.42);
@@ -382,6 +379,17 @@ else if(k==='f'){const L=(a,b,X,Z)=>box(a,.06,b,'#ffffff',X,.13,Z);L(w-4,.5,cx,z
 else if(k==='g'){for(let q=0;q<w*d/6;q++){const fl=new T.Mesh(new T.Sph(.5,8,6),mat(c||'#e8463c'));fl.position.set(x+1+Wt(q+x)*(w-2),.4,z+1+Wt(q*7+z)*(d-2));$t.add(fl)}}
 else if(k==='dock'){box(w,.6,d,'#8a5a3a',cx,.5,cz)}
 }
+// statues: a 0.5 m height map from their actual triangles, so landing and bumping match what you see
+{const R=.5;window.__STAT=[];for(const g of $t.children.slice(n0)){if(!g.isGroup)continue;g.updateMatrixWorld(!0);const tris=[];let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;
+g.traverse(o=>{if(!o.isMesh||!o.geometry)return;const P=o.geometry.attributes.position,I=o.geometry.index,e=o.matrixWorld.elements,V=[];for(let i=0;i<P.count;i++){const a=P.getX(i),b=P.getY(i),c=P.getZ(i);const X=e[0]*a+e[4]*b+e[8]*c+e[12],Y=e[1]*a+e[5]*b+e[9]*c+e[13],Z=e[2]*a+e[6]*b+e[10]*c+e[14];V.push(X,Y,Z);X<x0&&(x0=X);X>x1&&(x1=X);Z<z0&&(z0=Z);Z>z1&&(z1=Z)}
+const n=I?I.count:P.count;for(let t=0;t<n;t+=3){const A=I?I.getX(t):t,B=I?I.getX(t+1):t+1,C=I?I.getX(t+2):t+2;tris.push(V[A*3],V[A*3+1],V[A*3+2],V[B*3],V[B*3+1],V[B*3+2],V[C*3],V[C*3+1],V[C*3+2])}});
+if(!tris.length)continue;const nx=Math.ceil((x1-x0)/R)+1,nz=Math.ceil((z1-z0)/R)+1,H=new Float32Array(nx*nz);
+for(let t=0;t<tris.length;t+=9){const ax=tris[t],ay=tris[t+1],az=tris[t+2],bx=tris[t+3],by=tris[t+4],bz=tris[t+5],cx=tris[t+6],cy=tris[t+7],cz=tris[t+8];
+const den=(bz-cz)*(ax-cx)+(cx-bx)*(az-cz);const i0=Math.max(0,Math.floor((Math.min(ax,bx,cx)-x0)/R)),i1=Math.min(nx-1,Math.ceil((Math.max(ax,bx,cx)-x0)/R)),j0=Math.max(0,Math.floor((Math.min(az,bz,cz)-z0)/R)),j1=Math.min(nz-1,Math.ceil((Math.max(az,bz,cz)-z0)/R));
+if(Math.abs(den)<1e-9){const top=Math.max(ay,by,cy);for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const px=x0+(i+.5)*R,pz=z0+(j+.5)*R;if(px>=Math.min(ax,bx,cx)-R/2&&px<=Math.max(ax,bx,cx)+R/2&&pz>=Math.min(az,bz,cz)-R/2&&pz<=Math.max(az,bz,cz)+R/2){const q=j*nx+i;H[q]<top&&(H[q]=top)}}continue}
+for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const px=x0+(i+.5)*R,pz=z0+(j+.5)*R,l1=((bz-cz)*(px-cx)+(cx-bx)*(pz-cz))/den,l2=((cz-az)*(px-cx)+(ax-cx)*(pz-cz))/den,l3=1-l1-l2;
+if(l1>=-.02&&l2>=-.02&&l3>=-.02){const y=l1*ay+l2*by+l3*cy,q=j*nx+i;H[q]<y&&(H[q]=y)}}}
+window.__STAT.push({x0,z0,nx,nz,r:R,h:H})}}
 for(const[x0,z0,x1,z1,lo,hi,c]of ie.skybridges||[]){const L=x1-x0+1.2,W=z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2,H=hi-lo;
 box(L,.5,W,'#e9ecef',cx,lo+.25,cz);box(L,.5,W,'#e9ecef',cx,hi-.25,cz);box(L,H-1,W-.3,c,cx,(lo+hi)/2,cz);for(let k=0;k<=Math.round(L/2.5);k++){const xx=x0-.6+k*L/Math.round(L/2.5);box(.25,H,W+.05,'#e9ecef',xx,(lo+hi)/2,cz)}}
 
@@ -725,7 +733,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[cx,cz,hw,P]of window.__BRS||[]){if(Math.hypot(x-cx,z-cz)>34)continue;for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+.8)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.2?{f:g0,c:g0+h-1,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[cx,cz,hw,P]of window.__BRS||[]){if(Math.hypot(x-cx,z-cz)>34)continue;for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+.8)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.2?{f:g0,c:g0+h-1,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

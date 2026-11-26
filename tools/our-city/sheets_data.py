@@ -229,6 +229,12 @@ RING_SHEETS = {
   ('s', 13.05, 10.95, 2.0, 1.65, 2, '#9FD89A', 'Food Store'),
   ('s', 15.05, 9.0, 4.9, 3.7, 1, '#F6C98A', 'Cheese Burger Factory'),
  ],
+ 'S5': [
+  ('b', 1.0, 2.0, 4.35, 2.0, 2, '#C9D8F0', 'Bathroom'),                    # MEN on one side, WOMEN on the other
+  ('fishing', 10.2, 2.0, 4.8, 2.0, 0, None, 'Fishing Place'),               # half on the beach, half over the lake
+  ('fishing', 6.2, 7.9, 2.1, 4.0, 0, None, 'Fishing Place'),
+  ('s', 0.05, 8.9, 4.05, 3.65, 2, '#6FB0E8', 'GS25'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

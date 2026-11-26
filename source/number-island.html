@@ -2755,7 +2755,7 @@ function teacherFacts(forBoss = false) { // forBoss: false, true (Boss Battle) o
   const T = { A: parseNums(s.multA, 0, 100), B: parseNums(s.multB, 0, 100), add: parseNums(s.addRange, 1, 9999) };
   if (!forBoss) return T;
   const pre = forBoss === 'race' ? 'race' : 'boss';
-  return { A: isSame(s[pre + 'A']) ? T.A : parseNums(s[pre + 'A'], 0, 100), B: isSame(s[pre + 'B']) ? T.B : parseNums(s[pre + 'B'], 0, 100),
+  return { A: isSame(s[pre + 'A']) ? T.A : parseNums(s[pre + 'A'], 0, 999), B: isSame(s[pre + 'B']) ? T.B : parseNums(s[pre + 'B'], 0, 999),
            add: isSame(s[pre + 'Add']) ? T.add : parseNums(s[pre + 'Add'], 1, 9999) };
 }
 const bossOwnNumbers = (pre = 'boss') => { const s = store.settings || {}; return !(isSame(s[pre + 'A']) && isSame(s[pre + 'B']) && isSame(s[pre + 'Add'])); };

@@ -808,14 +808,16 @@ const bk=box(1,.7,.7,'#b07a45',x+w*a+1.2,.45,z+d*b-1);const h=new T.Mesh(new Vo(
 for(const[o,col]of[[-1,'#ffd23c'],[.6,'#f08a24']]){const f=new T.Mesh(new T.Sph(.25,8,6),mat(col));f.position.set(x+w*a+o*.6,.3,z+d*b+.4);$t.add(f)}
 for(let k=0;k<2;k++){const p=person(['#2f6fdf','#7fc94a','#ff8ad8','#c77dff'][(k+Math.floor(a*10))%4]);p.g.position.set(x+w*a+(k?1.6:-1.6),-.55,z+d*b+(k?.8:-.6));p.g.rotation.y=k?-1.8:1.4;p.legs.forEach(l=>l.rotation.x=-1.5);p.arms[0].rotation.x=-.8}}
 const tb=x+w*.72,tz=z+d*.25;box(3.2,.2,1.6,'#a8743f',tb,1.1,tz);for(const s of[-1,1]){box(3.2,.15,.5,'#a8743f',tb,.65,tz+s*1.2);box(.15,1.1,.15,'#6b4426',tb-1.3,.55,tz+s*.6);box(.15,1.1,.15,'#6b4426',tb+1.3,.55,tz+s*.6)}umbrella(tb,tz,'#e8282d')}
-// little train going back and forth on its track
-function train(x,z,w,d){const long=w>=d,L=(long?w:d),cx=x+w/2,cz=z+d/2,ux=long?1:0,uz=long?0:1;for(let s=-L/2;s<=L/2;s+=1.2)box(long?.3:2.6,.15,long?2.6:.3,'#6b4426',cx+ux*s,.1,cz+uz*s);for(const o of[-.7,.7])box(long?L:.15,.18,long?.15:L,'#9aa3ab',cx+(long?0:o),.25,cz+(long?o:0));
-const g=new T.Group();$t.add(g);const C=['#e8463c','#2f6fdf','#ffd23c','#7fc94a'];box(1.9,1.8,4,'#2a2f36',0,1.3,0,g);box(2,1.2,1.6,'#e8463c',0,2.4,-1.1,g);const ch=new T.Mesh(new T.Cyl(.3,.4,1.2,10),mat('#2a2f36'));ch.position.set(0,2.8,1.3);g.add(ch);
-for(let i=1;i<4;i++){box(1.8,1.2,3.4,C[i],0,1,-i*4,g);const p=person(C[(i+1)%4]);$t.remove(p.g);p.g.scale.setScalar(.6);p.g.position.set(0,1.3,-i*4);g.add(p.g)}
-for(let i=0;i<4;i++)for(const s of[-1,1])for(const o of[-1,1]){const wh=new T.Mesh(new T.Cyl(.38,.38,.2,10),mat('#222'));wh.rotation.z=Math.PI/2;wh.position.set(s*.95,.4,-i*4+o*1.1);g.add(wh)}
+// little train going round a circular track
+function train(x,z,w,d){const cx=x+w/2,cz=z+d/2,R=9;const tie=new T.Box(2.6,.15,.3);for(let k=0;k<44;k++){const a=k/44*Math.PI*2,m=new T.Mesh(tie,mat('#6b4426'));m.position.set(cx+Math.cos(a)*R,.1,cz+Math.sin(a)*R);m.rotation.y=-a;$t.add(m)}
+for(const o of[-.7,.7]){const rl=new T.Mesh(new Vo(R+o,.09,4,64),mat('#9aa3ab'));rl.rotation.x=Math.PI/2;rl.position.set(cx,.25,cz);$t.add(rl)}
+const mid=new T.Mesh(new T.Cyl(R-1.6,R-1.6,.12,40),mat('#8fd06a'));mid.position.set(cx,.1,cz);$t.add(mid);for(let k=0;k<6;k++){const f=new T.Mesh(new T.Sph(.45,8,6),mat(['#ff5a5a','#ffd23c','#ff8ad8'][k%3]));f.position.set(cx+Math.cos(k)*3,.4,cz+Math.sin(k)*3);$t.add(f)}
+const C=['#e8463c','#2f6fdf','#ffd23c','#7fc94a'],cars=[];const eng=new T.Group();box(1.9,1.8,3.2,'#2a2f36',0,1.3,0,eng);box(2,1.2,1.4,'#e8463c',0,2.4,-.9,eng);const ch=new T.Mesh(new T.Cyl(.3,.4,1.2,10),mat('#2a2f36'));ch.position.set(0,2.8,1);eng.add(ch);$t.add(eng);cars.push(eng);
+for(let i=1;i<4;i++){const g=new T.Group();box(1.8,1.2,2.8,C[i],0,1,0,g);const p=person(C[(i+1)%4]);$t.remove(p.g);p.g.scale.setScalar(.6);p.g.position.set(0,1.3,0);g.add(p.g);$t.add(g);cars.push(g)}
+for(const g of cars)for(const s of[-1,1])for(const o of[-1,1]){const wh=new T.Mesh(new T.Cyl(.38,.38,.2,10),mat('#222'));wh.rotation.z=Math.PI/2;wh.position.set(s*.95,.4,o*.9);g.add(wh)}
 const smoke=[];for(let k=0;k<5;k++){const m=new T.Mesh(new T.Sph(.4,8,6),new T.Mat({color:new Pt('#ffffff'),transparent:!0,opacity:.6}));$t.add(m);smoke.push(m)}
-const run=Math.max(4,L-6);let t=0;LIVE.push(dt=>{t+=dt;const k=(Math.sin(t*.35)+1)/2,s=-run/2+run*k,dir=Math.cos(t*.35)>0?1:-1;g.position.set(cx+ux*s,0,cz+uz*s);g.rotation.y=Math.atan2(ux,uz)+(dir>0?0:Math.PI);
-smoke.forEach((m,i)=>{const a=((t*1.5+i/5)%1);m.position.set(g.position.x+Math.sin(g.rotation.y)*1.3,3+a*3,g.position.z+Math.cos(g.rotation.y)*1.3);m.scale.setScalar(.6+a);m.material.opacity=.6*(1-a)})})}
+let a0=0;LIVE.push(dt=>{a0+=dt*.35;cars.forEach((g,i)=>{const a=a0-i*.36;g.position.set(cx+Math.cos(a)*R,0,cz+Math.sin(a)*R);g.rotation.y=-a+Math.PI});
+const e=cars[0],t=performance.now()/1e3;smoke.forEach((m,i)=>{const k=(t*1.5+i/5)%1;m.position.set(e.position.x,3+k*3,e.position.z);m.scale.setScalar(.6+k);m.material.opacity=.6*(1-k)})})}
 // secret room: a little door in the corner of a building, a hidden room with a glowing treasure chest
 function secret(x,z,w,d,H){const cx=x+w/2,cz=z+d/2,RH=3.4;box(w-.6,H-RH,d-.6,'#9a8ad8',cx,RH+(H-RH)/2,cz);box(w-.6,.4,d-.6,'#7a6ab8',cx,RH,cz);
 box(.3,RH,d-.6,'#9a8ad8',x+w-.45,RH/2,cz);box(w-2.8,RH,.3,'#9a8ad8',x+.3+(w-2.8)/2,RH/2,z+d-.45);box(1.6,RH,.3,'#9a8ad8',x+w-1.1,RH/2,z+d-.45);

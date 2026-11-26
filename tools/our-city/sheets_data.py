@@ -197,6 +197,21 @@ RING_SHEETS = {
   ('s', 11.0, 9.0, 3.0, 2.0, 4, '#C0392B', 'Barn'),
   ('pool', 15.0, 11.0, 2.0, 1.0, 0, None, 'Pool'),
  ],
+ 'N3': [
+  ('camp', 0.2, 2.1, 1.9, 3.8, 0, None, 'Virgo Camping'),
+  ('s', 2.15, 2.05, 2.9, 1.95, 6, '#C9CDD2', 'LOL Mart'),
+  ('s', 2.15, 4.05, 2.9, 1.9, 6, '#C9CDD2', 'Pomeranian Hat Shop'),
+  ('b', 6.15, 3.0, 2.9, 2.8, 9, '#F4F4F4', 'Hospital'),
+  ('s', 12.0, 2.0, 3.0, 2.9, 3, '#E9F2B8', 'Great Sir Pigeon Restaurant'),
+  ('pigeonstatue', 16.9, 4.9, 2.1, 1.9, 0, None, 'Great Sir Pigeon Statue'),   # wears a hat with a feather and holds a sword
+  ('s', 0.05, 10.05, 2.0, 2.9, 4, '#B8B8C0', 'Bird Disco'),                    # disco ball on the roof
+  ('cornfarm', 2.2, 9.05, 2.8, 2.7, 0, None, 'Corn Farm'),                     # fence + seed pile
+  ('s', 5.2, 8.95, 2.8, 2.95, 8, '#E9F2B8', 'Great Sir Pigeon Rent-A-Car'),
+  ('s', 5.2, 11.95, 2.8, 2.0, 8, '#E9F2B8', 'Great Sir Pigeon Souvenir Shop'),
+  ('s', 11.1, 8.05, 3.85, 3.8, 16, '#D6E4F5', 'Police Station'),
+  ('policecar', 13.0, 12.2, 1.5, 0.9, 0, None, ''),   # parked in front of the station
+  ('s', 15.1, 8.05, 4.85, 5.9, 25, '#F2EFC0', 'Great Sir Pigeon Hotel'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

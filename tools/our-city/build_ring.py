@@ -122,6 +122,15 @@ def kept_out(x, z): return any(a < x < a + w and b < z < b + d for a, b, w, d in
 # ---- forest
 inside = ns['inside']
 FOREST = [(x * M, z * M) for x, z in ns['FOREST']]
+# apple trees in the north-west of Raccoon Forest (each has an apple to eat under it)
+apples = []
+_cand = [(x, z) for z in range(-170, 130, 9) for x in range(-210, 20, 9)]
+random.Random(4).shuffle(_cand)
+for x, z in _cand:
+    if len(apples) >= 12: break
+    if not inside(FOREST, x, z) or near_road(x, z, 12) or kept_out(x, z): continue
+    if any(math.hypot(x - a_, z - b_) < 38 for a_, b_ in apples): continue
+    apples.append((x, z)); keepout.append((x - 8, z - 8, 16, 16))
 g = random.Random(7); trees = []
 for z in range(-300, 400, 8):
     for x in range(-450, 100, 8):
@@ -151,7 +160,7 @@ lx, ly, lrx, lry = ns['LAKE']
 nature = {'forest': FOREST, 'farm': FARM, 'fields': fields, 'barn': barn, 'river': RIV, 'riverW': ns['RIVER_W'] * M,
           'lake': [lx * M, ly * M, lrx * M, lry * M], 'beach': 22, 'mountain': [cx * M, cy * M, RX * M, RY * M],
           'lookout': [880, -290], 'tunnels': tunnels, 'trees': trees,
-          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'gantries': gantries, 'ramps': ramps}
+          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'gantries': gantries, 'ramps': ramps, 'apples': [[float(x), float(z)] for x, z in apples]}
 C.update({'roads': roads, 'streams': streams, 'ponds': ponds, 'terrain': T, 'nature': nature,
           'bounds': [-420.0, -1000.0, 1900.0, 750.0]})
 json.dump(C, open(os.path.join(HERE, 'city_ring.json'), 'w'))

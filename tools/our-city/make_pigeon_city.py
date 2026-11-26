@@ -180,8 +180,12 @@ for it in C['items']:
         mx, mz, nx, nz, L = best_side(x, z, w, d)
         deco.append([k, x, z, w, d, c, n, round(math.atan2(nx, nz), 3)])
         solids.append([x + .5, z + .5, x + w - .5, z + d - .5, 3.6])
-        kind = random.choice(['cafe', 'bakery', 'convenience'])
-        snacks.append([kind, {'cafe': 'Star Coffee Stand', 'bakery': 'Star Treats Stand', 'convenience': 'Star Snack Stand'}[kind], round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
+        if n:
+            kind = 'apple' if re.search(r'apple|grape|melon|fruit|berr', n, re.I) else 'cafe' if re.search(r'milk|coffee|juice|tea', n, re.I) else 'bakery'
+            snacks.append([kind, n, round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
+        else:
+            kind = random.choice(['cafe', 'bakery', 'convenience'])
+            snacks.append([kind, {'cafe': 'Star Coffee Stand', 'bakery': 'Star Treats Stand', 'convenience': 'Star Snack Stand'}[kind], round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
     elif k == 'fishing':   # a wooden fishing pier: people fishing, a snack stand at the land end
         deco.append([k, x, z, w, d, c, n])
         solids.append([x + .5, z + .5, x + w - .5, z + d - .5, 1.6])
@@ -198,6 +202,7 @@ for it in C['items']:
             parksigns.append([round(mx - nx * 1.2, 1), round(mz - nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
     elif k in ('camp', 'cornfarm', 'policecar'):
         deco.append([k, x, z, w, d, c, n])
+        if k == 'cornfarm': snacks.append(['bakery', 'Seed Pile', round(x + w - 5, 1), round(z + d / 2, 1), 3.9])   # on top of the seed pile
         if n:
             mx, mz, nx, nz, L = best_side(x, z, w, d)
             parksigns.append([round(mx - nx * 1.2, 1), round(mz - nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
@@ -264,12 +269,33 @@ if NAT:   # the ring's countryside: river + lake are water, forest trees, signs
     lx, lz, lrx, lrz = NAT['lake']
     areas.append([1, ellipse(lx, lz, lrx, lrz, 64)])
     trees += NAT['trees']
+    for ax_, az_ in NAT.get('apples', []): snacks.append(['apple', 'Raccoon Forest apple', ax_ + 1.5, az_ + 1.5, 1.1])
+    # the river boat: from the foot of the mountain down the river and out into the lake
+    route = [list(q) for q in R] + [[lx - lrx * .1, lz - lrz * .2], [lx + lrx * .25, lz + lrz * .1]]
+    NAT['boat'] = route
+    # bridges: wherever a road crosses the boat's route, the road rises over it
+    def _x(p1, p2, p3, p4):
+        d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0])
+        if abs(d) < 1e-9: return None
+        t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d
+        u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d
+        return (p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t) if 0 <= t <= 1 and 0 <= u <= 1 else None
+    bridges = []
+    for rw, major, pts, *_ in roads:
+        P_ = [(pts[i], pts[i + 1]) for i in range(0, len(pts), 2)]
+        for a_, b_ in zip(P_, P_[1:]):
+            for c_, d_ in zip(route, route[1:]):
+                q = _x(a_, b_, c_, d_)
+                if q and not any(math.hypot(q[0] - B[0], q[1] - B[1]) < 25 for B in bridges):
+                    near = [[round(x_, 1), round(z_, 1)] for x_, z_ in P_ if math.hypot(x_ - q[0], z_ - q[1]) < 40]
+                    bridges.append([round(q[0], 1), round(q[1], 1), rw / 2, near])
+    print('bridges:', [(B[0], B[1]) for B in bridges])
     face = lambda x, z: round(math.atan2(300 - x, 210 - z), 3)
     for x, z, n in [(688, 420, 'Pigeon Lake'), (-118, 432, 'Pigeon Farm'), (-128, 70, 'Raccoon Forest')]:
         parksigns.append([x, z, face(x, z), n])
 city = {'home': -1, 'bounds': C.get('bounds') or [-40.0, -40.0, 640.0, 460.0], 'nature': NAT, 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
-        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'planes': PLANES, 'solids': solids, 'deco': deco}
+        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'bridges': bridges if NAT else [], 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'planes': PLANES, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
 
 # ---------- engine patches ----------
@@ -484,6 +510,43 @@ LIVE.push(()=>{const on=Math.floor(performance.now()/350)%2;L1.material=on?red:o
 for(const P of ie.planes||[])plane(...P);
 
 if(ie.nature){const N=ie.nature;
+// crops: real plants in rows (wheat, cabbages, corn, pumpkins), drawn with instancing so it stays fast
+{const kinds=[ // [row gap, plant gap, parts: [geometry, colour, y, scale jitter]]
+ [1.3,.9,[[new T.Cyl(.05,.07,1.3,4),'#c9a640',.65],[new T.Cone(.14,.5,5),'#e8c75a',1.45]]],
+ [1.5,1.2,[[new T.Sph(.5,8,6),'#7cc95e',.38],[new T.Sph(.34,8,6),'#a9de7a',.62]]],
+ [1.6,1.1,[[new T.Cyl(.08,.11,2.4,5),'#5f9e3a',1.2],[new T.Box(1,.05,.22),'#79b84a',1.4],[new T.Cyl(.15,.15,.55,6),'#f2c94c',1.75]]],
+ [2.2,1.9,[[new T.Sph(.55,10,7),'#f08a24',.42],[new T.Box(1.3,.08,.9),'#4f8f3a',.15]]]];
+const pos=[[],[],[],[]];for(const[x,z,w,d,k]of N.fields){const K=kinds[k],long=w>=d;const A=long?w:d,B=long?d:w;
+for(let b=.8;b<B-.5;b+=K[0])for(let a=.8;a<A-.5;a+=K[1]){const px=long?x+a:x+b,pz=long?z+b:z+a;pos[k].push(px+(rnd()-.5)*.25,pz+(rnd()-.5)*.25,rnd()*6.28,.8+rnd()*.4)}}
+const M4=new ee,Q=new T.Group();kinds.forEach((K,k)=>{const n=pos[k].length/4;if(!n)return;for(const[geo,col,y]of K[2]){const im=new on(geo,new T.Mat({color:new Pt(col)}),n);
+for(let i=0;i<n;i++){const px=pos[k][i*4],pz=pos[k][i*4+1],r=pos[k][i*4+2],s=pos[k][i*4+3];Q.position.set(px,ne(px,pz)+y*s+.1,pz);Q.rotation.set(0,r,0);Q.scale.set(s,s,s);Q.updateMatrix();im.setMatrixAt(i,Q.matrix)}im.instanceMatrix.needsUpdate=!0;$t.add(im)}})}
+// apple trees in Raccoon Forest
+for(const[x,z]of N.apples||[]){const y=ne(x,z),g=new T.Group();g.position.set(x,y,z);$t.add(g);box(.8,4,.8,'#6b4426',0,2,0,g);
+for(const[a,b,c,r]of[[0,5.2,0,2.6],[1.4,4.6,.6,1.8],[-1.3,4.7,-.4,1.9],[.2,6.4,-.3,1.7]]){const m=new T.Mesh(new T.Sph(r,10,8),mat('#4f9a3a'));m.position.set(a,b,c);g.add(m)}
+for(let q=0;q<16;q++){const a=rnd()*6.3,h=3.6+rnd()*3.2,r=1.8+rnd()*.9,m=new T.Mesh(new T.Sph(.26,8,6),mat('#d9262a'));m.position.set(Math.cos(a)*r,h,Math.sin(a)*r);g.add(m)}
+for(let q=0;q<4;q++){const m=new T.Mesh(new T.Sph(.26,8,6),mat('#d9262a'));m.position.set(-2+rnd()*4,.25,-2+rnd()*4);g.add(m)}}
+// bridges: the road rises over the river (BRH), with a deck, railings and stone ends
+for(const[cx,cz,hw,P]of ie.bridges||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],L=Math.hypot(c-a,d-b);if(L<.5)continue;const ux=(c-a)/L,uz=(d-b)/L,nx=-uz,nz=ux,mx=(a+c)/2,mz=(b+d)/2,h=BRH(mx,mz);if(h<.6)continue;
+const y0=ne(mx,mz)+h,yaw=Math.atan2(ux,uz),pit=Math.atan2(BRH(c,d)-BRH(a,b),L);
+const sl=box(hw*2+1.6,1.1,L+.2,'#8d8a85',mx,y0-.45,mz);sl.rotation.order='YXZ';sl.rotation.y=yaw;sl.rotation.x=-pit;
+for(const s of[-1,1]){const r=box(.3,1,L+.2,'#e9e4d6',mx+nx*s*(hw+.6),y0+.75,mz+nz*s*(hw+.6));r.rotation.order='YXZ';r.rotation.y=yaw;r.rotation.x=-pit;const pst=box(.45,1.3,.45,'#cfc8b8',a+nx*s*(hw+.6),ne(a,b)+BRH(a,b)+.6,b+nz*s*(hw+.6))}}}
+// the river boat: back and forth between the mountain and the lake; birds can ride on its deck
+if(N.boat&&N.boat.length>1){const P=N.boat,seg=[];let tot=0;for(let k=1;k<P.length;k++){const L=Math.hypot(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]);seg.push([P[k-1],P[k],L,tot]);tot+=L}
+const at=s=>{for(const[a,b,L,o]of seg)if(s<=o+L){const t=(s-o)/L;return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}const a=P[P.length-2],b=P[P.length-1];return[b[0],b[1],Math.atan2(b[0]-a[0],b[1]-a[1])]};
+const g=new T.Group();$t.add(g);const DECK=1.7,BW=3.2,BL=7;box(BW*2,1.4,BL*2,'#ffffff',0,.6,0,g);box(BW*2+.1,.35,BL*2+.1,'#2f6fdf',0,.5,0,g);const bow=new T.Mesh(new T.Cyl(BW,BW,1.4,3,1,!1,0,Math.PI),mat('#ffffff'));bow.rotation.y=Math.PI/2;bow.scale.set(1,1,.9);bow.position.set(0,.6,BL);g.add(bow);
+box(BW*2-.4,.15,BL*2-.4,'#b07a45',0,DECK-.3,0,g);box(3.4,2.2,3.6,'#f4efe4',0,DECK+.8,-3.2,g);box(3.8,.25,4,'#e8463c',0,DECK+2,-3.2,g);for(const s of[-1,1])box(.08,.7,3.6,'#7fb8e8',s*1.72,DECK+1.1,-3.2,g);
+box(.12,3.2,.12,'#555',0,DECK+3.4,-4.6,g);box(1.2,.7,.06,'#ffd23c',.6,DECK+4.6,-4.6,g);for(const s of[-1,1])box(.12,.5,BL*2-1,'#ffffff',s*(BW-.15),DECK+.1,0,g);
+const ring=new T.Mesh(new Vo(.5,.16,8,16),mat('#ff7a1a'));ring.position.set(BW,DECK-.1,2);ring.rotation.y=Math.PI/2;g.add(ring);
+const B={x:0,z:0,yaw:0};let s=0,d=1,wait=0;window.__boat=B;
+window.__boatAt=(x,z)=>{const dx=x-B.x,dz=z-B.z,c=Math.cos(B.yaw),sn=Math.sin(B.yaw),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<BW&&Math.abs(lz)<BL+1?DECK:null};
+LIVE.push(dt=>{const ox=B.x,oz=B.z,oy=B.yaw;if(wait>0)wait-=dt;else{s+=d*6*dt;if(s>=tot){s=tot;d=-1;wait=4}if(s<=0){s=0;d=1;wait=4}}const[x,z,yw]=at(s);let want=yw+(d<0?Math.PI:0),dy=want-B.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+B.yaw+=dy*Math.min(1,dt*1.5);B.x=x;B.z=z;const t=performance.now()/1e3;g.position.set(x,.15+Math.sin(t*1.7)*.08,z);g.rotation.set(Math.sin(t*1.3)*.02,B.yaw,Math.sin(t*1.1)*.025);
+const Pl=window.__game&&window.__game.P;if(Pl&&ox&&Pl.grounded&&Math.abs(Pl.y-DECK)<1.6){const rx=Pl.x-ox,rz=Pl.z-oz,c=Math.cos(oy),sn=Math.sin(oy),lx=rx*c-rz*sn,lz=rx*sn+rz*c;
+if(Math.abs(lx)<BW+.3&&Math.abs(lz)<BL+1.3){const c2=Math.cos(B.yaw),s2=Math.sin(B.yaw);Pl.x=B.x+lx*c2+lz*s2;Pl.z=B.z-lx*s2+lz*c2;Pl.yaw+=B.yaw-oy}}})}
+}
+
+
+if(ie.nature){const N=ie.nature;
 const addSolid=(a,b,c,d,top)=>{const i0=Math.max(0,Math.floor((a-Yt)/Zt)),i1=Math.min(fe-1,Math.floor((c-Yt)/Zt)),j0=Math.max(0,Math.floor((b-jt)/Zt)),j1=Math.min(Ke-1,Math.floor((d-jt)/Zt));for(let zz=j0;zz<=j1;zz++)for(let xx=i0;xx<=i1;xx++){const q=zz*fe+xx;$i[q]<top&&($i[q]=top)}};
 const seg=(x0,z0,x1,z1,w,h,y,c,m)=>{const L=Math.hypot(x1-x0,z1-z0);const b=new T.Mesh(new T.Box(w,h,L+.3),m||mat(c));b.position.set((x0+x1)/2,y,(z0+z1)/2);b.rotation.y=Math.atan2(x1-x0,z1-z0);$t.add(b);return b};
 // tunnels: road, walls, roof, lights, stone portals
@@ -531,7 +594,7 @@ for(let k=2;k<P.length;k+=3){const[x,z]=P[k],y=Math.max(ne(x,z),ne(x+3,z),ne(x-3
 for(const[a,b,w,d]of[[0,-4,8.4,.15],[0,4,8.4,.15],[-4,0,.15,8.4],[4,0,.15,8.4]])box(w,1.1,d,'#ffffff',a,5,b,g);const rf=new T.Mesh(new T.Cone(6.4,2.6,4),mat('#d94b3c'));rf.rotation.y=Math.PI/4;rf.position.y=9;g.add(rf);
 for(const[a,b]of[[-3.5,-3.5],[3.5,-3.5],[-3.5,3.5],[3.5,3.5]])box(.3,3.4,.3,'#7a4f2c',a,6.1,b,g);const sc=new T.Mesh(new T.Cyl(.25,.4,1.6,10),mat('#2f3a44'));sc.position.set(0,5.6,2.2);sc.rotation.x=-1.1;g.add(sc);addSolid(x-4.2,z-4.2,x+4.2,z+4.2,y+4.5)}
 // farm: crop fields, a red barn and a silo
-{const tex=['#e9d27a','#9cc46b','#c7df8a','#e6a04a'].map((c,k)=>{const cv=document.createElement('canvas');cv.width=cv.height=128;const x2=cv.getContext('2d');x2.fillStyle=c;x2.fillRect(0,0,128,128);x2.fillStyle=k===3?'#7aa04a':'rgba(90,70,30,.35)';for(let r=0;r<128;r+=16)x2.fillRect(0,r,128,k===3?6:4);if(k===3){x2.fillStyle='#f08a24';for(let q=0;q<40;q++){x2.beginPath();x2.arc(Math.random()*128,Math.floor(Math.random()*8)*16+3,4,0,7);x2.fill()}}const t=new Pe(cv);t.wrapS=t.wrapT=1e3;t.repeat.set(4,4);t.colorSpace=me;return new T.Mat({map:t})});
+{const tex=['#8a6a3e','#7d5f37','#8a6a3e','#7d5f37'].map((c,k)=>{const cv=document.createElement('canvas');cv.width=cv.height=128;const x2=cv.getContext('2d');x2.fillStyle=c;x2.fillRect(0,0,128,128);x2.fillStyle='rgba(60,40,20,.45)';for(let r=0;r<128;r+=16)x2.fillRect(0,r,128,5);if(false){x2.fillStyle='#f08a24';for(let q=0;q<40;q++){x2.beginPath();x2.arc(Math.random()*128,Math.floor(Math.random()*8)*16+3,4,0,7);x2.fill()}}const t=new Pe(cv);t.wrapS=t.wrapT=1e3;t.repeat.set(4,4);t.colorSpace=me;return new T.Mat({map:t})});
 for(const[x,z,w,d,k]of N.fields){const pl=new T.Mesh(new Hn(w,d),tex[k]);pl.rotation.x=-Math.PI/2;if(k%2)pl.rotation.z=Math.PI/2*0;pl.position.set(x+w/2,ne(x+w/2,z+d/2)+.09,z+d/2);$t.add(pl)}
 if(N.barn){const[x,z]=N.barn,y=ne(x,z),g=new T.Group();g.position.set(x,y,z);$t.add(g);box(18,9,24,'#c0392b',0,4.5,0,g);const sh=new T.Shape();sh.moveTo(-10,0);sh.lineTo(10,0);sh.lineTo(0,7);sh.lineTo(-10,0);
 const rf=new T.Mesh(new T.Ext(sh,{depth:26,bevelEnabled:!1}),mat('#5a3a2a'));rf.position.set(0,9,-13);g.add(rf);box(7,7,.3,'#ffffff',0,3.5,12.1,g);box(6,6,.4,'#8e2a20',0,3.2,12.2,g);
@@ -606,10 +669,14 @@ for(const[k,x,z,w,d]of ie.deco||[])k==='fishing'&&fishing(x,z,w,d);
 
 // little snack stands: a kiosk with a striped awning and a snack on the counter
 {const AW=[['#ff5a5a','#ffffff'],['#3b8fd9','#ffffff'],['#2e9e5b','#ffffff'],['#ffd23c','#ff7a3c'],['#ff8ad8','#ffffff']];let q=0;
-for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){if(k!=='stand')continue;const g=new T.Group();g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g);const[a,b]=AW[q++%AW.length];
+for(let[k,x,z,w,d,c,n,f]of ie.deco||[]){if(k!=='stand')continue;n=n||'';const g=new T.Group();g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g);const[a,b]=AW[q++%AW.length];
 box(4,2.2,3,'#f4efe4',0,1.1,-.3,g);box(4.2,.25,1,'#a8743f',0,1.25,1.4,g);box(3.4,1.1,.1,'#3a3f48',0,1.9,1.21,g);
 for(let i=0;i<6;i++){const s=box(.7,.12,1.8,i%2?b:a,-1.75+i*.7,3,.7,g);s.rotation.x=.35}box(4.3,1.2,.12,a,0,3.5,-1.8,g);box(4.3,.12,3.4,b,0,4.1,-.3,g);
-const it=new T.Mesh(new T.Sph(.3,10,8),mat(['#f2b23c','#e8463c','#7a4f2c','#ff8ad8'][q%4]));it.position.set(.8,1.55,1.4);g.add(it)}}
+const FR={apple:['#d9262a',.3],grape:['#7b3fb0',.22],melon:['#3f8f3a',.55],milk:['#ffffff',.3],egg:['#fbf3e0',.22],corn:['#f2c94c',.3]},key=Object.keys(FR).find(k2=>(n||'').toLowerCase().includes(k2));
+if(key){const[fc,fr]=FR[key];for(let i=0;i<(key==='melon'?2:6);i++){const it=new T.Mesh(new T.Sph(fr,10,8),mat(fc));if(key==='egg')it.scale.set(1,1.3,1);if(key==='milk')it.scale.set(.8,1.4,.8);it.position.set(-1.4+i*(key==='melon'?1.4:.55),1.4+fr,1.4);g.add(it)}
+const cv=document.createElement('canvas');cv.width=512;cv.height=128;const c2=cv.getContext('2d');c2.fillStyle=b;c2.fillRect(0,0,512,128);c2.fillStyle=a===b?'#1e2a33':a;c2.font='bold 76px sans-serif';c2.textAlign='center';c2.textBaseline='middle';
+let fs=76;while(c2.measureText(n).width>480&&fs>30){fs-=4;c2.font='bold '+fs+'px sans-serif'}c2.fillText(n,256,68);const tx=new Pe(cv);tx.colorSpace=me;const pl=new T.Mesh(new Hn(4.2,1.05),new Be({map:tx}));pl.position.set(0,4.75,1.4);g.add(pl);box(4.3,1.2,.1,'#ffffff',0,4.75,1.33,g)}
+else{const it=new T.Mesh(new T.Sph(.3,10,8),mat(['#f2b23c','#e8463c','#7a4f2c','#ff8ad8'][q%4]));it.position.set(.8,1.55,1.4);g.add(it)}}}
 
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'?elephant(x,z,w,d):k==='basketball'?basketball(x,z,w,d):k==='playground'?playground(x,z,w,d):k==='bigcats'&&bigcats(x,z,w,d);
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
@@ -645,11 +712,20 @@ if(!N)return G.grass;const[lx,lz,rx,rz]=N.lake,b=N.beach;if(((x-lx)/(rx+b))**2+(
 const st=[[6,G.grass],[60,G.hill],[150,G.rock],[230,G.grey],[275,G.grey],[300,G.snow]];for(let k=1;k<st.length;k++)if(y<st[k][0]){const t=(y-st[k-1][0])/(st[k][0]-st[k-1][0]);return st[k-1][1].clone().lerp(st[k][1],t)}return G.snow}
 function d_(){''')
     rep('F.y=Math.min(x,420)', 'F.y=Math.min(x,800)')
-    rep('S=ne(h+m,u+d)+E(u+d),y=ne(h-m,u-d)+E(u-d),R=ne(h,u)+E(u);', 'JF=window.__JP||(()=>0),S=ne(h+m,u+d)+E(u+d)+JF(h+m,u+d,f),y=ne(h-m,u-d)+E(u-d)+JF(h-m,u-d,f),R=ne(h,u)+E(u)+JF(h,u,f);')   # cars jump the ramps
+    # bridges: roads (and cars) rise over the river so the boat fits underneath
+    rep('var Ko=null,Er=[]', 'var BRS=ie.bridges||[],BRH=(x,z)=>{let h=0;for(const b of BRS){const d=Math.hypot(x-b[0],z-b[1]);if(d<34){const t=Math.min(1,(34-d)/20),v=6.5*t*t*(3-2*t);v>h&&(h=v)}}return h};window.__BRS=BRS;window.__BRH=BRH;var Ko=null,Er=[]')
+    rep('Ko=y?(P,L)=>Gi(L):null;', 'Ko=y?(P,L)=>Gi(L):BRH;')
+    rep('}else{let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),g>=4){', '}else{Ko=BRH;let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),Ko=null,g>=4){')
+    # a 4th kind of snack: apples
+    rep('r_={convenience:0,cafe:1,bakery:2}', 'r_={convenience:0,cafe:1,bakery:2,apple:3}')
+    rep('[[f,14259775]]],u=[0,0,0]', '[[f,14259775]],[[new Le(.62,14,10),14164010],[new ce(.06,.06,.4,6).translate(0,.68,0),5913652],[new Le(.26,8,6).scale(1.4,.4,.8).translate(.28,.8,0),4891194]]],u=[0,0,0,0]')
+    rep('for(let g=0;g<3;g++){let _=h[g]', 'for(let g=0;g<4;g++){let _=h[g]')
+    rep('["Ramyeon!","Coffee!","Bread!"][b.t]', '["Ramyeon!","Coffee!","Bread!","Apple!"][b.t]')
+    rep('S=ne(h+m,u+d)+E(u+d),y=ne(h-m,u-d)+E(u-d),R=ne(h,u)+E(u);', 'JF=window.__JP||(()=>0),S=ne(h+m,u+d)+E(u+d)+JF(h+m,u+d,f)+BRH(h+m,u+d),y=ne(h-m,u-d)+E(u-d)+JF(h-m,u-d,f)+BRH(h-m,u-d),R=ne(h,u)+E(u)+JF(h,u,f)+BRH(h,u);')   # cars jump the ramps
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[cx,cz,hw,P]of window.__BRS||[]){if(Math.hypot(x-cx,z-cz)>34)continue;for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+.8)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.2?{f:g0,c:g0+h-1,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

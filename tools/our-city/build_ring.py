@@ -113,7 +113,7 @@ for name, items in RING_SHEETS.items():
             ramps.append([round(best[1], 1), round(best[2], 1), round(best[3], 4), round(best[4], 4), best[5], path])
             continue
         it = {'k': kind, 'x': round((ox + c) * M, 1), 'z': round((oy + r) * M, 1), 'w': round(w * M, 1), 'd': round(d * M, 1), 'f': fl,
-              'c': None if kind in ('raccoon', 'pigeonstatue', 'pig', 'stickman', 'rocket', 'balloon', 'merrygoround', 'parking') else col, 'n': label, 's': name}
+              'c': None if kind in ('raccoon', 'pigeonstatue', 'pig', 'stickman', 'rocket', 'balloon', 'merrygoround', 'parking', 'picnic', 'train', 'secret', 'roof67', 'channel', 'aquarium') else col, 'n': label, 's': name}
         if kind in ('raccoon', 'pigeonstatue', 'pig', 'stickman'):
             it['rot'] = round(math.atan2(300 - (it['x'] + it['w'] / 2), 210 - (it['z'] + it['d'] / 2)), 3)   # face the middle of the city
         C['items'].append(it); keepout.append((it['x'] - 6, it['z'] - 6, it['w'] + 12, it['d'] + 12))

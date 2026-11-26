@@ -212,6 +212,21 @@ RING_SHEETS = {
   ('policecar', 13.0, 12.2, 1.5, 0.9, 0, None, ''),   # parked in front of the station
   ('s', 15.1, 8.05, 4.85, 5.9, 25, '#F2EFC0', 'Great Sir Pigeon Hotel'),
  ],
+ 'S2': [
+  ('s', 2.4, 0.6, 4.2, 2.0, 5, '#E8F25A', 'Claw Machine and Snack'),
+  ('s', 8.0, 0.5, 4.8, 3.6, 10, '#9A8AD8', 'PC and Arcade'),
+  ('secret', 11.75, 3.0, 1.05, 1.1, 0, None, 'Secret Space'),           # a hidden room in the arcade's corner, treasure inside
+  ('picnic', 1.1, 3.9, 1.95, 1.95, 0, None, 'Picnic'),
+  ('s', 5.4, 4.3, 6.9, 2.6, 25, '#C98A6A', 'Cinema'),
+  ('roof67', 5.5, 4.35, 2.0, 1.4, 25, None, ''),                         # a 67 on the cinema roof
+  ('train', 14.7, 1.35, 3.0, 0.8, 0, None, ''),                          # a little train going back and forth
+  ('p', 14.8, 4.9, 4.0, 1.1, 0, None, ''),
+  ('court', 0.25, 8.95, 4.85, 3.8, 0, None, 'Basketball Court'),
+  ('stand', 2.6, 11.2, 0.7, 0.7, 1, None, 'Court Snacks'),
+  ('s', 7.65, 10.9, 1.8, 1.6, 4, '#F2B8A8', 'Sushi Shop'),
+  ('channel', 13.8, 10.35, 2.0, 0.55, 0, None, ''),                       # the stream from the pond into the aquarium
+  ('aquarium', 15.7, 9.0, 3.8, 3.85, 10, None, 'Aquarium'),               # glass walls, fish and a shark
+ ],
  'S3': [
   ('court', 1.15, 0.9, 4.0, 4.8, 0, None, 'Basketball Court'),               # people playing basketball
   ('stickman', 5.25, 0.9, 2.85, 2.95, 0, None, 'Statue of Stickman'),

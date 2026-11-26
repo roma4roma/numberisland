@@ -92,7 +92,7 @@ def near_road(x, z, extra):
     return any(abs(px - x) < hw + extra and abs(pz - z) < hw + extra and math.hypot(px - x, pz - z) < hw + extra for px, pz, hw in RP)
 
 # ---- the students' ring sheets
-gantries, keepout = [], []
+gantries, keepout, ramps = [], [], []
 for name, items in RING_SHEETS.items():
     sc, sr = ns['RING'][name]; ox, oy = sc * 20, sr * 14
     for kind, c, r, w, d, fl, col, label in items:
@@ -100,9 +100,21 @@ for name, items in RING_SHEETS.items():
             ax, az, bx, bz = (ox + c) * M, (oy + r) * M, (ox + w) * M, (oy + d) * M
             gantries.append([round(ax, 1), round(az, 1), round(bx, 1), round(bz, 1), fl * 3.2, col, label]); keepout += [(ax - 9, az - 9, 18, 18), (bx - 9, bz - 9, 18, 18)]
             continue
+        if kind == 'ramp':
+            cx_, cz_ = (ox + c + w / 2) * M, (oy + r + d / 2) * M
+            best = None
+            for rd in roads:
+                for a_, b_ in zip(rd['pts'], rd['pts'][1:]):
+                    dx_, dz_ = b_[0] - a_[0], b_[1] - a_[1]; L_ = dx_ * dx_ + dz_ * dz_ or 1
+                    t_ = max(0, min(1, ((cx_ - a_[0]) * dx_ + (cz_ - a_[1]) * dz_) / L_)); px_, pz_ = a_[0] + dx_ * t_, a_[1] + dz_ * t_
+                    dd = math.hypot(px_ - cx_, pz_ - cz_)
+                    if best is None or dd < best[0]: L1 = math.sqrt(L_); best = (dd, px_, pz_, dx_ / L1, dz_ / L1, rd['w'] / 2, rd)
+            path = [[round(q[0], 1), round(q[1], 1)] for q in best[6]['pts'] if math.hypot(q[0] - best[1], q[1] - best[2]) < 95]
+            ramps.append([round(best[1], 1), round(best[2], 1), round(best[3], 4), round(best[4], 4), best[5], path])
+            continue
         it = {'k': kind, 'x': round((ox + c) * M, 1), 'z': round((oy + r) * M, 1), 'w': round(w * M, 1), 'd': round(d * M, 1), 'f': fl,
-              'c': None if kind in ('raccoon', 'pigeonstatue', 'pig') else col, 'n': label, 's': name}
-        if kind in ('raccoon', 'pigeonstatue', 'pig'):
+              'c': None if kind in ('raccoon', 'pigeonstatue', 'pig', 'stickman') else col, 'n': label, 's': name}
+        if kind in ('raccoon', 'pigeonstatue', 'pig', 'stickman'):
             it['rot'] = round(math.atan2(300 - (it['x'] + it['w'] / 2), 210 - (it['z'] + it['d'] / 2)), 3)   # face the middle of the city
         C['items'].append(it); keepout.append((it['x'] - 6, it['z'] - 6, it['w'] + 12, it['d'] + 12))
     C['done'].append(name)
@@ -139,7 +151,7 @@ lx, ly, lrx, lry = ns['LAKE']
 nature = {'forest': FOREST, 'farm': FARM, 'fields': fields, 'barn': barn, 'river': RIV, 'riverW': ns['RIVER_W'] * M,
           'lake': [lx * M, ly * M, lrx * M, lry * M], 'beach': 22, 'mountain': [cx * M, cy * M, RX * M, RY * M],
           'lookout': [880, -290], 'tunnels': tunnels, 'trees': trees,
-          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'gantries': gantries}
+          'mroad': [[round(x, 1), round(z, 1)] for x, z in _line], 'gantries': gantries, 'ramps': ramps}
 C.update({'roads': roads, 'streams': streams, 'ponds': ponds, 'terrain': T, 'nature': nature,
           'bounds': [-420.0, -1000.0, 1900.0, 750.0]})
 json.dump(C, open(os.path.join(HERE, 'city_ring.json'), 'w'))

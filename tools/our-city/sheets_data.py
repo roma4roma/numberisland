@@ -212,6 +212,23 @@ RING_SHEETS = {
   ('policecar', 13.0, 12.2, 1.5, 0.9, 0, None, ''),   # parked in front of the station
   ('s', 15.1, 8.05, 4.85, 5.9, 25, '#F2EFC0', 'Great Sir Pigeon Hotel'),
  ],
+ 'S3': [
+  ('court', 1.15, 0.9, 4.0, 4.8, 0, None, 'Basketball Court'),               # people playing basketball
+  ('stickman', 5.25, 0.9, 2.85, 2.95, 0, None, 'Statue of Stickman'),
+  ('s', 8.1, 0.9, 2.9, 2.95, 5, '#F2B8D8', 'Monkey vs Bunny'),
+  ('playground', 5.2, 3.95, 5.0, 2.05, 0, None, 'Playground'),             # slide, swings, seesaw, kids
+  ('ramp', 12.0, 2.9, 1.6, 2.7, 0, None, ''),                              # cars jump over it!
+  ('b', 15.1, 0.3, 4.85, 3.6, 4, '#F6E27A', 'Hotel Called Hotel'),
+  ('garbage', 15.15, 4.05, 1.95, 1.9, 0, None, 'Garbage'),                 # pile of garbage bags
+  ('pond', 1.1, 8.0, 1.8, 0.85, 0, None, ''),
+  ('p', 1.15, 8.95, 4.05, 3.65, 0, None, 'Big Cat Park'),                  # a lion and a tiger walk around
+  ('b', 6.2, 9.95, 1.0, 1.0, 2, '#E8A0D8', 'Toilet'),
+  ('pigeonstatue', 8.15, 9.0, 1.05, 0.85, 0, None, 'Pigeon Statue'),
+  ('pigeonstatue', 8.15, 10.95, 1.0, 0.95, 0, None, 'Pigeon Statue'),
+  ('b', 13.05, 10.0, 2.0, 0.95, 1, '#E8A0D8', 'Toilet'),
+  ('s', 13.05, 10.95, 2.0, 1.65, 2, '#9FD89A', 'Food Store'),
+  ('s', 15.05, 9.0, 4.9, 3.7, 1, '#F6C98A', 'Cheese Burger Factory'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

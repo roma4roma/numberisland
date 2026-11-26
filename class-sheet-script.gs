@@ -358,7 +358,9 @@ var EXTRA_ROWS = [
   ['Row to Math Island', 'On', 'On = once a day, students row a boat to the island by answering questions before they can play. Off = no boat. Names under "Can always play" skip it.'],
   ['Row to Math Island: questions', 20, 'How many right answers it takes to row across (a wrong answer just gets a new question).'],
   ['Row to Math Island: facts', '2-12', 'Which times tables to use, like 2-12, or 2-9, or 3,4,6,7,8. Each student gets more of the facts they find hard.'],
-  ['Row to Math Island: kinds', '× ÷', 'Type  × ÷  for both,  × only  or  ÷ only.']
+  ['Row to Math Island: kinds', '× ÷', 'Type  × ÷  for both,  × only  or  ÷ only.'],
+  ['Pigeon Pigeon: starting time', '2 min', 'How much flying time students start with. Examples: 2 min, 90 sec, 3:30.'],
+  ['Pigeon Pigeon: time per snack', '5-60', 'Seconds added for each snack answered right: a surprise amount somewhere in this range. Examples: 5-60, 10-30, or 20 (always 20 seconds).']
 ];
 /* The Settings tab is read by the NAME in column A, not the row number, so rows can be moved,
    and blank rows or notes added, without breaking anything. */
@@ -378,6 +380,7 @@ var SETTING_SECTIONS = [
                      'Boss questions', 'Boss × and ÷: first number', 'Boss × and ÷: second number', 'Boss + and − numbers']],
   ['🏁 Race Day', ['Race Day', 'Race Day results time', 'Race Day prize', 'Race Day questions', 'Race Day × and ÷: first number', 'Race Day × and ÷: second number', 'Race Day + and − numbers']],
   ['🏫 Don\'t Get Caught! (classroom game)', ['Classroom game plays per day', 'Classroom game questions', 'Classroom game seconds per question']],
+  ['🐦 Pigeon Pigeon', ['Pigeon Pigeon: starting time', 'Pigeon Pigeon: time per snack']],
   ['🗂️ Sheet upkeep', ['Keep activity for (days)', 'Data version (do not change)']]
 ];
 function settingsMap_(sh) {
@@ -451,7 +454,8 @@ function readSettings_(ss) {
            bossSkip: text_(v[30], ''),
            classPlays: String(v[31]).trim() === '' ? 2 : Math.max(0, Math.round(Number(v[31]) || 0)), classTypes: text_(v[32], 'Mixed'), classSecs: Number(v[33]) || 15,
            boatOn: !/^(off|no|false|0)$/i.test(String(v[34]).trim()), boatQs: Number(v[35]) > 0 ? Math.round(Number(v[35])) : 20,
-           boatFacts: text_(v[36], '2-12'), boatTypes: text_(v[37], '× ÷') };
+           boatFacts: text_(v[36], '2-12'), boatTypes: text_(v[37], '× ÷'),
+           pigeonStart: v[38] instanceof Date ? v[38].getHours() + ':' + ('0' + v[38].getMinutes()).slice(-2) : text_(v[38], '2 min'), pigeonBonus: text_(v[39], '5-60') };
 }
 /** Cell to text. If Sheets turned "2-9" into a date (Feb 9), turn it back into "2-9". */
 function text_(x, dflt) {

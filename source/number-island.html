@@ -4574,10 +4574,28 @@ async function raceEnd() {
 /* ---------- Pigeon Pigeon (pigeon.html: Banpo Pigeon engine + Our City) ----------
    A 3D flying game on its own page. Math Island hands it a "ticket" with questions at this student's level,
    and when the student comes back it reads the result: 10 coins a snack, and every answer counts toward their skills. */
+/* Teacher's Settings: starting time ("2 min", "90 sec", "3:30") and seconds per snack ("5-60", "10-30", "20"). */
+function pigeonSecs(text, bareIsMinutes) {
+  const t = String(text == null ? '' : text).trim().toLowerCase();
+  let m = t.match(/^(\d+):(\d{1,2})$/); if (m) return +m[1] * 60 + +m[2];
+  let secs = 0, any = false;
+  t.replace(/(\d+(?:\.\d+)?)\s*(m|min|mins|minutes?|s|sec|secs|seconds?)?/g, (_, n, u) => { any = true; secs += u && u[0] === 'm' ? n * 60 : !u && bareIsMinutes && +n <= 15 ? n * 60 : +n; });
+  return any ? Math.round(secs) : null;
+}
+function pigeonTimes() {
+  const s = store.settings || {};
+  const start = Math.max(10, Math.min(1800, pigeonSecs(s.pigeonStart, true) || 120));
+  const parts = String(s.pigeonBonus == null ? '' : s.pigeonBonus).replace(/\s*(?:–|—|to)\s*/gi, '-').split('-').map(x => pigeonSecs(x, false)).filter(x => x != null);
+  let lo = parts.length ? parts[0] : 5, hi = parts.length > 1 ? parts[1] : parts.length ? lo : 60;
+  if (lo > hi) [lo, hi] = [hi, lo];
+  lo = Math.max(0, Math.min(600, lo)); hi = Math.max(lo, Math.min(600, hi));
+  return { start, bonus: [lo, hi] };
+}
 function pigeonLaunch() {
   const p = P(), qs = [];
   for (let i = 0; i < 80; i++) { const q = classQuestion(); qs.push({ skill: q.skill, text: q.text, answer: q.answer }); }
-  try { localStorage.setItem('numberIsland.pigeonTicket', JSON.stringify({ pid: p.id, name: p.name, at: Date.now(), qs })); } catch (e) {}
+  const T = pigeonTimes();
+  try { localStorage.setItem('numberIsland.pigeonTicket', JSON.stringify({ pid: p.id, name: p.name, at: Date.now(), qs, startSecs: T.start, bonus: T.bonus })); } catch (e) {}
   $('#gameBody').innerHTML = `<div class="picker"><h3>🐦 Taking off…</h3><p class="note">Loading the city. This can take a few seconds.</p></div>`;
   save(); setTimeout(() => { location.href = 'pigeon.html'; }, 300);
 }

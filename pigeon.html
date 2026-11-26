@@ -4605,7 +4605,11 @@ three/build/three.module.js:
     $('miGate').classList.add('show'); $('miGateBtn').addEventListener('click', home); window.__paused = true; return;
   }
   try { localStorage.removeItem('numberIsland.pigeonTicket'); } catch (e) {}
-  let left = START_SECS, last = performance.now(), qi = 0, over = false, current = null;
+  const B = Array.isArray(ticket.bonus) && ticket.bonus.length === 2 ? ticket.bonus.map(Number) : [BONUS_MIN, BONUS_MAX];
+  const BLO = Math.max(0, B[0]), BHI = Math.max(BLO, B[1]);
+  const dur = n => n >= 60 ? (n % 60 ? `${Math.floor(n / 60)} min ${n % 60} s` : n === 60 ? '1 minute' : `${n / 60} minutes`) : n + (n === 1 ? ' second' : ' seconds');
+  document.querySelectorAll('.mathnote').forEach(el => { el.innerHTML = el.innerHTML.replace(/\(a surprise: 5 seconds to 1 minute\)/, BLO === BHI ? `(${dur(BLO)})` : `(a surprise: ${dur(BLO)} to ${dur(BHI)})`); });
+  let left = Number(ticket.startSecs) > 0 ? Number(ticket.startSecs) : START_SECS, last = performance.now(), qi = 0, over = false, current = null;
   const log = [];
   const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   function saveResult() {
@@ -4662,11 +4666,12 @@ three/build/three.module.js:
     log.push({ skill: c.q.skill, text: c.q.text, answer: c.q.answer, ok, slow: !!slow });
     const fb = $('miFb');
     if (ok) {
-      // 60% of snacks give under 30 s (5–29), 40% give 30–60 s
-      const add = Math.random() < .6 ? BONUS_MIN + Math.floor(Math.random() * (30 - BONUS_MIN)) : 30 + Math.floor(Math.random() * (BONUS_MAX - 30 + 1)); left += add;
-      const txt = add >= 60 ? '1 minute' : add + ' seconds';
-      fb.textContent = `✅ Yes! +${txt}${add >= 50 ? ' 🎉' : add <= 10 ? ' (a small snack!)' : ''}`; fb.className = 'miFb good';
-      $('miClock').dataset.plus = add >= 60 ? '+1:00' : `+0:${String(add).padStart(2, '0')}`; $('miClock').classList.add('plus'); setTimeout(() => $('miClock').classList.remove('plus'), 1800);
+      // a surprise amount in the teacher's range: 60% of snacks give the lower part, 40% the upper part
+      const mid = Math.round(BLO + (BHI - BLO) * .45);
+      const add = BLO === BHI ? BLO : Math.random() < .6 ? BLO + Math.floor(Math.random() * Math.max(1, mid - BLO)) : mid + Math.floor(Math.random() * (BHI - mid + 1)); left += add;
+      const big = BHI > BLO && add >= BLO + (BHI - BLO) * .8, small = BHI > BLO && add <= BLO + (BHI - BLO) * .1;
+      fb.textContent = `✅ Yes! +${dur(add)}${big ? ' 🎉' : small ? ' (a small snack!)' : ''}`; fb.className = 'miFb good';
+      $('miClock').dataset.plus = `+${Math.floor(add / 60)}:${String(add % 60).padStart(2, '0')}`; $('miClock').classList.add('plus'); setTimeout(() => $('miClock').classList.remove('plus'), 1800);
     }
     else { fb.textContent = (slow ? '⏰ Too slow! ' : '❌ Not quite! ') + `${c.q.text} = ${fmt(c.q.answer)}`; fb.className = 'miFb bad'; }
     saveResult();

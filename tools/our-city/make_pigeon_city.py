@@ -89,6 +89,7 @@ def best_side(x, z, w, d):
         return road_dist(S[0] + S[2] * 5, S[1] + S[3] * 5) + (1000 if blocked else 0)
     return min(sides, key=score)
 signs, parksigns = [], []
+stand_count = []
 # sky bridges between buildings you can fly under: [x0, z0, x1, z1 (the open gap), bottom, top, colour]
 SKYBRIDGES = [
     [59.4, 381, 70.6, 389, 12.8, 16.0, '#9cc3dd'],   # C1: 10-storey tower <-> Cake Cake
@@ -186,7 +187,7 @@ for it in C['items']:
         if n:
             kind = 'apple' if re.search(r'apple|grape|melon|fruit|berr', n, re.I) else 'cafe' if re.search(r'milk|coffee|juice|tea', n, re.I) else 'bakery'
             snacks.append([kind, n, round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
-        else:
+        elif stand_count.append(1) or len(stand_count) % 5 == 1:   # only 1 in 5 of the unnamed stands has food
             kind = random.choice(['cafe', 'bakery', 'convenience'])
             snacks.append([kind, {'cafe': 'Star Coffee Stand', 'bakery': 'Star Treats Stand', 'convenience': 'Star Snack Stand'}[kind], round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
     elif k == 'fishing':   # a wooden fishing pier: people fishing, a snack stand at the land end
@@ -283,29 +284,60 @@ if NAT:   # the ring's countryside: river + lake are water, forest trees, signs
     # the river boat: from the foot of the mountain down the river and out into the lake
     route = [list(q) for q in R] + [[lx - lrx * .1, lz - lrz * .2], [lx + lrx * .25, lz + lrz * .1]]
     NAT['boat'] = route
-    # bridges: wherever a road crosses the boat's route, the road rises over it
-    def _x(p1, p2, p3, p4):
-        d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0])
-        if abs(d) < 1e-9: return None
-        t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d
-        u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d
-        return (p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t) if 0 <= t <= 1 and 0 <= u <= 1 else None
-    bridges = []
+    # bridges: every stretch of road over the river or lake becomes a bridge 7.5 m up (with 25 m ramps),
+    # so the boat fits underneath and nothing stands in the water
+    RIVPOLY = Lp + Rp[::-1]
+    def in_poly(P, x, z):
+        c = False
+        for k_ in range(len(P)):
+            (x1, z1), (x2, z2) = P[k_ - 1], P[k_]
+            if (z1 > z) != (z2 > z) and x < (x2 - x1) * (z - z1) / (z2 - z1) + x1: c = not c
+        return c
+    def wet(x, z): return ((x - lx) / (lrx + 3)) ** 2 + ((z - lz) / (lrz + 3)) ** 2 < 1 or in_poly(RIVPOLY, x, z)
+    BH, RAMP, GR = 7.5, 26.0, 2.0
+    spans, cells = [], {}
     for rw, major, pts, *_ in roads:
-        P_ = [(pts[i], pts[i + 1]) for i in range(0, len(pts), 2)]
+        P_ = [(pts[i_], pts[i_ + 1]) for i_ in range(0, len(pts), 2)]
+        S_ = []
         for a_, b_ in zip(P_, P_[1:]):
-            for c_, d_ in zip(route, route[1:]):
-                q = _x(a_, b_, c_, d_)
-                if q and not any(math.hypot(q[0] - B[0], q[1] - B[1]) < 25 for B in bridges):
-                    near = [[round(x_, 1), round(z_, 1)] for x_, z_ in P_ if math.hypot(x_ - q[0], z_ - q[1]) < 40]
-                    bridges.append([round(q[0], 1), round(q[1], 1), rw / 2, near])
-    print('bridges:', [(B[0], B[1]) for B in bridges])
+            L_ = math.hypot(b_[0] - a_[0], b_[1] - a_[1]); n_ = max(1, int(L_ / 2))
+            S_ += [(a_[0] + (b_[0] - a_[0]) * t_ / n_, a_[1] + (b_[1] - a_[1]) * t_ / n_) for t_ in range(n_)]
+        S_.append(P_[-1])
+        W_ = [wet(x_, z_) for x_, z_ in S_]
+        if not any(W_): continue
+        D_ = [0.0] * len(S_); acc = 0
+        for k_ in range(1, len(S_)): acc += math.hypot(S_[k_][0] - S_[k_ - 1][0], S_[k_][1] - S_[k_ - 1][1]); D_[k_] = acc
+        wd = [D_[k_] for k_ in range(len(S_)) if W_[k_]]
+        H_ = []
+        for k_ in range(len(S_)):
+            dd = min(abs(D_[k_] - q_) for q_ in wd) - 4          # a little flat bit past the bank
+            t_ = 1 if dd <= 0 else max(0, 1 - dd / RAMP)
+            H_.append(round(BH * t_ * t_ * (3 - 2 * t_), 2))
+        cur = []
+        for k_ in range(len(S_)):
+            if H_[k_] > .05:
+                cur.append([round(S_[k_][0], 1), round(S_[k_][1], 1), H_[k_]])
+                r_ = rw / 2 + 7
+                for ci in range(int((S_[k_][0] - r_) // GR), int((S_[k_][0] + r_) // GR) + 1):
+                    for cj in range(int((S_[k_][1] - r_) // GR), int((S_[k_][1] + r_) // GR) + 1):
+                        if math.hypot(ci * GR + GR / 2 - S_[k_][0], cj * GR + GR / 2 - S_[k_][1]) < r_:
+                            cells[(ci, cj)] = max(cells.get((ci, cj), 0), H_[k_])
+            elif cur: spans.append([rw / 2, cur]); cur = []
+        if cur: spans.append([rw / 2, cur])
+    if cells:
+        i0 = min(c[0] for c in cells); i1 = max(c[0] for c in cells); j0 = min(c[1] for c in cells); j1 = max(c[1] for c in cells)
+        nxg, nzg = i1 - i0 + 1, j1 - j0 + 1
+        grid = [0] * (nxg * nzg)
+        for (ci, cj), h_ in cells.items(): grid[(cj - j0) * nxg + ci - i0] = h_
+        bridges = {'x0': i0 * GR, 'z0': j0 * GR, 'r': GR, 'nx': nxg, 'nz': nzg, 'h': grid, 'spans': spans}
+    else: bridges = {}
+    print('bridge spans:', len(spans), 'grid', len(cells))
     face = lambda x, z: round(math.atan2(300 - x, 210 - z), 3)
     for x, z, n in [(688, 420, 'Pigeon Lake'), (-118, 432, 'Pigeon Farm'), (-128, 70, 'Raccoon Forest')]:
         parksigns.append([x, z, face(x, z), n])
 city = {'home': -1, 'bounds': C.get('bounds') or [-40.0, -40.0, 640.0, 460.0], 'nature': NAT, 'buildings': buildings, 'roads': roads, 'areas': areas,
         'rails': [], 'stations': [], 'snacks': snacks, 'signs': signs, 'trees': trees, 'crosswalks': [], 'dong': [],
-        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'bridges': bridges if NAT else [], 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'planes': PLANES, 'solids': solids, 'deco': deco}
+        'billboards': [], 'terrain': terrain, 'parksigns': parksigns, 'bridges': bridges if NAT else {}, 'skybridges': SKYBRIDGES, 'critters': CRITTERS, 'planes': PLANES, 'solids': solids, 'deco': deco}
 s = s[:i + len(TAG)] + json.dumps(city, ensure_ascii=False, separators=(',', ':')) + s[j:]
 
 # ---------- engine patches ----------
@@ -344,6 +376,10 @@ const SIX=[ring(4.5,5,2.2,4.5),shp([[.2,5],[2.4,5],[6,15],[3.6,15.6]])],SEVEN=sh
 function letters(x,z,w,d,parts){const g=new T.Group();box(Math.max(w,8),2,Math.max(d,6),'#cfc8b8',0,1,0,g);const step=11,st=-(parts.length-1)*step/2;
 parts.forEach(([sh,c],i)=>{const m=new T.Mesh(new T.Ext(sh,{depth:3,bevelEnabled:!0,bevelSize:.4,bevelThickness:.4,bevelSegments:2}),mat(c));m.position.set(st+i*step-4.5,2,-1.5);g.add(m)});
 const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=-.5;$t.add(g)}
+{const mark=(x,z)=>{const i=Math.floor((x-Yt)/Zt),j=Math.floor((z-jt)/Zt);if(i>=0&&j>=0&&i<fe&&j<Ke){const q=j*fe+i;$i[q]<.05&&($i[q]=.05)}};
+for(const[t,P]of ie.areas||[]){if(t!==1)continue;let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;for(let k=0;k<P.length;k+=2){x0=Math.min(x0,P[k]);x1=Math.max(x1,P[k]);z0=Math.min(z0,P[k+1]);z1=Math.max(z1,P[k+1])}
+for(let z=z0-2;z<=z1+2;z+=Zt)for(let x=x0-2;x<=x1+2;x+=Zt){let c=!1;for(let a=0,b=P.length-2;a<P.length;b=a,a+=2){const xa=P[a],za=P[a+1],xb=P[b],zb=P[b+1];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}c&&mark(x,z)}}
+const BG=ie.bridges||{};if(BG.h)for(let j=0;j<BG.nz;j++)for(let i=0;i<BG.nx;i++)BG.h[j*BG.nx+i]>.3&&mark(BG.x0+(i+.5)*BG.r,BG.z0+(j+.5)*BG.r)}
 const n0=$t.children.length;
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
@@ -565,17 +601,17 @@ for(const[x,z]of N.apples||[]){const y=ne(x,z),g=new T.Group();g.position.set(x,
 for(const[a,b,c,r]of[[0,5.2,0,2.6],[1.4,4.6,.6,1.8],[-1.3,4.7,-.4,1.9],[.2,6.4,-.3,1.7]]){const m=new T.Mesh(new T.Sph(r,10,8),mat('#4f9a3a'));m.position.set(a,b,c);g.add(m)}
 for(let q=0;q<16;q++){const a=rnd()*6.3,h=3.6+rnd()*3.2,r=1.8+rnd()*.9,m=new T.Mesh(new T.Sph(.26,8,6),mat('#d9262a'));m.position.set(Math.cos(a)*r,h,Math.sin(a)*r);g.add(m)}
 for(let q=0;q<4;q++){const m=new T.Mesh(new T.Sph(.26,8,6),mat('#d9262a'));m.position.set(-2+rnd()*4,.25,-2+rnd()*4);g.add(m)}}
-// bridges: the road rises over the river (BRH), with a deck, railings and stone ends
-for(const[cx,cz,hw,P]of ie.bridges||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],L=Math.hypot(c-a,d-b);if(L<.5)continue;const ux=(c-a)/L,uz=(d-b)/L,nx=-uz,nz=ux,mx=(a+c)/2,mz=(b+d)/2,h=BRH(mx,mz);if(h<.6)continue;
-const y0=ne(mx,mz)+h,yaw=Math.atan2(ux,uz),pit=Math.atan2(BRH(c,d)-BRH(a,b),L);
-const sl=box(hw*2+1.6,1.1,L+.2,'#8d8a85',mx,y0-.45,mz);sl.rotation.order='YXZ';sl.rotation.y=yaw;sl.rotation.x=-pit;
-for(const s of[-1,1]){const r=box(.3,1,L+.2,'#e9e4d6',mx+nx*s*(hw+.6),y0+.75,mz+nz*s*(hw+.6));r.rotation.order='YXZ';r.rotation.y=yaw;r.rotation.x=-pit;const pst=box(.45,1.3,.45,'#cfc8b8',a+nx*s*(hw+.6),ne(a,b)+BRH(a,b)+.6,b+nz*s*(hw+.6))}}}
+// bridges: deck slab, railings and support piers along every raised stretch of road
+for(const[hw,P]of BRS){for(let i=1;i<P.length;i++){const[a,b,ha]=P[i-1],[c,d,hc]=P[i],L=Math.hypot(c-a,d-b);if(L<.3||Math.max(ha,hc)<.6)continue;const ux=(c-a)/L,uz=(d-b)/L,nx=-uz,nz=ux,mx=(a+c)/2,mz=(b+d)/2,h=(ha+hc)/2;
+const y0=ne(mx,mz)+h,yaw=Math.atan2(ux,uz),pit=Math.atan2(hc-ha,L);const sl=box(hw*2+2.4,1.1,L+.25,'#8d8a85',mx,y0-.5,mz);sl.rotation.order='YXZ';sl.rotation.y=yaw;sl.rotation.x=-pit;
+for(const s of[-1,1]){const r=box(.3,1,L+.25,'#e9e4d6',mx+nx*s*(hw+1),y0+.75,mz+nz*s*(hw+1));r.rotation.order='YXZ';r.rotation.y=yaw;r.rotation.x=-pit}
+if(i%9===0&&h>3)for(const s of[-1,1])box(1.4,h,1.4,'#b9b4aa',mx+nx*s*(hw-1),ne(mx,mz)+h/2-.6,mz+nz*s*(hw-1))}}
 // the river boat: back and forth between the mountain and the lake; birds can ride on its deck
 if(N.boat&&N.boat.length>1){const P=N.boat,seg=[];let tot=0;for(let k=1;k<P.length;k++){const L=Math.hypot(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]);seg.push([P[k-1],P[k],L,tot]);tot+=L}
 const at=s=>{for(const[a,b,L,o]of seg)if(s<=o+L){const t=(s-o)/L;return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}const a=P[P.length-2],b=P[P.length-1];return[b[0],b[1],Math.atan2(b[0]-a[0],b[1]-a[1])]};
 const g=new T.Group();$t.add(g);const DECK=1.7,BW=3.2,BL=7;box(BW*2,1.4,BL*2,'#ffffff',0,.6,0,g);box(BW*2+.1,.35,BL*2+.1,'#2f6fdf',0,.5,0,g);const bow=new T.Mesh(new T.Cyl(BW,BW,1.4,3,1,!1,0,Math.PI),mat('#ffffff'));bow.rotation.y=Math.PI/2;bow.scale.set(1,1,.9);bow.position.set(0,.6,BL);g.add(bow);
 box(BW*2-.4,.15,BL*2-.4,'#b07a45',0,DECK-.3,0,g);box(3.4,2.2,3.6,'#f4efe4',0,DECK+.8,-3.2,g);box(3.8,.25,4,'#e8463c',0,DECK+2,-3.2,g);for(const s of[-1,1])box(.08,.7,3.6,'#7fb8e8',s*1.72,DECK+1.1,-3.2,g);
-box(.12,3.2,.12,'#555',0,DECK+3.4,-4.6,g);box(1.2,.7,.06,'#ffd23c',.6,DECK+4.6,-4.6,g);for(const s of[-1,1])box(.12,.5,BL*2-1,'#ffffff',s*(BW-.15),DECK+.1,0,g);
+box(.12,1.4,.12,'#555',0,DECK+2.8,-4.6,g);box(1,.55,.06,'#ffd23c',.5,DECK+3.2,-4.6,g);for(const s of[-1,1])box(.12,.5,BL*2-1,'#ffffff',s*(BW-.15),DECK+.1,0,g);
 const ring=new T.Mesh(new Vo(.5,.16,8,16),mat('#ff7a1a'));ring.position.set(BW,DECK-.1,2);ring.rotation.y=Math.PI/2;g.add(ring);
 const B={x:0,z:0,yaw:0};let s=0,d=1,wait=0;window.__boat=B;
 window.__boatAt=(x,z)=>{const dx=x-B.x,dz=z-B.z,c=Math.cos(B.yaw),sn=Math.sin(B.yaw),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<BW&&Math.abs(lz)<BL+1?DECK:null};
@@ -787,7 +823,7 @@ const st=[[6,G.grass],[60,G.hill],[150,G.rock],[230,G.grey],[275,G.grey],[300,G.
 function d_(){''')
     rep('F.y=Math.min(x,420)', 'F.y=Math.min(x,800)')
     # bridges: roads (and cars) rise over the river so the boat fits underneath
-    rep('var Ko=null,Er=[]', 'var BRS=ie.bridges||[],BRH=(x,z)=>{let h=0;for(const b of BRS){const d=Math.hypot(x-b[0],z-b[1]);if(d<34){const t=Math.min(1,(34-d)/20),v=6.5*t*t*(3-2*t);v>h&&(h=v)}}return h};window.__BRS=BRS;window.__BRH=BRH;var Ko=null,Er=[]')
+    rep('var Ko=null,Er=[]', 'var BRG=ie.bridges||{},BRS=BRG.spans||[],BRH=(x,z)=>{if(!BRG.h)return 0;const fx=(x-BRG.x0)/BRG.r-.5,fz=(z-BRG.z0)/BRG.r-.5,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>a<0||b<0||a>=BRG.nx||b>=BRG.nz?0:BRG.h[b*BRG.nx+a];return(g(i,j)*(1-u)+g(i+1,j)*u)*(1-v)+(g(i,j+1)*(1-u)+g(i+1,j+1)*u)*v};window.__BRS=BRS;window.__BRH=BRH;var Ko=null,Er=[]')
     rep('Ko=y?(P,L)=>Gi(L):null;', 'Ko=y?(P,L)=>Gi(L):BRH;')
     rep('}else{let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),g>=4){', '}else{Ko=BRH;let y=$x[d];if(y!==void 0?Jx(y,m,g):h(m,g,.18,n),Ko=null,g>=4){')
     # a 4th kind of snack: apples
@@ -799,7 +835,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[cx,cz,hw,P]of window.__BRS||[]){if(Math.hypot(x-cx,z-cz)>34)continue;for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+.8)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.2?{f:g0,c:g0+h-1,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

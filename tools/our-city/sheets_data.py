@@ -285,6 +285,18 @@ RING_SHEETS = {
   ('stand', 4.2, 11.2, 0.6, 0.6, 1, None, ''),
   ('stand', 4.3, 12.2, 0.6, 0.6, 1, None, ''),
  ],
+ 'W1': [
+  ('museum', 13.05, 0.05, 3.95, 2.0, 4, '#EEEAE0', 'Museum'),
+  ('rocket', 18.0, 0.95, 1.6, 1.5, 0, None, 'Rocket'),                      # a giant tall rocket
+  ('s', 5.05, 3.0, 0.95, 1.0, 1, '#8A5A3A', 'Hut'),                          # a little hut in Raccoon Forest
+  ('balloon', 12.0, 4.95, 3.05, 3.0, 0, None, 'Hot Air Balloon'),           # goes up and down
+  ('merrygoround', 15.65, 4.85, 3.2, 3.2, 0, None, 'Merry-Go-Round'),        # spins
+  ('s', 11.05, 8.0, 1.0, 1.0, 1, '#F6D55C', 'Balloon Tickets'),
+  ('stand', 13.1, 9.15, 0.7, 0.7, 1, None, ''),                              # the star outside the parking lot
+  ('parking', 11.05, 9.95, 3.0, 3.0, 0, None, 'Parking Lot'),
+  ('towerride', 15.0, 9.0, 2.1, 2.05, 10, None, 'Tower Ride'),               # a drop tower, 10 floors high
+  ('s', 15.05, 12.0, 2.0, 1.0, 2, '#3B2A6A', 'Arcade'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

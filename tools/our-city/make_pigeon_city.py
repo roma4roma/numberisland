@@ -40,6 +40,9 @@ import re
 STYLES = [  # (pattern, background, text colour) -- first match wins
     (r'bank|money', '#d4a017', '#1e2a33'),
     (r'airport', '#1f3a93', '#ffffff'),
+    (r'arcade', '#2b1b4a', '#ff5ad1'),
+    (r'museum', '#7a1f2b', '#f3e2b0'),
+    (r'ticket', '#e8463c', '#ffffff'),
     (r'hospital', '#ffffff', '#e8282d'),
     (r'hotel', '#3b3f6b', '#ffd98a'),
     (r'movie|theat', '#1e1e2e', '#ffd23c'),
@@ -192,6 +195,17 @@ for it in C['items']:
         mx, mz, nx, nz, L = best_side(x, z, w, d)
         snacks.append(['convenience', n or 'Fishing Place', round(mx + nx * 2.5, 1), round(mz + nz * 2.5, 1)])
         if n: parksigns.append([round(mx + nx * 1.2, 1), round(mz + nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
+    elif k in ('museum', 'rocket'):   # built in the game; collision comes from their real shape
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        deco.append([k, x, z, w, d, c, n, round(math.atan2(nx, nz), 3), f])
+        if k == 'museum':
+            snacks.append(['cafe', 'Museum Cafe', round(mx + nx * 3, 1), round(mz + nz * 3, 1)])
+    elif k in ('balloon', 'merrygoround', 'towerride', 'parking'):
+        deco.append([k, x, z, w, d, c, n, f])
+        if k == 'towerride': solids.append([x + w / 2 - 2.2, z + d / 2 - 2.2, x + w / 2 + 2.2, z + d / 2 + 2.2, f * FLOOR + 4])
+        if n and k != 'towerride':
+            mx, mz, nx, nz, L = best_side(x, z, w, d)
+            parksigns.append([round(mx - nx * 1.2, 1), round(mz - nz * 1.2, 1), round(math.atan2(nx, nz), 3), n])
     elif k == 'pond':
         areas.append([1, ellipse(x + w / 2, z + d / 2, w / 2, d / 2)])
     elif k in ('court', 'playground', 'garbage'):
@@ -373,6 +387,24 @@ sa(new T.Box(1.1,13,.35),'#d8dde3',7.5);sa(new T.Cone(.78,2,4),'#d8dde3',15).rot
 g.scale.setScalar(Math.max(.4,S));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f!=null?f:0;$t.add(g)}
 else if(k==='cat')animal(x,z,w,d,{body:'#f2a65a',belly:'#fff1dc',nose:'#f27a8a',mask:!1,stripes:!1});
 else if(k==='redpanda')redpanda(x,z,w,d);
+else if(k==='museum'){const g=new T.Group(),Wd=Math.abs(Math.sin(n2r(f)))>.5?d:w,Dp=Math.abs(Math.sin(n2r(f)))>.5?w:d,H=Math.max(3,(ie.deco.find(q=>q[0]==='museum'&&q[1]===x)||[])[8]||4)*3.2,M='#eeeae0',Mx='#d9d3c4';
+function n2r(v){return v}const L=Wd-1.5,D=Dp-1.5,PD=Math.min(5,D*.3);box(L,1.4,D,Mx,0,.7,0,g);for(let i=0;i<4;i++)box(L*.7,.35,1,Mx,0,.18+i*.35,D/2+.4+(3-i)*.5,g);
+box(L-.6,H,D-PD,M,0,1.4+H/2,-PD/2,g);box(L,1,D,'#cfc8b8',0,1.4+H+.5,0,g);const nc=Math.max(4,Math.round(L/3.2));for(let i=0;i<nc;i++){const cx2=-L/2+1+i*(L-2)/(nc-1);const c=new T.Mesh(new T.Cyl(.55,.62,H,14),mat(M));c.position.set(cx2,1.4+H/2,D/2-PD/2);g.add(c);box(1.4,.4,1.4,Mx,cx2,1.6,D/2-PD/2,g);box(1.5,.4,1.5,Mx,cx2,1.4+H-.2,D/2-PD/2,g)}
+const sh=new T.Shape();sh.moveTo(-L/2,0);sh.lineTo(L/2,0);sh.lineTo(0,Math.min(5,L*.16));sh.lineTo(-L/2,0);const pd=new T.Mesh(new T.Ext(sh,{depth:PD,bevelEnabled:!1}),mat(M));pd.position.set(0,1.4+H+1,D/2-PD);g.add(pd);
+const cv=document.createElement('canvas');cv.width=512;cv.height=96;const c2=cv.getContext('2d');c2.fillStyle='#e4ddcc';c2.fillRect(0,0,512,96);c2.fillStyle='#6b5a3a';c2.font='bold 64px serif';c2.textAlign='center';c2.textBaseline='middle';c2.fillText((n||'MUSEUM').toUpperCase(),256,52);
+const tx=new Pe(cv);tx.colorSpace=me;const fr=new T.Mesh(new Hn(Math.min(L*.6,14),Math.min(L*.6,14)*96/512),new Be({map:tx}));fr.position.set(0,1.4+H+.5,D/2+.02);g.add(fr);
+box(2.4,3.6,.2,'#5a3a22',0,3.2,D/2-PD+.05,g);for(const s of[-1,1])box(1.4,2.4,.15,'#3a4a5a',s*L*.28,1.4+H*.5,D/2-PD+.03,g);
+const dm=new T.Mesh(new T.Sph(Math.min(D,L)*.22,24,12,0,6.3,0,1.6),mat('#7fb7a0'));dm.position.set(0,1.4+H+1,-PD/2);g.add(dm);
+for(const s of[-1,1]){const bn=box(.15,H*.55,2.2,s<0?'#c0392b':'#2f6fdf',s*(L/2-.2),1.4+H*.55,D/2-PD-.2,g);bn.rotation.y=Math.PI/2}
+g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
+else if(k==='rocket'){const g=new T.Group(),Rr=3.2,BH=48;box(16,1.2,16,'#8d8a85',0,.6,0,g);box(14,.3,14,'#ffd23c',0,1.25,0,g);
+const body=new T.Mesh(new T.Cyl(Rr,Rr,BH,28),mat('#f4f4f4'));body.position.y=1.2+BH/2+4;g.add(body);for(const yy of[10,26,42]){const b=new T.Mesh(new T.Cyl(Rr+.05,Rr+.05,2,28),mat('#e8463c'));b.position.y=1.2+4+yy;g.add(b)}
+const nose=new T.Mesh(new T.Cone(Rr,13,28),mat('#e8463c'));nose.position.y=1.2+4+BH+6.5;g.add(nose);const eng=new T.Mesh(new T.Cyl(Rr*.75,Rr*1.05,4,20),mat('#555b63'));eng.position.y=1.2+2;g.add(eng);
+for(let i=0;i<4;i++){const a=i*Math.PI/2,fin=new T.Group();fin.rotation.y=a;g.add(fin);const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(5,-2);sh.lineTo(5,3);sh.lineTo(0,12);sh.lineTo(0,0);const m=new T.Mesh(new T.Ext(sh,{depth:.5,bevelEnabled:!1}),mat('#e8463c'));m.position.set(Rr-.2,5.2,-.25);fin.add(m)}
+for(const yy of[30,36]){const wdw=new T.Mesh(new T.Sph(1.1,14,10),mat('#2f6fdf'));wdw.scale.set(1,1,.35);wdw.position.set(0,1.2+4+yy,Rr-.15);g.add(wdw);const rim=new T.Mesh(new Vo(1.15,.18,8,20),mat('#c9ced3'));rim.position.set(0,1.2+4+yy,Rr);g.add(rim)}
+const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv.getContext('2d');c2.fillStyle='#f4f4f4';c2.fillRect(0,0,128,512);c2.fillStyle='#1f3a93';c2.font='bold 80px sans-serif';c2.textAlign='center';'OURCITY'.split('').forEach((ch,i)=>c2.fillText(ch,64,70+i*66));
+const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
+const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
 else if(k==='f'){const L=(a,b,X,Z)=>box(a,.06,b,'#ffffff',X,.13,Z);L(w-4,.5,cx,z+2);L(w-4,.5,cx,z+d-2);L(.5,d-4,x+2,cz);L(.5,d-4,x+w-2,cz);w>d?L(.5,d-4,cx,cz):L(w-4,.5,cx,cz);const lg=w>d;[-1,1].forEach(s=>{const gx=lg?cx+s*(w/2-2.5):cx,gz=lg?cz:cz+s*(d/2-2.5);box(lg?.3:7,.3,lg?7:.3,'#ffffff',gx,2.4,gz);for(const o of[-3.4,3.4])box(.3,2.4,.3,'#ffffff',lg?gx:gx+o,1.2,lg?gz+o:gz)})}
@@ -674,6 +706,40 @@ LIVE.push(()=>{const t=performance.now()/1e3+ph,by=.55+Math.sin(t*2)*.07-(Math.s
 // a fish jumps now and then
 const fish=new T.Mesh(new T.Sph(.45,10,8),mat('#f2a541'));fish.scale.set(.5,.6,1.3);$t.add(fish);let ft=rnd()*6;LIVE.push(dt=>{ft+=dt;const c=ft%6;if(c<1){const s0=ex+nx*7+tx*((Math.floor(ft/6)%3)-1)*4,s1=ez+nz*7+tz*((Math.floor(ft/6)%3)-1)*4;fish.visible=!0;fish.position.set(s0+tx*(c*3-1.5),.4+Math.sin(c*Math.PI)*2.2,s1+tz*(c*3-1.5));fish.rotation.y=Math.atan2(tx,tz);fish.rotation.x=(c-.5)*1.6}else fish.visible=!1})}
 for(const[k,x,z,w,d]of ie.deco||[])k==='fishing'&&fishing(x,z,w,d);
+
+// hot air balloon: tethered, floats up and down all day
+function balloon(x,z,w,d){const cx=x+w/2,cz=z+d/2,pad=new T.Mesh(new T.Cyl(Math.min(w,d)/2-1,Math.min(w,d)/2-1,.15,32),mat('#d9cfa8'));pad.position.set(cx,.08,cz);$t.add(pad);
+const cv=document.createElement('canvas');cv.width=512;cv.height=256;const c2=cv.getContext('2d');const C=['#e8463c','#ffd23c','#2f6fdf','#7fc94a','#ff8a3c','#c77dff'];for(let i=0;i<12;i++){c2.fillStyle=C[i%6];c2.fillRect(i*512/12,0,512/12+1,256)}c2.fillStyle='rgba(255,255,255,.85)';c2.fillRect(0,150,512,14);
+const tx=new Pe(cv);tx.colorSpace=me;const g=new T.Group();$t.add(g);const env=new T.Mesh(new T.Sph(8,32,20),new T.Mat({map:tx}));env.scale.set(1,1.18,1);env.position.y=16;g.add(env);
+const neck=new T.Mesh(new T.Cyl(2.6,1.2,4,20,1,!0),new T.Mat({map:tx,side:2}));neck.position.y=6.6;g.add(neck);for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;const r=new T.Mesh(new T.Cyl(.04,.04,4.4,4),mat('#444'));r.position.set(Math.cos(a)*1.4,4.4,Math.sin(a)*1.4);r.rotation.z=-Math.cos(a)*.25;r.rotation.x=Math.sin(a)*.25;g.add(r)}
+box(2.4,1.4,2.4,'#8a5a2a',0,1.6,0,g);box(2.6,.25,2.6,'#6b4426',0,2.35,0,g);const fl=new T.Mesh(new T.Cone(.35,1.1,8),new Be({color:new Pt('#ffb020')}));fl.position.y=3.4;g.add(fl);
+for(let k=0;k<2;k++){const p=person(['#2f6fdf','#e8463c'][k]);$t.remove(p.g);p.g.scale.setScalar(.75);p.g.position.set(k?.5:-.5,1.2,0);g.add(p.g)}
+const rope=new T.Mesh(new T.Cyl(.05,.05,1,4),mat('#d9c79a'));$t.add(rope);box(.4,1,.4,'#6b4426',cx+3,.5,cz+3);
+LIVE.push(()=>{const t=performance.now()/1e3,k=.5-.5*Math.cos(t*.18),y=1+k*42;g.position.set(cx+Math.sin(t*.3)*.8*k,y,cz+Math.cos(t*.23)*.8*k);g.rotation.y=t*.05;fl.scale.y=.6+Math.abs(Math.sin(t*6))*.6+(Math.sin(t*.18)>0?.5:0);
+const ax=cx+3,az=cz+3,bx=g.position.x,by=y+1,bz=g.position.z,L=Math.hypot(bx-ax,by-1,bz-az);rope.position.set((ax+bx)/2,(1+by)/2,(az+bz)/2);rope.scale.y=L;rope.lookAt(bx,by,bz);rope.rotateX(Math.PI/2)})}
+// merry-go-round: spins, horses go up and down
+function merry(x,z,w,d){const cx=x+w/2,cz=z+d/2,R=Math.min(w,d)/2-1.5;const base=new T.Mesh(new T.Cyl(R+1,R+1.3,1,40),mat('#e9d8b0'));base.position.set(cx,.5,cz);$t.add(base);
+const rot=new T.Group();rot.position.set(cx,1,cz);$t.add(rot);const fl=new T.Mesh(new T.Cyl(R,R,.3,40),mat('#c0392b'));fl.position.y=.15;rot.add(fl);const pole=new T.Mesh(new T.Cyl(1.2,1.2,8,20),mat('#ffd23c'));pole.position.y=4;rot.add(pole);
+const cv=document.createElement('canvas');cv.width=512;cv.height=64;const c2=cv.getContext('2d');for(let i=0;i<16;i++){c2.fillStyle=i%2?'#ffffff':'#e8463c';c2.fillRect(i*32,0,32,64)}const tx=new Pe(cv);tx.colorSpace=me;
+const roof=new T.Mesh(new T.Cone(R+1,4.5,32,1,!0),new T.Mat({map:tx,side:2}));roof.position.y=8+2.25;rot.add(roof);const rim=new T.Mesh(new T.Cyl(R+1,R+1,1,32,1,!0),new T.Mat({map:tx,side:2}));rim.position.y=7.6;rot.add(rim);
+const flag=new T.Mesh(new T.Sph(.6,10,8),mat('#ffd23c'));flag.position.y=12.8;rot.add(flag);const HC=['#ffffff','#f6d55c','#a0d8ff','#ffb3d1','#c9a46a','#ffffff','#b9f0b0','#ffd0a0'],hs=[];
+for(let i=0;i<8;i++){const a=i/8*Math.PI*2,h=new T.Group();h.position.set(Math.cos(a)*(R-2.2),0,Math.sin(a)*(R-2.2));h.rotation.y=-a;rot.add(h);const p=new T.Mesh(new T.Cyl(.12,.12,7.4,6),mat('#e0b040'));p.position.y=3.9;h.add(p);
+const hr=new T.Group();h.add(hr);const add=(geo,c,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);hr.add(m);return m};const C=HC[i];
+add(new T.Sph(1,12,8),C,0,0,0,.55,.55,1.2);add(new T.Sph(.45,10,8),C,0,.75,1.05,.8,1,1.3);for(const[a2,b2]of[[-.3,.6],[.3,.6],[-.3,-.6],[.3,-.6]])add(new T.Cyl(.12,.1,1.1,6),C,a2,-.75,b2);add(new T.Box(.15,.6,.5),'#c0392b',0,.7,.65);add(new T.Box(.7,.12,.8),'#2f6fdf',0,.55,0);hs.push([hr,i])}
+LIVE.push(dt=>{rot.rotation.y+=dt*.55;const t=performance.now()/1e3;for(const[hr,i]of hs)hr.position.y=2.6+Math.sin(t*2.2+i*.8)*.6})}
+// tower ride (drop tower): seats rise slowly, pause, then drop
+function towerride(x,z,w,d,fl){const cx=x+w/2,cz=z+d/2,H=Math.max(20,(fl||10)*3.2)+4;const base=new T.Mesh(new T.Cyl(4.5,5,1,24),mat('#8d8a85'));base.position.set(cx,.5,cz);$t.add(base);
+const col=new T.Mesh(new T.Cyl(1.6,1.8,H,16),mat('#e8463c'));col.position.set(cx,H/2+1,cz);$t.add(col);for(let k=4;k<H;k+=4){const b=new T.Mesh(new T.Cyl(1.65,1.65,1.2,16),mat('#ffffff'));b.position.set(cx,k,cz);$t.add(b)}
+const cap=new T.Mesh(new T.Cone(2.4,3,16),mat('#ffd23c'));cap.position.set(cx,H+2.5,cz);$t.add(cap);const lt=new T.Mesh(new T.Sph(.5,10,8),new Be({color:new Pt('#ff3b3b')}));lt.position.set(cx,H+4.2,cz);$t.add(lt);
+const ring=new T.Group();ring.position.set(cx,2,cz);$t.add(ring);const rr=new T.Mesh(new Vo(2.6,.5,10,24),mat('#2f6fdf'));rr.rotation.x=Math.PI/2;ring.add(rr);
+for(let i=0;i<8;i++){const a=i/8*Math.PI*2,s=new T.Group();s.position.set(Math.cos(a)*3.1,0,Math.sin(a)*3.1);s.rotation.y=-a+Math.PI/2;ring.add(s);box(.9,1.2,.25,'#ffd23c',0,.2,.45,s);box(.9,.2,.8,'#ffd23c',0,-.4,0,s);
+const p=person(['#e8463c','#2f6fdf','#7fc94a','#ff8ad8'][i%4]);$t.remove(p.g);p.g.scale.setScalar(.6);p.g.position.set(0,-.95,0);p.legs.forEach(l=>l.rotation.x=-1.4);s.add(p.g);p.arms.forEach(a2=>a2.rotation.x=-2.8)}
+let t=0;LIVE.push(dt=>{t=(t+dt)%16;let y;if(t<8)y=2+(H-6)*(t/8);else if(t<10)y=H-4;else if(t<11.2){const k=(t-10)/1.2;y=H-4-(H-6)*k*k}else y=2;ring.position.y=y;ring.rotation.y+=dt*(t<8?.2:0)})}
+// parking lot: asphalt, white lines, parked cars
+function parking(x,z,w,d){const pl=new T.Mesh(new Hn(w-1,d-1),mat('#4a4f56'));pl.rotation.x=-Math.PI/2;pl.position.set(x+w/2,.1,z+d/2);$t.add(pl);const C=['#e8463c','#2f6fdf','#f4f4f4','#222','#ffd23c','#7fc94a','#a0a8b0'];
+for(let r=0;r<2;r++){const zz=z+3+r*(d-6);for(let xx=x+2;xx<x+w-2;xx+=3){box(.12,.02,5,'#ffffff',xx,.12,zz+(r?-2.5:2.5));if(xx+3<x+w-1&&rnd()<.7){const cg=new T.Group();cg.position.set(xx+1.5,0,zz+(r?-2.5:2.5));$t.add(cg);const c=C[Math.floor(rnd()*C.length)];box(1.9,.8,4.2,c,0,.7,0,cg);box(1.7,.65,2.2,c,0,1.4,-.2,cg);box(1.72,.45,2,'#7fb8e8',0,1.42,-.2,cg)}}}}
+for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='balloon'?balloon(x,z,w,d):k==='merrygoround'?merry(x,z,w,d):k==='towerride'?towerride(x,z,w,d,f):k==='parking'&&parking(x,z,w,d);
+
 
 // little snack stands: a kiosk with a striped awning and a snack on the counter
 {const AW=[['#ff5a5a','#ffffff'],['#3b8fd9','#ffffff'],['#2e9e5b','#ffffff'],['#ffd23c','#ff7a3c'],['#ff8ad8','#ffffff']];let q=0;

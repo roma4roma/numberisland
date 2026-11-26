@@ -206,6 +206,7 @@ for it in C['items']:
         deco.append([k, x, z, w, d, c, n, round(math.atan2(nx, nz), 3), f])
         if k == 'museum':
             snacks.append(['cafe', 'Museum Cafe', round(mx + nx * 3, 1), round(mz + nz * 3, 1)])
+            snacks.append(['bakery', 'Dino Bites', round(x + w / 2 + nx * 2, 1), round(z + d / 2 + nz * 2, 1), 2.6])   # inside, by the T-rex
     elif k in ('balloon', 'merrygoround', 'towerride', 'parking'):
         deco.append([k, x, z, w, d, c, n, f])
         if k == 'towerride': solids.append([x + w / 2 - 2.2, z + d / 2 - 2.2, x + w / 2 + 2.2, z + d / 2 + 2.2, f * FLOOR + 4])
@@ -397,6 +398,23 @@ g.scale.setScalar(S);lx||(g.rotation.y=Math.PI/2);g.position.set(x+w/2,0,z+d/2);
 const shp=p=>{const s=new T.Shape();s.moveTo(...p[0]);p.slice(1).forEach(q=>s.lineTo(...q));return s};
 const ring=(cx,cy,r1,r2)=>{const s=new T.Shape();s.absarc(cx,cy,r2,0,Math.PI*2);const h=new T.Path();h.absarc(cx,cy,r1,0,Math.PI*2,!0);s.holes.push(h);return s};
 const SIX=[ring(4.5,5,2.2,4.5),shp([[.2,5],[2.4,5],[6,15],[3.6,15.6]])],SEVEN=shp([[0,13],[9,13],[9,11.4],[4.2,0],[1.6,0],[6.2,11],[0,11]]),ELL=shp([[0,0],[8,0],[8,2.6],[2.6,2.6],[2.6,14],[0,14]]),OH=ring(4.5,7,2.6,5.6);
+
+// T-rex skeleton on a platform, facing +x, about S metres long
+function trex(G,S,H){const B='#efe6d2',k=S/14;const g=new T.Group();g.scale.setScalar(k);G.add(g);const bone=(geo,px,py,pz)=>{const m=new T.Mesh(geo,mat(B));m.position.set(px,py,pz);g.add(m);return m};
+const lim=(a,b,r)=>{const L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const m=bone(new T.Cyl(r,r*.8,L,8),(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);m.lookAt(b[0],b[1],b[2]);m.rotateX(Math.PI/2);bone(new T.Sph(r*1.15,8,6),b[0],b[1],b[2])};
+const pl=new T.Mesh(new T.Box(15,.5,5),mat('#5a4a3a'));pl.position.y=.25;g.add(pl);const sign=new T.Mesh(new T.Box(2.4,1,.15),mat('#3a2a1a'));sign.position.set(5.5,.9,2.6);sign.rotation.x=-.3;g.add(sign);
+const sp=[];for(let i=0;i<=30;i++){const t=i/30,x=-7+t*12.2,y=4.6+Math.sin(t*Math.PI*.9)*1.2-(t<.35?(.35-t)*5:0)+(t>.85?(t-.85)*6:0);sp.push([x,y])}
+sp.forEach(([x,y],i)=>{const r=i<10?.12+i*.03:i>25?.32:.42;bone(new T.Sph(r,8,6),x,y,0);if(i>8&&i<27&&i%2===0){const sp2=bone(new T.Cyl(.06,.1,.7,5),x,y+.45,0)}});
+for(let i=11;i<=22;i++){const[x,y]=sp[i],r=1.1+Math.sin((i-11)/11*Math.PI)*.8;const rib=new T.Mesh(new Vo(r,.07,5,14,Math.PI*1.05),mat(B));rib.position.set(x,y-r*.95,0);rib.rotation.y=Math.PI/2;rib.rotation.z=Math.PI/2;g.add(rib)}
+const[hx,hy]=sp[13];for(const s of[-1,1]){const hip=[hx,hy-.2,s*.7],kn=[hx+1.2,hy-2.4,s*.9],an=[hx-.4,hy-4.1,s*.9],ft=[hx+.6,.75,s*.95];lim(hip,kn,.32);lim(kn,an,.22);lim(an,ft,.16);
+for(const o of[-.25,0,.25])lim(ft,[ft[0]+1,.55,ft[2]+o],.07)}
+const[cx,cy]=sp[24];for(const s of[-1,1]){const sh=[cx,cy-.9,s*.6],el=[cx+.5,cy-1.6,s*.75];lim(sh,el,.09);lim(el,[cx+.9,cy-1.4,s*.75],.07)}
+const[nx,ny]=sp[30],sk=new T.Group();sk.position.set(nx+.6,ny+.2,0);sk.rotation.z=-.15;g.add(sk);const sb=(geo,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(B));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);sk.add(m);return m};
+sb(new T.Box(2.4,.9,1.2),.8,.2,0);sb(new T.Box(1.4,.6,1),2.3,.05,0);const jaw=new T.Group();jaw.position.set(0,-.3,0);jaw.rotation.z=-.25;sk.add(jaw);const jb=new T.Mesh(new T.Box(3.4,.3,1),mat(B));jb.position.set(1.4,-.2,0);jaw.add(jb);
+for(let i=0;i<7;i++){const tt=new T.Mesh(new T.Cone(.08,.35,5),mat('#ffffff'));tt.position.set(.6+i*.42,-.32,.42);tt.rotation.z=Math.PI;sk.add(tt);const t2=tt.clone();t2.position.z=-.42;sk.add(t2);const lb=new T.Mesh(new T.Cone(.07,.3,5),mat('#ffffff'));lb.position.set(.6+i*.42,0,.42);jaw.add(lb);const l2=lb.clone();l2.position.z=-.42;jaw.add(l2)}
+for(const s of[-1,1]){const e=new T.Mesh(new T.Sph(.25,8,6),mat('#2a2018'));e.position.set(.6,.45,s*.55);sk.add(e)}
+for(const p of[[-3,0],[3,0]]){const pole=new T.Mesh(new T.Cyl(.05,.05,4,5),mat('#555'));pole.position.set(p[0],2.5,0);g.add(pole)}
+(function jw(){jaw.rotation.z=-.2-Math.max(0,Math.sin(performance.now()/1400))*.15;requestAnimationFrame(jw)})()}
 function letters(x,z,w,d,parts){const g=new T.Group();box(Math.max(w,8),2,Math.max(d,6),'#cfc8b8',0,1,0,g);const step=11,st=-(parts.length-1)*step/2;
 parts.forEach(([sh,c],i)=>{const m=new T.Mesh(new T.Ext(sh,{depth:3,bevelEnabled:!0,bevelSize:.4,bevelThickness:.4,bevelSegments:2}),mat(c));m.position.set(st+i*step-4.5,2,-1.5);g.add(m)});
 const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=-.5;$t.add(g)}
@@ -449,14 +467,21 @@ else if(k==='cat')animal(x,z,w,d,{body:'#f2a65a',belly:'#fff1dc',nose:'#f27a8a',
 else if(k==='redpanda')redpanda(x,z,w,d);
 else if(k==='museum'){const g=new T.Group(),Wd=Math.abs(Math.sin(n2r(f)))>.5?d:w,Dp=Math.abs(Math.sin(n2r(f)))>.5?w:d,H=Math.max(3,(ie.deco.find(q=>q[0]==='museum'&&q[1]===x)||[])[8]||4)*3.2,M='#eeeae0',Mx='#d9d3c4';
 function n2r(v){return v}const L=Wd-1.5,D=Dp-1.5,PD=Math.min(5,D*.3);box(L,1.4,D,Mx,0,.7,0,g);for(let i=0;i<4;i++)box(L*.7,.35,1,Mx,0,.18+i*.35,D/2+.4+(3-i)*.5,g);
-box(L-.6,H,D-PD,M,0,1.4+H/2,-PD/2,g);box(L,1,D,'#cfc8b8',0,1.4+H+.5,0,g);const nc=Math.max(4,Math.round(L/3.2));for(let i=0;i<nc;i++){const cx2=-L/2+1+i*(L-2)/(nc-1);const c=new T.Mesh(new T.Cyl(.55,.62,H,14),mat(M));c.position.set(cx2,1.4+H/2,D/2-PD/2);g.add(c);box(1.4,.4,1.4,Mx,cx2,1.6,D/2-PD/2,g);box(1.5,.4,1.5,Mx,cx2,1.4+H-.2,D/2-PD/2,g)}
+{const HW=L-.6,HD=D-PD,zc=-PD/2,fz=zc+HD/2,bz=zc-HD/2,T2=.5,DW=7,DH=7.5;box(HW,H,T2,M,0,1.4+H/2,bz+T2/2,g);for(const s of[-1,1])box(T2,H,HD,M,s*(HW/2-T2/2),1.4+H/2,zc,g);
+const sw=(HW-DW)/2;for(const s of[-1,1])box(sw,H,T2,M,s*(DW/2+sw/2),1.4+H/2,fz-T2/2,g);box(DW,H-DH,T2,M,0,1.4+DH+(H-DH)/2,fz-T2/2,g);
+const fl=new T.Mesh(new Hn(HW-1,HD-1),mat('#c9b48a'));fl.rotation.x=-Math.PI/2;fl.position.set(0,1.42,zc);g.add(fl);for(let i=-2;i<=2;i++)box(HW-1.2,.02,.08,'#a8946a',0,1.44,zc+i*HD/5,g);
+const ins=new T.Mesh(new Hn(HW-1,H-.2),mat('#f3ecdc'));ins.position.set(0,1.4+H/2,bz+T2+.01);g.add(ins);
+for(const s of[-1,1])for(let k=0;k<3;k++){const fr=box(.1,2.6,3.4,['#8a5a2a','#3a6a8a','#6a3a5a'][k],s*(HW/2-T2-.06),1.4+4.2,zc-HD/3+k*HD/3,g);box(.12,2,2.8,['#e9cf8a','#bfe0f0','#f0c0d0'][k],s*(HW/2-T2-.12),1.4+4.2,zc-HD/3+k*HD/3,g)}
+const g2=new T.Group();g2.position.set(0,1.4,zc-HD*.05);g.add(g2);trex(g2,Math.min(HW*.62,HD*1.1,17),H);
+window.__MUSEUM=window.__MUSEUM||[];window.__MUSEUM.push({cx:x+w/2,cz:z+d/2,f,HW,HD,zc,fz,bz,H,DW,DH,top:1.4+H+1})}
+box(L,1,D,'#cfc8b8',0,1.4+H+.5,0,g);const nc=Math.max(4,Math.round(L/3.2));for(let i=0;i<nc;i++){const cx2=-L/2+1+i*(L-2)/(nc-1);const c=new T.Mesh(new T.Cyl(.55,.62,H,14),mat(M));c.position.set(cx2,1.4+H/2,D/2-PD/2);g.add(c);box(1.4,.4,1.4,Mx,cx2,1.6,D/2-PD/2,g);box(1.5,.4,1.5,Mx,cx2,1.4+H-.2,D/2-PD/2,g)}
 const sh=new T.Shape();sh.moveTo(-L/2,0);sh.lineTo(L/2,0);sh.lineTo(0,Math.min(5,L*.16));sh.lineTo(-L/2,0);const pd=new T.Mesh(new T.Ext(sh,{depth:PD,bevelEnabled:!1}),mat(M));pd.position.set(0,1.4+H+1,D/2-PD);g.add(pd);
 const cv=document.createElement('canvas');cv.width=512;cv.height=96;const c2=cv.getContext('2d');c2.fillStyle='#e4ddcc';c2.fillRect(0,0,512,96);c2.fillStyle='#6b5a3a';c2.font='bold 64px serif';c2.textAlign='center';c2.textBaseline='middle';c2.fillText((n||'MUSEUM').toUpperCase(),256,52);
 const tx=new Pe(cv);tx.colorSpace=me;const fr=new T.Mesh(new Hn(Math.min(L*.6,14),Math.min(L*.6,14)*96/512),new Be({map:tx}));fr.position.set(0,1.4+H+.5,D/2+.02);g.add(fr);
-box(2.4,3.6,.2,'#5a3a22',0,3.2,D/2-PD+.05,g);for(const s of[-1,1])box(1.4,2.4,.15,'#3a4a5a',s*L*.28,1.4+H*.5,D/2-PD+.03,g);
+for(const s of[-1,1])box(1.4,2.4,.15,'#3a4a5a',s*L*.28,1.4+H*.5,D/2-PD+.03,g);
 const dm=new T.Mesh(new T.Sph(Math.min(D,L)*.22,24,12,0,6.3,0,1.6),mat('#7fb7a0'));dm.position.set(0,1.4+H+1,-PD/2);g.add(dm);
 for(const s of[-1,1]){const bn=box(.15,H*.55,2.2,s<0?'#c0392b':'#2f6fdf',s*(L/2-.2),1.4+H*.55,D/2-PD-.2,g);bn.rotation.y=Math.PI/2}
-g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
+g.userData.hollow=!0;g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
 else if(k==='rocket'){const g=new T.Group(),Rr=3.2,BH=48;box(16,1.2,16,'#8d8a85',0,.6,0,g);box(14,.3,14,'#ffd23c',0,1.25,0,g);
 const body=new T.Mesh(new T.Cyl(Rr,Rr,BH,28),mat('#f4f4f4'));body.position.y=1.2+BH/2+4;g.add(body);for(const yy of[10,26,42]){const b=new T.Mesh(new T.Cyl(Rr+.05,Rr+.05,2,28),mat('#e8463c'));b.position.y=1.2+4+yy;g.add(b)}
 const nose=new T.Mesh(new T.Cone(Rr,13,28),mat('#e8463c'));nose.position.y=1.2+4+BH+6.5;g.add(nose);const eng=new T.Mesh(new T.Cyl(Rr*.75,Rr*1.05,4,20),mat('#555b63'));eng.position.y=1.2+2;g.add(eng);
@@ -473,7 +498,7 @@ else if(k==='g'){for(let q=0;q<w*d/6;q++){const fl=new T.Mesh(new T.Sph(.5,8,6),
 else if(k==='dock'){box(w,.6,d,'#8a5a3a',cx,.5,cz)}
 }
 // statues: a 0.5 m height map from their actual triangles, so landing and bumping match what you see
-{const R=.5;window.__STAT=[];for(const g of $t.children.slice(n0)){if(!g.isGroup)continue;g.updateMatrixWorld(!0);const tris=[];let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;
+{const R=.5;window.__STAT=[];for(const g of $t.children.slice(n0)){if(!g.isGroup||g.userData.hollow)continue;g.updateMatrixWorld(!0);const tris=[];let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;
 g.traverse(o=>{if(!o.isMesh||!o.geometry)return;const P=o.geometry.attributes.position,I=o.geometry.index,e=o.matrixWorld.elements,V=[];for(let i=0;i<P.count;i++){const a=P.getX(i),b=P.getY(i),c=P.getZ(i);const X=e[0]*a+e[4]*b+e[8]*c+e[12],Y=e[1]*a+e[5]*b+e[9]*c+e[13],Z=e[2]*a+e[6]*b+e[10]*c+e[14];V.push(X,Y,Z);X<x0&&(x0=X);X>x1&&(x1=X);Z<z0&&(z0=Z);Z>z1&&(z1=Z)}
 const n=I?I.count:P.count;for(let t=0;t<n;t+=3){const A=I?I.getX(t):t,B=I?I.getX(t+1):t+1,C=I?I.getX(t+2):t+2;tris.push(V[A*3],V[A*3+1],V[A*3+2],V[B*3],V[B*3+1],V[B*3+2],V[C*3],V[C*3+1],V[C*3+2])}});
 if(!tris.length)continue;const nx=Math.ceil((x1-x0)/R)+1,nz=Math.ceil((z1-z0)/R)+1,H=new Float32Array(nx*nz);
@@ -906,7 +931,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

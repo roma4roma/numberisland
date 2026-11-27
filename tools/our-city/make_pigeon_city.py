@@ -752,6 +752,13 @@ box(L,.5,W,'#e9ecef',cx,lo+.25,cz);box(L,.5,W,'#e9ecef',cx,hi-.25,cz);box(L,H-1,
 {const LIVE=[];const rnd=Math.random,clampv=(v,a,b)=>Math.max(a,Math.min(b,v));
 const part=(g,geo,c,x,y,z,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);g.add(m);return m};
 const pivot=(g,x,y,z)=>{const p=new T.Group();p.position.set(x,y,z);g.add(p);return p};
+// turns a person into a raccoon: grey furry head, black mask, white muzzle, ears and a striped tail
+function raccoonHead(g){const H=(geo,c,x,y,z,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);g.add(m);return m};
+H(new T.Sph(.25,14,12),'#a9b0b8',0,1.7,0);H(new T.Sph(.2,12,10),'#16171a',0,1.72,.1,1.15,.42,1);
+for(const k of[-1,1]){H(new T.Sph(.055,8,6),'#ffffff',k*.085,1.74,.27);H(new T.Sph(.03,8,6),'#111111',k*.085,1.74,.315);
+const e=H(new Ho(.085,.18,6),'#8d949c',k*.19,2.03,0);e.rotation.z=-k*.45;H(new Ho(.05,.1,6),'#16171a',k*.195,2.02,.04).rotation.z=-k*.45;H(new T.Sph(.07,8,6),'#f4f4f4',k*.16,1.62,.16,1,.8,.7)}
+H(new T.Sph(.1,10,8),'#f4f4f4',0,1.6,.21,1.1,.8,1);H(new T.Sph(.04,8,6),'#111111',0,1.64,.31);
+for(let i=0;i<5;i++)H(new T.Sph(.12-i*.012,10,8),i%2?'#2b2d33':'#a9b0b8',0,.92-i*.1,-.2-i*.1,1,1.15,1)}
 function person(shirt){const g=new T.Group(),skin=['#f1c7a0','#d9a47a','#a86f4a','#f6d6b8'][Math.floor(rnd()*4)];
 const legs=[-1,1].map(s=>{const p=pivot(g,s*.13,.85,0);part(p,new T.Box(.16,.8,.18),'#22262b',0,-.4,0);part(p,new T.Box(.18,.12,.3),'#ffffff',0,-.82,.06);return p});
 part(g,new T.Box(.48,.62,.28),shirt,0,1.18,0);part(g,new T.Box(.5,.2,.3),'#22262b',0,.85,0);
@@ -1159,7 +1166,7 @@ else{const it=new T.Mesh(new T.Sph(.3,10,8),mat(['#f2b23c','#e8463c','#7a4f2c','
 
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'?elephant(x,z,w,d):k==='basketball'?basketball(x,z,w,d):k==='playground'?playground(x,z,w,d):k==='bigcats'&&bigcats(x,z,w,d);
 for(const[k,x,z,w,d]of ie.deco||[])k==='stadium'&&footballGame(x,z,w,d);
-for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');const cap=new T.Mesh(new T.Sph(.23,10,8),mat('#4a5436'));cap.position.y=1.76;cap.scale.y=.6;p.g.add(cap);men.push(p)}
+for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');raccoonHead(p.g);const cap=new T.Mesh(new T.Sph(.25,10,8,0,6.3,0,1.3),mat('#4a5436'));cap.position.y=1.8;p.g.add(cap);men.push(p)}
 let t=0;LIVE.push(dt=>{t+=dt;const L=U*.7,ph=(t*1.4)%(2*L),dir=ph<L?1:-1,pos=ph<L?ph:2*L-ph;men.forEach((p,i)=>{p.g.position.set(cx-L/2+pos,.13,cz-5+i*2);p.g.rotation.y=dir>0?Math.PI/2:-Math.PI/2;const sw=Math.sin(t*6)*.6;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw;p.arms[1].rotation.x=sw})})}
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 for(const[x,z,r,n]of ie.parksigns||[]){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r;$t.add(g);

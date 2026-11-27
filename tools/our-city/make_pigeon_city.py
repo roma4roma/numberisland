@@ -235,6 +235,14 @@ for it in C['items']:
         snacks.append(['cafe', 'Romy Cafe', round(cxk, 1), round(czk, 1)])
         snacks.append(['bakery', 'Romy Patio', round(mx - nx * 4, 1), round(mz - nz * 4, 1)])
         snacks.append(['cafe', 'Romy Rooftop', round(x + w / 2 - nx * (depth / 2 - 4), 1), round(z + d / 2 - nz * (depth / 2 - 4), 1), round(max(3, f) * FLOOR + .9, 1)])
+    elif k == 'puppystatue':
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        deco.append([k, x, z, w, d, c, n])
+        if n: parksigns.append([round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
+        snacks.append(['convenience', 'Dog Statue Snacks', round(mx + nx * 2.5, 1), round(mz + nz * 2.5, 1)])
+    elif k == 'roofdog':   # a big puppy figure standing on a roof, facing the street
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        deco.append([k, x, z, w, d, round(math.atan2(nx, nz) + math.pi / 2, 3), n, round(max(1, f) * FLOOR + .3, 1)])
     elif k in ('puppies', 'dogwalk', 'heart', 'boatrental', 'riverpier', 'decorating', 'pomeranian'):   # E1: dogs, hearts, boats, fishing, decorating
         mx, mz, nx, nz, L = best_side(x, z, w, d)
         if k == 'pomeranian':
@@ -780,6 +788,16 @@ fluff(1.5,0,9.8,3.6,OL,1,.85,1);fluff(.5,0,10.3,4.95,'#1d1f24');for(const k of[-
 const tg=new T.Mesh(new T.Sph(.5,8,6),mat('#e8728a'));tg.position.set(0,9,4.4);tg.scale.set(1,.5,.8);g.add(tg);
 for(const k of[-1,1]){fluff(1.3,k*2,1.9,3.4,O,1,.8,1.4);fluff(1.6,k*3.6,2.6,-2,O)}fluff(2.2,0,7.5,-5,OL,1.2,1,.8);
 g.scale.setScalar(Math.max(.6,Math.min(1.1,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f||0;$t.add(g)}
+// a giant white puppy lying down with its head on its paws (like the puppy on the Dog Cafe)
+function puppyStatue(x,z,w,d){const g=new T.Group(),Wc='#f6f3ee',Wd='#e9e2d6',L=Math.max(w,d),S=L/46;
+const P=(r,px,py,pz,c,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(new T.Sph(r,16,12),mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
+box(22,1.4,44,'#b9b4aa',0,.7,0,g);box(23,.3,45,'#a39e94',0,.15,0,g);
+P(6,0,6,2,Wc,1.15,.85,2.3);P(6.2,0,8.2,-11,Wc,1,1,1);P(3.2,0,6.6,-16.6,Wd,1.05,.8,1.1);P(1.1,0,7.6,-19.6,'#1d1f24');
+for(const k of[-1,1]){P(.8,k*2.6,10.4,-15.9,'#1d1f24');P(.25,k*2.75,10.7,-16.6,'#ffffff');P(3,k*6,7.5,-9,Wd,.5,1.6,1);P(2.1,k*4.6,2.8,-15,Wc,1,.75,2.4);P(1.2,k*4.6,2.5,-19.5,Wd,1.1,.8,1);
+P(2.8,k*6.3,4.2,11,Wc,1,.9,1.6);P(1.5,k*6.3,2.4,15,Wd,1.1,.7,1.2)}
+const tg=P(1,0,4.9,-18.6,'#e8728a',1,.35,1.2);P(2.6,4,9.5,-7,'#e9d1a8',1,.3,1);
+P(1.4,1.2,8.3,16.5,Wc,1,1.3,1);P(1.2,2,10,17,Wc,1,1.2,1)
+g.scale.setScalar(Math.max(.6,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=w>d?Math.PI/2:0;$t.add(g)}
 // RomaCity Raccoons logo: a raccoon face in a gold ring with the team name around it
 function raccoonLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#f2b705';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#24262b';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
 c.fillStyle='#24262b';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
@@ -923,7 +941,7 @@ const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv
 const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
 const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
 else if(k==='stadium')stadium(x,z,w,d,n,c);
-else if(k==='military')military(x,z,w,d);else if(k==='pomeranian')pomeranian(x,z,w,d,f);else if(k==='steps')grassSteps(f);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
+else if(k==='military')military(x,z,w,d);else if(k==='pomeranian')pomeranian(x,z,w,d,f);else if(k==='puppystatue')puppyStatue(x,z,w,d);else if(k==='steps')grassSteps(f);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
 else if(k==='roof67'){letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);const g=$t.children[$t.children.length-1];g.position.y=f;g.rotation.y=0}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
@@ -1132,11 +1150,13 @@ function heartBalloons(list){const sh=new T.Shape;sh.moveTo(0,-.9);sh.bezierCurv
 const H=[];for(const[x,z,c]of list){const m=new T.Mesh(geo,mat(c));const y0=ks(x,z)+4.5+rnd()*3;m.position.set(x,y0,z);$t.add(m);const st=new T.Mesh(new ce(.02,.02,4,4),mat('#dddddd'));st.position.set(x,y0-2.6,z);$t.add(st);H.push([m,st,y0,rnd()*6])}
 let t=0;LIVE.push(dt=>{t+=dt;for(const[m,st,y0,o]of H){m.position.y=y0+Math.sin(t*1.3+o)*.35;m.rotation.y=Math.sin(t*.7+o)*.6;st.position.y=m.position.y-2.6}})}
 // boat rental: a dock with swan paddle boats, and a few out on the river
-function boatRental(x,z,w,d,side){const long=w<d,cx=x+w/2,cz=z+d/2,s=side||-1;box(w,.25,d,'#9b6b3f',cx,1.1,cz);for(let u=0;u<=1;u+=.25)for(const k of[-1,1])box(.25,1.8,.25,'#6b4a2e',long?cx+k*(w/2-.2):x+u*w,.4,long?z+u*d:cz+k*(d/2-.2));
+function boatRental(x,z,w,d,side,sail){const long=w<d,cx=x+w/2,cz=z+d/2,s=side||-1;box(w,.25,d,'#9b6b3f',cx,1.1,cz);for(let u=0;u<=1;u+=.25)for(const k of[-1,1])box(.25,1.8,.25,'#6b4a2e',long?cx+k*(w/2-.2):x+u*w,.4,long?z+u*d:cz+k*(d/2-.2));
 const swan=c=>{const g=new T.Group();const hull=new T.Mesh(new T.Sph(1,12,8),mat(c));hull.scale.set(1.1,.45,1.6);hull.position.y=.35;g.add(hull);const neck=new T.Mesh(new ce(.14,.2,1.3,8),mat(c));neck.position.set(0,1.1,1.2);neck.rotation.x=-.3;g.add(neck);
 const hd=new T.Mesh(new T.Sph(.25,10,8),mat(c));hd.position.set(0,1.75,1.45);g.add(hd);const bk=new T.Mesh(new Ho(.1,.3,6),mat('#ff8a24'));bk.rotation.x=Math.PI/2;bk.position.set(0,1.72,1.75);g.add(bk);box(1.2,.3,.8,'#2f6fdf',0,.75,-.3,g);$t.add(g);return g};
-const moored=[];for(let i=0;i<4;i++){const b=swan(i%2?'#ffffff':'#ff9ac8');const t=(i+.5)/4;b.position.set(long?cx+s*(w/2+1.6):x+t*w,0,long?z+t*d:cz+s*(d/2+1.6));b.rotation.y=long?0:Math.PI/2;moored.push(b)}
-const out=[];for(let i=0;i<3;i++){const b=swan(['#ffffff','#ff9ac8','#ffd23c'][i]);const p=person(['#e85a8a','#2f6fdf','#7fd38a'][i]);p.legs.forEach(l=>l.rotation.x=-1.4);p.g.position.set(0,.25,-.2);b.add(p.g);out.push([b,i])}
+const sailboat=c=>{const g=new T.Group();const hull=new T.Mesh(new T.Sph(1,12,8),mat('#ffffff'));hull.scale.set(.8,.4,1.8);hull.position.y=.3;g.add(hull);box(1.4,.1,2.6,'#9b6b3f',0,.55,0,g);const ms=new T.Mesh(new ce(.05,.06,4,6),mat('#ddd'));ms.position.set(0,2.5,.2);g.add(ms);
+const sh=new T.Shape;sh.moveTo(0,0);sh.lineTo(0,3.4);sh.lineTo(1.7,0);sh.closePath();const sl=new T.Mesh(new T.Ext(sh,{depth:.03,bevelEnabled:!1}),mat(c));sl.rotation.y=Math.PI/2;sl.position.set(0,.8,.3);g.add(sl);$t.add(g);return g};
+const mk=sail?sailboat:swan;const moored=[];for(let i=0;i<4;i++){const b=mk(sail?['#e8463c','#2f6fdf','#ffd23c','#2ecc71'][i]:(i%2?'#ffffff':'#ff9ac8'));const t=(i+.5)/4;b.position.set(long?cx+s*(w/2+1.6):x+t*w,0,long?z+t*d:cz+s*(d/2+1.6));b.rotation.y=long?0:Math.PI/2;moored.push(b)}
+const out=[];for(let i=0;i<3;i++){const b=mk(sail?['#ff8a24','#b45cff','#3bd1ff'][i]:['#ffffff','#ff9ac8','#ffd23c'][i]);const p=person(['#e85a8a','#2f6fdf','#7fd38a'][i]);p.legs.forEach(l=>l.rotation.x=-1.4);p.g.position.set(0,.25,-.2);b.add(p.g);out.push([b,i])}
 let t=0;LIVE.push(dt=>{t+=dt;moored.forEach((b,i)=>b.position.y=Math.sin(t*1.5+i)*.08);for(const[b,i]of out){const a=t*.12+i*2.1,R=long?[4,d/2]:[w/2,4],ox=long?cx+s*(w/2+7):cx,oz=long?cz:cz+s*(d/2+7);
 b.position.set(ox+Math.cos(a)*R[0],Math.sin(t*1.5+i)*.08,oz+Math.sin(a)*R[1]);b.rotation.y=Math.atan2(-Math.sin(a)*R[0],Math.cos(a)*R[1])}})}
 // river fishing pier: planks out over the water, people fishing off the end
@@ -1568,7 +1588,7 @@ for(const[k,x,z,w,d,c]of ie.deco||[])k==='stadium'&&stadiumGame(x,z,w,d,c);
 for(const[k,x,z,w,d]of ie.deco||[])k==='coaster'&&coasterRide(x,z,w,d);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='disco'&&disco(x,z,w,d,c,f[0],f[1],f[2]);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='romycafe'&&romyCafe(x,z,w,d,f[0],f[1],f[2]);
-{const HB=[];for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){if(k==='puppies')puppies(x,z,w,d);else if(k==='dogwalk')dogWalk(x,z,w,d);else if(k==='heart')HB.push([x+w/2,z+d/2,c]);else if(k==='boatrental')boatRental(x,z,w,d,f===1?1:-1);else if(k==='riverpier')riverPier(x,z,w,d,f===1?1:-1);else if(k==='decorating')decorating(x,z,w,d)}if(HB.length)heartBalloons(HB)}
+{const HB=[];for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){if(k==='puppies')puppies(x,z,w,d);else if(k==='dogwalk')dogWalk(x,z,w,d);else if(k==='heart')HB.push([x+w/2,z+d/2,c]);else if(k==='boatrental')boatRental(x,z,w,d,f===1?1:-1,c==='sail');else if(k==='roofdog'){const D=doggy('#f6f3ee',6.5);D.g.position.set(x+w/2,f,z+d/2);D.g.rotation.y=c||0}else if(k==='riverpier')riverPier(x,z,w,d,f===1?1:-1);else if(k==='decorating')decorating(x,z,w,d)}if(HB.length)heartBalloons(HB)}
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='cbox'?cardboardBox(x,z,w,d,f[0],f[1],f[2]):k==='factory'&&factoryTop(x,z,w,d,f);
 for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');raccoonHead(p.g);const cap=new T.Mesh(new T.Sph(.25,10,8,0,6.3,0,1.3),mat('#4a5436'));cap.position.y=1.8;p.g.add(cap);men.push(p)}
 let t=0;LIVE.push(dt=>{t+=dt;const L=U*.7,ph=(t*1.4)%(2*L),dir=ph<L?1:-1,pos=ph<L?ph:2*L-ph;men.forEach((p,i)=>{p.g.position.set(cx-L/2+pos,.13,cz-5+i*2);p.g.rotation.y=dir>0?Math.PI/2:-Math.PI/2;const sw=Math.sin(t*6)*.6;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw;p.arms[1].rotation.x=sw})})}

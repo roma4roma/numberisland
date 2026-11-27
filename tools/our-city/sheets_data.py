@@ -429,6 +429,33 @@ RING_SHEETS = {
   ('heart', 5.45, 12.05, 0.3, 0.3, 0, '#ff8a3d', ''),
   ('heart', 8.65, 13.20, 0.3, 0.3, 0, '#ff8a3d', ''),
  ],
+ 'E2': [
+  ('s', 1.15, 0.05, 3.15, 1.75, 15, '#B39DDB', 'Dog Hotel'),
+  ('s', 5.4, 0.05, 4.2, 1.8, 5, '#FFC9A0', 'Dog Cafe'),
+  ('roofdog', 5.4, 0.05, 4.2, 1.8, 5, None, ''),                      # the puppy from the drawing, big on the roof
+  ('s', 11.6, 0.05, 2.0, 1.75, 5, '#7FD34E', 'Super Duper Market'),
+  ('s', 17.5, 0.05, 1.7, 2.15, 5, '#9ED8EA', 'Fishing Restaurant'),
+  ('s', 2.3, 2.8, 4.3, 0.9, 7, '#7FD3E0', 'CU'),
+  ('s', 0.15, 4.0, 2.05, 1.9, 4, '#8A5A3A', 'Yummy Bakery'),
+  ('s', 3.4, 5.0, 2.05, 1.9, 5, '#BFC5C2', 'APT'),
+  ('s', 6.5, 4.0, 2.7, 2.9, 5, '#2AB7A0', 'Restaurant'),
+  ('b', 10.4, 4.85, 1.2, 2.05, 5, '#C9CCCA', 'Apartment'),
+  ('s', 12.4, 3.95, 1.0, 1.85, 3, '#2BA8D0', 'Fishing Place'),
+  ('riverpier', 13.4, 4.6, 1.0, 0.45, 1, None, ''),
+  ('s', 17.4, 3.85, 0.9, 1.85, 3, '#2BA8D0', 'Fishing Place'),
+  ('riverpier', 14.7, 4.6, 2.7, 0.45, 0, None, ''),
+  ('s', 0.2, 7.9, 1.0, 0.95, 2, '#7FC4E8', 'CU'),
+  ('s', 4.45, 7.95, 1.95, 1.95, 3, '#7FC4E8', 'CU'),
+  ('s', 6.5, 8.85, 0.9, 1.05, 5, '#C9B8E8', 'Toy Store'),
+  ('puppystatue', 0.25, 8.9, 3.05, 5.05, 4, None, 'Dog Statue'),      # a giant white puppy lying down
+  ('s', 4.35, 12.1, 0.95, 1.85, 2, '#FFF3C4', 'Ice Cream'),
+  ('s', 7.35, 12.0, 2.05, 1.95, 3, '#B9A3E3', 'Dog Hair Shop'),
+  ('s', 10.0, 7.8, 1.2, 1.0, 2, '#E6F57A', 'Ramen Store'),
+  ('s', 11.2, 10.8, 1.05, 3.1, 5, '#F6C945', 'Candy Store'),
+  ('s', 15.6, 7.7, 2.95, 3.0, 4, '#5E8A8A', 'Boat Rental'),
+  ('boatrental', 14.3, 8.4, 1.25, 1.6, 0, 'sail', ''),                 # little sailboats on the river
+  ('s', 17.4, 11.7, 1.7, 2.0, 5, '#FF7AC8', 'CU'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

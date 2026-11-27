@@ -17,9 +17,10 @@ sed -i "s|const CLASS_SHEET_URL = '';|const CLASS_SHEET_URL = '$SHEET_URL';|; s|
 echo "$V" > version.txt
 # 4. Pigeon Pigeon: the Banpo Pigeon game + Math Island questions, flying over the city the class designed
 #    (sheets in tools/our-city/sheets_data.py -> city.json -> swapped into the game)
-(cd tools && PYTHONPATH=.:our-city python3 our-city/build_city.py >/dev/null)
+#    now the big city: the 9 middle sheets + the ring of 16 sheets with the forest, mountain, river and lake
+(cd tools && PYTHONPATH=.:our-city python3 our-city/build_ring.py >/dev/null)
 TMP=$(mktemp)
 python3 tools/pigeon_patch.py source/banpo-pigeon-original.html "$TMP" >/dev/null
-python3 tools/our-city/make_pigeon_city.py "$TMP" tools/our-city/city.json pigeon.html >/dev/null
+python3 tools/our-city/make_pigeon_city.py "$TMP" tools/our-city/city_ring.json pigeon.html >/dev/null
 rm -f "$TMP"
 echo "Built index.html (version $V)"

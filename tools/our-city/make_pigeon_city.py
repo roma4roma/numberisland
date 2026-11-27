@@ -1545,7 +1545,7 @@ function d_(){''')
     rep('r_={convenience:0,cafe:1,bakery:2}', 'r_={convenience:0,cafe:1,bakery:2,apple:3}')
     rep('[[f,14259775]]],u=[0,0,0]', '[[f,14259775]],[[new Le(.62,14,10),14164010],[new ce(.06,.06,.4,6).translate(0,.68,0),5913652],[new Le(.26,8,6).scale(1.4,.4,.8).translate(.28,.8,0),4891194]]],u=[0,0,0,0]')
     rep('for(let g=0;g<3;g++){let _=h[g]', 'for(let g=0;g<4;g++){let _=h[g]')
-    rep('["Ramyeon!","Coffee!","Bread!"][b.t]', '["Ramyeon!","Coffee!","Bread!","Apple!"][b.t]')
+    rep('["Ramyeon!","Coffee!","Bread!"][b.t]', '["Ramyeon!","Coffee!","Bread!","Apple!"][b.t]', count=max(1, s.count('["Ramyeon!","Coffee!","Bread!"][b.t]')))   # (twice in the Math Island build)
     rep('S=ne(h+m,u+d)+E(u+d),y=ne(h-m,u-d)+E(u-d),R=ne(h,u)+E(u);', 'JF=window.__JP||(()=>0),S=ne(h+m,u+d)+E(u+d)+JF(h+m,u+d,f)+BRH(h+m,u+d),y=ne(h-m,u-d)+E(u-d)+JF(h-m,u-d,f)+BRH(h-m,u-d),R=ne(h,u)+E(u)+JF(h,u,f)+BRH(h,u);')   # cars jump the ramps
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen

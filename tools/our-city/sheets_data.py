@@ -373,6 +373,23 @@ RING_SHEETS = {
   ('p', 17.2, 10.0, 2.75, 2.9, 0, None, ''),
   ('wall', 2.0, 11.6, 1.1, 2.2, 5, None, 'Giant Wall'),
  ],
+ 'W2': [
+  ('romycafe', 15.1, 0.05, 3.9, 2.8, 5, None, 'Romy Cafe'),            # patio, rooftop patio, and you can go inside
+  ('p', 10.7, 1.0, 4.4, 4.6, 0, None, ''),
+  ('p', 15.2, 3.0, 3.6, 2.6, 0, None, ''),
+  ('steps', 10.65, 0.05, 0.6, 0.9, 6, None, ''),                       # the giant grassy steps
+  ('steps', 11.2, 0.95, 1.0, 0.95, 5, None, ''),
+  ('steps', 12.2, 1.9, 1.0, 0.95, 4, None, ''),
+  ('steps', 13.2, 2.85, 1.0, 0.95, 3, None, ''),
+  ('steps', 14.2, 3.8, 1.0, 0.95, 2, None, ''),
+  ('steps', 15.2, 4.75, 1.0, 0.95, 1, None, ''),
+  ('s', 12.3, 8.7, 3.1, 2.0, 3, '#F6D55C', 'Corner Store'),
+  ('s', 16.3, 7.65, 1.0, 4.05, 1, '#FF9AC8', 'Snack Bar'),
+  ('s', 18.2, 7.65, 1.05, 2.2, 1, '#7EC8E8', 'Mini Mart'),
+  ('s', 11.4, 11.8, 2.0, 1.05, 2, '#9ED07A', 'Snack Shop'),
+  ('b', 13.5, 12.95, 2.0, 1.0, 2, '#E8E2D6', ''),
+  ('b', 18.3, 10.6, 1.65, 2.0, 2, '#D9D4CA', ''),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

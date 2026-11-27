@@ -177,7 +177,7 @@ for it in C['items']:
         if k != 'f':
             for _ in range(max(1, round(w * d / ((160 if re.search(r'\bcat\b', n or '', re.I) else 45) if k == 'p' else 120)))):   # big cat park: open grass so you can see the cats
                 tx_, tz_ = round(x + 2 + random.random() * (w - 4), 1), round(z + 2 + random.random() * (d - 4), 1)
-                if any(o['k'] in ('f', 'playground', 'rock', 'garbage', 'court', 'stand', 'picnic') and o['x'] - 2.5 < tx_ < o['x'] + o['w'] + 2.5 and o['z'] - 2.5 < tz_ < o['z'] + o['d'] + 2.5 for o in C['items']): continue   # keep fields and playgrounds clear
+                if any(o['k'] in ('f', 'playground', 'rock', 'garbage', 'court', 'stand', 'picnic', 'steps') and o['x'] - 2.5 < tx_ < o['x'] + o['w'] + 2.5 and o['z'] - 2.5 < tz_ < o['z'] + o['d'] + 2.5 for o in C['items']): continue   # keep fields and playgrounds clear
                 trees.append([tx_, tz_])
         deco.append([k, x, z, w, d, c, n])
         if n:
@@ -225,6 +225,16 @@ for it in C['items']:
         H_ = max(1, host[0]['f']) * FLOOR if host else 20
         deco.append([k, x, z, w, d, c, n, H_])
         snacks.append(['bakery', 'Secret treasure', round(x + w / 2 - 1, 1), round(z + d / 2 - 1.5, 1), 1.1])
+    elif k == 'steps':   # giant grassy steps (height: 1.2 m per number)
+        deco.append([k, x, z, w, d, c, n, [[x, z, w, d, round(f * 1.2, 2)]]])
+    elif k == 'romycafe':   # a cafe you can go into, with a patio and a rooftop patio
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        deco.append([k, x, z, w, d, c, n, [f, round(nx, 3), round(nz, 3)]])
+        fx_ = abs(nx) > abs(nz); depth = w if fx_ else d
+        cxk, czk = x + w / 2 - nx * 4, z + d / 2 - nz * 4   # inside, between the tables
+        snacks.append(['cafe', 'Romy Cafe', round(cxk, 1), round(czk, 1)])
+        snacks.append(['bakery', 'Romy Patio', round(mx - nx * 4, 1), round(mz - nz * 4, 1)])
+        snacks.append(['cafe', 'Romy Rooftop', round(x + w / 2 - nx * (depth / 2 - 4), 1), round(z + d / 2 - nz * (depth / 2 - 4), 1), round(max(3, f) * FLOOR + .9, 1)])
     elif k == 'wall':
         deco.append([k, x, z, w, d, c, n, max(1, f) * FLOOR])
     elif k in ('maze', 'box', 'treehouse'):
@@ -594,7 +604,7 @@ const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc
 {const mark=(x,z)=>{const i=Math.floor((x-Yt)/Zt),j=Math.floor((z-jt)/Zt);if(i>=0&&j>=0&&i<fe&&j<Ke){const q=j*fe+i;$i[q]<.05&&($i[q]=.05)}};
 for(const[t,P]of ie.areas||[]){if(t!==1)continue;let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;for(let k=0;k<P.length;k+=2){x0=Math.min(x0,P[k]);x1=Math.max(x1,P[k]);z0=Math.min(z0,P[k+1]);z1=Math.max(z1,P[k+1])}
 for(let z=z0-2;z<=z1+2;z+=Zt)for(let x=x0-2;x<=x1+2;x+=Zt){let c=!1;for(let a=0,b=P.length-2;a<P.length;b=a,a+=2){const xa=P[a],za=P[a+1],xb=P[b],zb=P[b+1];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}c&&mark(x,z)}}
-for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'||k==='stadium'||k==='disco'||k==='cbox'||k==='maze')for(let zz=z;zz<=z+d;zz+=Zt)for(let xx=x;xx<=x+w;xx+=Zt)mark(xx,zz);   // no poles or lamps inside
+for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'||k==='stadium'||k==='disco'||k==='cbox'||k==='maze'||k==='romycafe')for(let zz=z;zz<=z+d;zz+=Zt)for(let xx=x;xx<=x+w;xx+=Zt)mark(xx,zz);   // no poles or lamps inside
 const BG=ie.bridges||{};if(BG.h)for(let j=0;j<BG.nz;j++)for(let i=0;i<BG.nx;i++)BG.h[j*BG.nx+i]>.3&&mark(BG.x0+(i+.5)*BG.r,BG.z0+(j+.5)*BG.r)}
 // a big boulder
 function rock(x,z,w,d){const g=new T.Group(),R=Math.min(w,d)/2;[[0,0,R*.62,'#8b8a86'],[R*.35,R*.2,R*.42,'#9a9893'],[-R*.4,-R*.15,R*.36,'#7f7e7a']].forEach(([u,v,r,col])=>{const m=new T.Mesh(new T.Sph(r,7,5),mat(col));m.scale.set(1,.72,.9);m.position.set(u,r*.55,v);m.rotation.y=u;g.add(m)});g.position.set(x+w/2,0,z+d/2);$t.add(g)}
@@ -701,6 +711,8 @@ for(let i=-4;i<=4;i+=1)for(const s of[-1,1])box(.1,1,.1,B,i,PY+.5,s*3.5,g);
 for(const s of[-1,1])box(.15,PY,.15,BL,-4.6,PY/2,s*.5+1.5,g);for(let k=1;k<PY;k+=.8)box(.1,.1,1,BL,-4.6,k,1.5,g);
 for(const s of[-1,1])box(.05,6,.05,'#d8c49a',4.8+s*.6,PY-3.5+3,-5.2,g);box(1.6,.15,.5,B,4.8,PY-6.4+3,-5.2,g);box(3,.3,.3,B,4.8,PY+3.1,-5.2,g);
 const sc=Math.min(1.3,Math.max(.8,Math.min(w,d)/18));g.scale.setScalar(sc);g.position.set(x+w/2,0,z+d/2);$t.add(g)}
+// giant grassy steps you can climb
+function grassSteps(cells){for(const[x,z,w,d,h]of cells){const g=new T.Group();box(w,h,d,'#a89f8c',0,h/2,0,g);box(w+.1,.35,d+.1,'#6cbf4a',0,h-.15,0,g);g.position.set(x+w/2,0,z+d/2);$t.add(g)}}
 // RomaCity Raccoons logo: a raccoon face in a gold ring with the team name around it
 function raccoonLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#f2b705';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#24262b';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
 c.fillStyle='#24262b';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
@@ -844,7 +856,7 @@ const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv
 const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
 const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
 else if(k==='stadium')stadium(x,z,w,d,n,c);
-else if(k==='military')military(x,z,w,d);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
+else if(k==='military')military(x,z,w,d);else if(k==='steps')grassSteps(f);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
 else if(k==='roof67'){letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);const g=$t.children[$t.children.length-1];g.position.y=f;g.rotation.y=0}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
@@ -942,6 +954,64 @@ function factoryTop(x,z,w,d,h){const pts=[[.25,.3],[.45,.3],[.7,.65]],puffs=[];f
 for(const yy of[2,6]){const r=new T.Mesh(new ce(1.02,1.02,.6,12),mat('#f4f4f4'));r.position.set(px,h+yy,pz);$t.add(r)}
 for(let i=0;i<6;i++){const p=new T.Mesh(new T.Sph(1,8,6),new Be({color:12105912,transparent:!0,opacity:.6}));$t.add(p);puffs.push([p,px,pz,h+CH,i/6])}}
 let t=0;LIVE.push(dt=>{t+=dt;for(const[p,px,pz,y0,o]of puffs){const k=(t*.25+o)%1;p.position.set(px+k*3,y0+k*10,pz+Math.sin(k*5+o*9)*.8);p.scale.setScalar(.8+k*2.4);p.material.opacity=.6*(1-k)}})}
+// Romy Cafe: glass-front cafe you can walk into, a patio out front and a rooftop patio with umbrellas and string lights
+function romyCafe(x,z,w,d,FLs,nx,nz){const fx=Math.abs(nx)>Math.abs(nz),fs=fx?Math.sign(nx):Math.sign(nz),Wf=fx?d:w,Dp=fx?w:d,PD=8,H=4.6,TOP=Math.max(3,FLs)*3.2;
+const cx=x+w/2,cz=z+d/2,G=new T.Group();G.position.set(cx+(fx?fs*Dp/2:0),0,cz+(fx?0:fs*Dp/2));G.rotation.y=Math.atan2(fx?fs:0,fx?0:fs);$t.add(G);
+// local: x across the front, z = 0 at the front edge, building from z=-PD to z=-Dp
+const B=(a,b,c,col,px,py,pz,par=G)=>box(a,b,c,col,px,py,pz,par),BD=Dp-PD,bz=-PD-BD/2,DK='#26282d',WD='#b07a45',DW=3.2;
+const glass=new T.Mat({color:12312314,transparent:!0,opacity:.28,side:2,depthWrite:!1});
+// ground floor: glass front with a door, solid sides and back
+for(const s of[-1,1]){B(.4,H,BD,DK,s*(Wf/2-.2),H/2,bz)}B(Wf,H,.4,DK,0,H/2,-Dp+.2);
+const gl=(a,px)=>{const m=new T.Mesh(new T.Box(a,H-.6,.1),glass);m.position.set(px,(H-.6)/2+.1,-PD-.1);G.add(m)};const half=(Wf-DW)/2;gl(half-.4,-(DW/2+half/2));gl(half-.4,DW/2+half/2);B(Wf,.6,.3,DK,0,H-.3,-PD-.1);
+for(let u=-Wf/2+.3;u<=Wf/2;u+=2.4)if(Math.abs(u)>DW/2+.2)B(.12,H-.6,.25,'#111',u,(H-.6)/2,-PD-.1);
+// floors above: charcoal with warm window strips and wooden slats
+{const cv=document.createElement('canvas');cv.width=256;cv.height=256;const c=cv.getContext('2d');c.fillStyle=DK;c.fillRect(0,0,256,256);for(let f=0;f<4;f++)for(let i=0;i<6;i++){c.fillStyle=Math.random()<.75?'#ffd98a':'#6c7a88';c.fillRect(8+i*42,14+f*62,32,36)}
+const tx=new Pe(cv);tx.colorSpace=me;const up=TOP-H,M=new T.Mat({map:tx});const blk=new T.Mesh(new T.Box(Wf,up,BD),[M,M,mat(DK),mat(DK),M,M]);blk.position.set(0,H+up/2,bz);G.add(blk);
+for(let u=-Wf/2+1;u<Wf/2;u+=1.2)B(.25,up,.3,WD,u,H+up/2,-PD+.12)}
+// sign: Romy Cafe with a coffee cup
+{const cv=document.createElement('canvas');cv.width=1024;cv.height=200;const c=cv.getContext('2d');c.fillStyle='#1b1c20';c.fillRect(0,0,1024,200);c.strokeStyle='#f3c27a';c.lineWidth=8;c.strokeRect(8,8,1008,184);
+c.fillStyle='#f3c27a';c.beginPath();c.moveTo(80,70);c.lineTo(190,70);c.lineTo(178,160);c.lineTo(92,160);c.closePath();c.fill();c.lineWidth=12;c.beginPath();c.arc(198,110,22,-1.2,1.2);c.stroke();
+c.strokeStyle='#ffffff';c.lineWidth=5;for(const k of[110,135,160]){c.beginPath();c.moveTo(k,58);c.bezierCurveTo(k-12,40,k+12,30,k,12);c.stroke()}
+c.fillStyle='#fff4e0';c.font='italic 900 120px Georgia, serif';c.textAlign='center';c.textBaseline='middle';c.shadowColor='#ffb347';c.shadowBlur=24;c.fillText('Romy Café',600,108);
+const tx=new Pe(cv);tx.colorSpace=me;const sg=new T.Mesh(new Hn(Math.min(Wf-2,14),Math.min(Wf-2,14)*200/1024),new Be({map:tx}));sg.position.set(0,H+1.6,-PD+.32);G.add(sg)}
+// awning over the glass front
+B(Wf-1,.15,2.6,'#2a8c82',0,H-.2,-PD+1.2);for(let u=-Wf/2+1;u<Wf/2-.5;u+=1.2)B(.6,.16,2.62,'#f4f4f4',u,H-.19,-PD+1.2);
+// inside: wood floor, counter, espresso machine, cakes, menu board, tables, lights, people
+{const fl=new T.Mesh(new Hn(Wf-.8,BD-.8),mat('#9b6b3f'));fl.rotation.x=-Math.PI/2;fl.position.set(0,.13,bz);G.add(fl);B(Wf-.8,.2,BD-.8,'#f2ead8',0,H-.1,bz);
+{const LM=new Be({color:15258292}),lin=(a,b,c,px,pz)=>{const m=new T.Mesh(new T.Box(a,b,c),LM);m.position.set(px,H/2,pz);G.add(m)};for(const sd of[-1,1])lin(.06,H-.2,BD-.9,sd*(Wf/2-.43),bz);lin(Wf-.9,H-.2,.06,0,-Dp+.43);const cl=new T.Mesh(new T.Box(Wf-.8,.12,BD-.8),new Be({color:15917000}));cl.position.set(0,H-.15,bz);G.add(cl)}const kz=-Dp+2.4;B(Math.min(10,Wf-4),1.1,1.2,WD,0,.55,kz);B(Math.min(10,Wf-4)+.2,.12,1.4,'#f4f4f4',0,1.16,kz);B(1.2,.8,.8,'#c0c6cc',-2.5,1.6,kz);B(.3,.5,.3,'#26282d',-2.5,1.4,kz+.5);
+{const ba=person('#2a8c82');G.add(ba.g);ba.g.position.set(-.5,.13,kz-1.25);box(.52,.5,.04,'#f4f4f4',0,1.15,.17,ba.g)}const pc=new T.Mesh(new T.Box(3,.8,1),glass);pc.position.set(2.5,1.62,kz);G.add(pc);['#ff8ab0','#ffd23c','#8a5a3a','#ffffff','#7fd38a'].forEach((col,i)=>{const k=new T.Mesh(new ce(.25,.25,.3,10),mat(col));k.position.set(1.3+i*.6,1.4,kz);G.add(k)});
+const mc=document.createElement('canvas');mc.width=256;mc.height=160;const q=mc.getContext('2d');q.fillStyle='#1d2420';q.fillRect(0,0,256,160);q.fillStyle='#fff';q.font='bold 24px Georgia';q.textAlign='center';q.fillText('MENU',128,30);q.font='18px Georgia';
+['Hot Chocolate ..... 3','Latte ..... 4','Strawberry Cake ..... 3','Croissant ..... 2','Lemonade ..... 2'].forEach((t,i)=>q.fillText(t,128,62+i*21));const mt=new Pe(mc);mt.colorSpace=me;const mb=new T.Mesh(new Hn(4,2.5),new Be({map:mt}));mb.position.set(0,3,-Dp+.5);G.add(mb);
+const tables=[];for(let i=0;i<Math.floor((Wf-4)/4.5);i++)for(const r of[0,1])tables.push([-Wf/2+3+i*4.5,-PD-2.6-r*3.4]);
+for(const[u,v]of tables){if(v<kz+2)continue;B(1,.08,1,'#f4f4f4',u,.85,v);B(.12,.8,.12,'#333',u,.45,v);for(const s of[-1,1])B(.5,.5,.5,'#2a8c82',u+s*.95,.3,v)}
+for(let i=0;i<5;i++){const l=new T.Mesh(new T.Sph(.25,10,8),new Be({color:16769162}));l.position.set(-Wf/2+3+i*(Wf-6)/4,H-.9,bz+1);G.add(l);B(.03,.7,.03,'#333',-Wf/2+3+i*(Wf-6)/4,H-.45,bz+1)}
+for(const s of[-1,1]){const p=new T.Mesh(new ce(.4,.3,.8,10),mat('#c96b3a'));p.position.set(s*(Wf/2-1.2),.5,-PD-1.2);G.add(p);const lf=new T.Mesh(new T.Sph(.8,8,6),mat('#3f8a3a'));lf.position.set(s*(Wf/2-1.2),1.5,-PD-1.2);G.add(lf)}}
+// the patio out front: wooden deck, planters, umbrellas, string lights
+{const dk=new T.Mesh(new Hn(Wf,PD-.4),mat('#c49a6c'));dk.rotation.x=-Math.PI/2;dk.position.set(0,.14,-PD/2);G.add(dk);
+for(const s of[-1,1]){B(Wf/2-2.4,.7,.7,'#7a5a3a',s*(Wf/4+1.2),.35,-.4);for(let u=1.6;u<Wf/2-.8;u+=1.4){const b2=new T.Mesh(new T.Sph(.42,8,6),mat(['#e85a8a','#ffd23c','#ff8a24'][Math.floor(u)%3]));b2.position.set(s*u,.85,-.4);G.add(b2)}}
+umbrellaSet(G,-Wf/2+4.5,.14,-PD/2,'#2a8c82');umbrellaSet(G,0,.14,-PD/2-.5,'#e85a8a');umbrellaSet(G,Wf/2-4.5,.14,-PD/2,'#2a8c82');
+stringLights(G,[[-Wf/2+.6,3.6,-.6],[-Wf/2+.6,3.6,-PD+.6],[Wf/2-.6,3.6,-PD+.6],[Wf/2-.6,3.6,-.6]]);
+const ch=document.createElement('canvas');ch.width=128;ch.height=192;const q=ch.getContext('2d');q.fillStyle='#1d2420';q.fillRect(0,0,128,192);q.fillStyle='#fff';q.font='italic bold 26px Georgia';q.textAlign='center';q.fillText('Romy',64,40);q.fillText('Café',64,70);q.font='18px Georgia';q.fillStyle='#ffd98a';q.fillText('coffee',64,110);q.fillText('cake',64,135);q.fillText('rooftop ↑',64,165);
+const ct=new Pe(ch);ct.colorSpace=me;const cb=new T.Mesh(new Hn(.9,1.35),new Be({map:ct,side:2}));cb.position.set(DW/2+.9,.8,-.1);cb.rotation.x=-.15;G.add(cb)}
+// the rooftop patio: wood deck, glass railing, umbrellas, a little bar, plants, string lights
+{const R=TOP+.22,dk=new T.Mesh(new Hn(Wf-.6,BD-.6),mat('#c49a6c'));dk.rotation.x=-Math.PI/2;dk.position.set(0,R,bz);G.add(dk);B(Wf,.3,BD,'#3a3d44',0,TOP+.02,bz);
+for(const[a,b,px,pz]of[[Wf,.08,0,-PD],[Wf,.08,0,-Dp],[.08,BD,-Wf/2,bz],[.08,BD,Wf/2,bz]]){const m=new T.Mesh(new T.Box(a,1.1,b),glass);m.position.set(px,R+.55,pz);G.add(m);B(a+.05,.08,b+.05,'#c0c6cc',px,R+1.12,pz)}
+const cols=['#ffd23c','#2a8c82','#e85a8a','#ff8a24'];for(let i=0;i<4;i++)umbrellaSet(G,-Wf/2+4+i*(Wf-8)/3,R,bz+(i%2?1.8:-1.8),cols[i]);
+B(4,1.1,1.2,WD,Wf/2-3.5,R+.55,-Dp+1.6);B(4.2,.1,1.4,'#f4f4f4',Wf/2-3.5,R+1.15,-Dp+1.6);
+for(const s of[-1,1]){const p=new T.Mesh(new ce(.5,.4,.9,10),mat('#c96b3a'));p.position.set(s*(Wf/2-1),R+.45,-PD-1);G.add(p);const tr=new T.Mesh(new T.Sph(1,8,6),mat('#3f8a3a'));tr.position.set(s*(Wf/2-1),R+1.9,-PD-1);G.add(tr)}
+stringLights(G,[[-Wf/2+.4,R+3,-PD-.4],[Wf/2-.4,R+3,-PD-.4],[Wf/2-.4,R+3,-Dp+.4],[-Wf/2+.4,R+3,-Dp+.4]])}
+// collision: a room (the cafe) with solid floors above it and the rooftop on top
+const wc=(u,v)=>{const c=Math.cos(G.rotation.y),s=Math.sin(G.rotation.y);return[G.position.x+u*c+v*s,G.position.z-u*s+v*c]};const A=wc(-Wf/2,-PD),Bq=wc(Wf/2,-Dp);
+const X0=Math.min(A[0],Bq[0]),X1=Math.max(A[0],Bq[0]),Z0=Math.min(A[1],Bq[1]),Z1=Math.max(A[1],Bq[1]),side=fx?(fs>0?'x1':'x0'):(fs>0?'z1':'z0'),fc=fx?cz:cx;
+window.__ROOMS=window.__ROOMS||[];window.__ROOMS.push({x0:X0,z0:Z0,x1:X1,z1:Z1,H,top:TOP+.25,dh:H-.7,side,a0:fc-DW/2+.3,a1:fc+DW/2-.3})}
+// a table with a striped umbrella and two people having a drink
+function umbrellaSet(par,u,y,v,col){box(1.1,.08,1.1,'#f4f4f4',u,y+.8,v,par);box(.12,.8,.12,'#333',u,y+.4,v,par);const pole=new T.Mesh(new ce(.05,.05,2.8,6),mat('#ddd'));pole.position.set(u,y+1.4,v);par.add(pole);
+const um=new T.Mesh(new Ho(1.8,.7,8),mat(col));um.position.set(u,y+2.9,v);par.add(um);const um2=new T.Mesh(new Ho(1.82,.69,8,1,!0,0,Math.PI/4),mat('#ffffff'));um2.position.set(u,y+2.9,v);par.add(um2);
+for(const s of[-1,1]){box(.5,.45,.5,'#7a5a3a',u+s*1,y+.25,v,par);const p=person(['#e85a8a','#2f6fdf','#ffd23c','#7fd38a','#b45cff'][Math.floor(Math.random()*5)]);par.add(p.g);p.g.position.set(u+s*1,y+.05,v);p.g.rotation.y=-s*Math.PI/2;p.legs.forEach(l=>l.rotation.x=-1.4);p.g.position.y=y-.3}
+const cup=new T.Mesh(new ce(.08,.06,.15,8),mat('#ffffff'));cup.position.set(u+.2,y+.92,v);par.add(cup)}
+// warm string lights between corner poles
+function stringLights(par,P){for(const p of P){const pole=new T.Mesh(new ce(.05,.05,p[1]-(par===null?0:0),6),mat('#333'));pole.position.set(p[0],p[1]/2+(p[1]>8?p[1]-3.2-(p[1]-3)/2:0),p[2]);if(p[1]<8)par.add(pole)}
+const M=new Be({color:16771500});for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];for(let k=1;k<12;k++){const t=k/12,l=new T.Mesh(new T.Sph(.09,6,4),M);l.position.set(a[0]+(b[0]-a[0])*t,a[1]-Math.sin(t*Math.PI)*.7,a[2]+(b[2]-a[2])*t);par.add(l)}}}
 // a game on at a stadium: a crowd in the stands and two teams playing (American football or soccer)
 function stadiumGame(x,z,w,d,sport){const S=STAD[sport]||STAD.football,rot=w>d,LW=rot?d:w,LD=rot?w:d,W2=LW/2-1,D2=LD/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N;
 const G=new T.Group();G.position.set(x+w/2,0,z+d/2);G.rotation.y=rot?Math.PI/2:0;$t.add(G);
@@ -1355,6 +1425,7 @@ for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons
 for(const[k,x,z,w,d,c]of ie.deco||[])k==='stadium'&&stadiumGame(x,z,w,d,c);
 for(const[k,x,z,w,d]of ie.deco||[])k==='coaster'&&coasterRide(x,z,w,d);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='disco'&&disco(x,z,w,d,c,f[0],f[1],f[2]);
+for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='romycafe'&&romyCafe(x,z,w,d,f[0],f[1],f[2]);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='cbox'?cardboardBox(x,z,w,d,f[0],f[1],f[2]):k==='factory'&&factoryTop(x,z,w,d,f);
 for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');raccoonHead(p.g);const cap=new T.Mesh(new T.Sph(.25,10,8,0,6.3,0,1.3),mat('#4a5436'));cap.position.y=1.8;p.g.add(cap);men.push(p)}
 let t=0;LIVE.push(dt=>{t+=dt;const L=U*.7,ph=(t*1.4)%(2*L),dir=ph<L?1:-1,pos=ph<L?ph:2*L-ph;men.forEach((p,i)=>{p.g.position.set(cx-L/2+pos,.13,cz-5+i*2);p.g.rotation.y=dir>0?Math.PI/2:-Math.PI/2;const sw=Math.sin(t*6)*.6;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw;p.arms[1].rotation.x=sw})})}
@@ -1406,7 +1477,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const R of window.__ROOMS||[]){if(x>R.x0&&x<R.x1&&z>R.z0&&z<R.z1){const inner=x>R.x0+.6&&x<R.x1-.6&&z>R.z0+.6&&z<R.z1-.6,door=!inner&&y<R.dh-.3&&(R.side==="x0"||R.side==="x1"?(z>R.a0&&z<R.a1&&(R.side==="x0"?x<R.x0+.8:x>R.x1-.8)):(x>R.a0&&x<R.a1&&(R.side==="z0"?z<R.z0+.8:z>R.z1-.8)));if(inner&&R.open)return{f:.15,c:1e4,name:null};if((inner||door)&&y<R.H-.4)return{f:.15,c:inner?R.H-.5:R.dh,name:null};return{f:R.H+.5,c:1e4,name:null}}}for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.L/2&&lz>=m.fz+.4&&lz<m.D/2+2.6){const fl=lz<=m.D/2?1.4:1.4*Math.max(0,1-(lz-m.D/2)/2.6);return y<fl+m.H-.6?{f:fl,c:1.4+m.H-.1,name:null}:{f:m.top+5,c:1e4,name:null}}if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P,dh]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(dh||hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}{const MR=window.__mroad;if(MR){if(!MR.bb){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const[px,pz]of MR.P){a=Math.min(a,px);b=Math.min(b,pz);c=Math.max(c,px);d=Math.max(d,pz)}MR.bb=[a-8,b-8,c+8,d+8]}const B=MR.bb;if(x>B[0]&&x<B[2]&&z>B[1]&&z<B[3]){let bd=1e9,bk=-1;for(let k=0;k<MR.P.length;k++){const dx=MR.P[k][0]-x,dz=MR.P[k][1]-z,q=dx*dx+dz*dz;q<bd&&(bd=q,bk=k)}if(bd<MR.hw*MR.hw&&y>MR.Y[bk]-3)return{f:MR.Y[bk],c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const R of window.__ROOMS||[]){if(x>R.x0&&x<R.x1&&z>R.z0&&z<R.z1){const inner=x>R.x0+.6&&x<R.x1-.6&&z>R.z0+.6&&z<R.z1-.6,door=!inner&&y<R.dh-.3&&(R.side==="x0"||R.side==="x1"?(z>R.a0&&z<R.a1&&(R.side==="x0"?x<R.x0+.8:x>R.x1-.8)):(x>R.a0&&x<R.a1&&(R.side==="z0"?z<R.z0+.8:z>R.z1-.8)));if(inner&&R.open)return{f:.15,c:1e4,name:null};if((inner||door)&&y<R.H-.4)return{f:.15,c:inner?R.H-.5:R.dh,name:null};return{f:R.top||R.H+.5,c:1e4,name:null}}}for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.L/2&&lz>=m.fz+.4&&lz<m.D/2+2.6){const fl=lz<=m.D/2?1.4:1.4*Math.max(0,1-(lz-m.D/2)/2.6);return y<fl+m.H-.6?{f:fl,c:1.4+m.H-.1,name:null}:{f:m.top+5,c:1e4,name:null}}if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P,dh]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(dh||hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}{const MR=window.__mroad;if(MR){if(!MR.bb){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const[px,pz]of MR.P){a=Math.min(a,px);b=Math.min(b,pz);c=Math.max(c,px);d=Math.max(d,pz)}MR.bb=[a-8,b-8,c+8,d+8]}const B=MR.bb;if(x>B[0]&&x<B[2]&&z>B[1]&&z<B[3]){let bd=1e9,bk=-1;for(let k=0;k<MR.P.length;k++){const dx=MR.P[k][0]-x,dz=MR.P[k][1]-z,q=dx*dx+dz*dz;q<bd&&(bd=q,bk=k)}if(bd<MR.hw*MR.hw&&y>MR.Y[bk]-3)return{f:MR.Y[bk],c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

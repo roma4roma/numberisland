@@ -78,7 +78,7 @@ SHEETS = {
   ('s', 5, 12, 3, 2, 14, '#6F9FE0', 'Hello Pizza'),
   ('p', 14, 5.5, 3, 3, 0, None, 'Park'),
   ('b', 18, 4.5, 1, 3.5, 7, GREY, ''),
-  ('s', 11, 9.5, 8.5, 4.5, 39, '#7EC8E8', 'WCA'),
+  ('s', 11, 9.5, 8.5, 4.5, 39, '#7EC8E8', 'RomaCity Tower'),
  ],
  'B2': [  # photographed upside down: already flipped here
   ('b', 17.5, 11.5, 2, 2, 10, '#9B7FD8', ''),
@@ -96,7 +96,7 @@ SHEETS = {
   ('s', 5.5, 0.5, 2, 2, 3, '#B9A3E8', 'Smile'),
  ],
  'C2': [
-  ('b', 0, 0.5, 2.5, 2, 3, GREY, 'WCA School'),
+  ('b', 0, 0.5, 2.5, 2, 3, GREY, 'RomaCity School'),
   ('s', 3, 0.5, 1, 1.5, 1, GREY, 'Coffee'),
   ('b', 9, 2, 1, 1, 1, GREY, ''),
   ('cat', 3, 3, 5, 3.5, 0, None, 'Giant Cat Statue'),

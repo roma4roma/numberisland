@@ -53,7 +53,7 @@ STYLES = [  # (pattern, background, text colour) -- first match wins
     (r'phone|tablet', '#2b2f36', '#7fd8ff'),
     (r'decorat', '#f5a3d0', '#ffffff'),
     (r'rent', '#4a5560', '#ffd23c'),
-    (r'school|wca|kids', '#1f3a93', '#ffd23c'),
+    (r'school|kids', '#1f3a93', '#ffd23c'),
     (r'station|train', '#0a7bd0', '#ffffff'),
     (r'gs25', '#00a6d6', '#ffffff'),
     (r'coffee|cafe|caf', '#6f4e37', '#fff3d6'),

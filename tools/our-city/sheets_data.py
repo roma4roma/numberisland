@@ -324,6 +324,25 @@ RING_SHEETS = {
   ('stand', 12.15, 7.05, 0.7, 0.7, 1, None, 'Touchdown Hot Dogs'),
   ('stand', 12.15, 8.95, 0.7, 0.7, 1, None, 'End Zone Popcorn'),
  ],
+ 'N4': [
+  ('b', 6.25, 1.9, 1.95, 0.9, 1, '#9ED0E6', 'Bathroom'),
+  ('pool', 5.2, 2.85, 4.1, 0.95, 0, None, 'Pool'),
+  ('waterpark', 0.05, 4.75, 5.1, 1.5, 0, None, 'Seoul Land'),
+  ('stand', 5.5, 4.85, 0.7, 0.7, 1, None, 'Seoul Land Snacks'),
+  ('s', 10.3, 1.25, 2.7, 3.4, 2, '#6CC04A', 'Candy Store'),
+  ('s', 13.1, 1.25, 1.9, 1.55, 1, '#F08A3C', 'Snack'),
+  ('b', 13.2, 2.85, 1.9, 1.75, 2, '#F08A3C', 'Snack School'),
+  ('p', 15.25, 1.25, 2.4, 5.0, 0, None, 'Fun Park'),
+  ('p', 17.6, 4.8, 2.35, 2.0, 0, None, ''),
+  ('f', 15.4, 1.45, 2.1, 2.3, 0, None, ''),                          # a little soccer field in Fun Park
+  ('playground', 15.4, 4.15, 2.1, 1.8, 0, None, ''),
+  ('s', 2.2, 7.85, 5.05, 1.85, 3, '#F08A3C', 'Movies'),
+  ('p', 3.0, 9.75, 5.35, 2.2, 0, None, ''),
+  ('rock', 7.0, 10.9, 1.2, 1.0, 0, None, 'Rock'),
+  ('garbage', 1.0, 10.9, 1.0, 1.0, 0, None, ''),                     # the bin
+  ('military', 10.3, 8.5, 5.0, 4.9, 0, None, 'Military Base'),
+  ('b', 16.5, 10.4, 2.0, 2.0, 4, '#F08A3C', ''),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

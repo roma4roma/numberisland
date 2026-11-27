@@ -551,6 +551,50 @@ def rep(a, b, count=1):
     assert n == count, (a[:70], n)
     s = s.replace(a, b)
 
+# the map: sharper and in colour, with the sheet grid on the big map and the current sheet under the small one
+MAPJS = r'''// ---- a nicer map: sharper, with real colours (water, parks, forest, mountain, buildings, roads) and the class's sheet grid
+window.__mapStyle=(i,U)=>{const W=i.canvas.width,H=i.canvas.height,X=x=>(x-Yt)*U,Z=z=>(z-jt)*U;
+i.fillStyle='#d6e8b8';i.fillRect(0,0,W,H);
+// hills and the mountain: shade by height
+if(ie.nature){const S=3;for(let py=0;py<H;py+=S)for(let px=0;px<W;px+=S){const h=ne(Yt+(px+S/2)/U,jt+(py+S/2)/U);if(h<1)continue;const k=Math.min(1,h/260);
+i.fillStyle=h>292?'#f4f4f4':`rgb(${Math.round(214-60*k)},${Math.round(232-90*k)},${Math.round(184-110*k)})`;i.fillRect(px,py,S,S)}}
+// the 5 x 5 (or 3 x 3) sheet area is the city: a slightly lighter ground
+const C=ie.nature?[-1,4,-1,4]:[0,3,0,3];i.fillStyle='rgba(255,255,255,.18)';i.fillRect(X(C[0]*200),Z(C[2]*140),(C[1]-C[0])*200*U,(C[3]-C[2])*140*U);
+const poly=(P,fill,stroke,lw)=>{i.beginPath();for(let n=0;n<P.length;n+=2)i.lineTo(X(P[n]),Z(P[n+1]));i.closePath();if(fill){i.fillStyle=fill;i.fill()}if(stroke){i.strokeStyle=stroke;i.lineWidth=lw||1;i.stroke()}};
+for(const[t,P]of ie.areas)if(t!==1)poly(P,t===2?'#e3d28f':'#a8d48a','rgba(60,120,50,.35)',1);
+if(ie.nature){const N=ie.nature;if(N.fields)for(const f of N.fields){const P=f.poly||f.p||f;if(Array.isArray(P)&&P.length>5&&typeof P[0]==='number')poly(P,'#e8d48a',null)}
+i.fillStyle='#4f9a47';for(const[x,z]of N.trees||[]){i.beginPath();i.arc(X(x),Z(z),Math.max(1.1,2.2*U*3),0,7);i.fill()}}
+for(const[t,P]of ie.areas)if(t===1)poly(P,'#8ec8ec','#5aa3d4',1.5);
+// roads: grey with a darker edge, yellow centre line on the big ones
+i.lineCap='round';i.lineJoin='round';const road=(F,w,col)=>{i.strokeStyle=col;i.lineWidth=w;i.beginPath();for(let n=0;n<F.length;n+=2)i.lineTo(X(F[n]),Z(F[n+1]));i.stroke()};
+for(const[w,m,F]of ie.roads)if(w>2.5)road(F,w*U+1.6,'#6f747b');for(const[w,m,F]of ie.roads)if(w>2.5)road(F,w*U,'#a3a8ae');for(const[w,m,F]of ie.roads)if(w>=9)road(F,Math.max(.8,.35*U*3),'#f2c94c');
+if(ie.nature&&ie.nature.mroad){const P=ie.nature.mroad.flat();road(P,9*U+1.6,'#6f747b');road(P,9*U,'#a3a8ae')}
+// places that are not ordinary buildings
+const DC={stadium:'#4fa547',maze:'#3f7f3a',cbox:'#c89a5e',military:'#9aa676',disco:'#b45cff',romycafe:'#2b2d33',coaster:'#f08a24',pool:'#8ec8ec',waterpark:'#8ec8ec',museum:'#eeeae0',parking:'#9a9fa6',court:'#d98a4a',f:'#5fb24f',playground:'#e9c98a',barn:'#c8282d',aquarium:'#3b9bd6',secret:null,octopus:'#b05cc8',tigerstatue:'#f08a24',treehouse:'#3f8a3a',wall:'#b5483a',steps:'#6cbf4a'};
+for(const[k,x,z,w,d]of ie.deco||[]){const c=DC[k];if(!c)continue;i.fillStyle=c;i.fillRect(X(x),Z(z),w*U,d*U);i.strokeStyle='rgba(0,0,0,.35)';i.lineWidth=1;i.strokeRect(X(x),Z(z),w*U,d*U)}
+// buildings in their own colours with a dark outline
+for(const b of ie.buildings){const P=b[4];const c=b[6];i.beginPath();for(let n=0;n<P.length;n+=2)i.lineTo(X(P[n]),Z(P[n+1]));i.closePath();i.fillStyle=typeof c==='number'?'#'+c.toString(16).padStart(6,'0'):typeof c==='string'?c:'#c3bcae';i.fill();i.strokeStyle='rgba(30,30,40,.55)';i.lineWidth=1;i.stroke()}};
+// the sheet grid with names (shown on the big map, and the sheet you're on under the small map)
+window.__sheetAt=(x,z)=>{const c=Math.floor(x/200),r=Math.floor(z/140),R=ie.nature?[-1,3]:[0,2];if(c<R[0]||c>R[1]||r<R[0]||r>R[1])return null;
+if(r===-1)return'N'+(c+2);if(r===3)return'S'+(c+2);if(c===-1)return'W'+(r+1);if(c===3)return'E'+(r+1);return'ABC'[r]+(c+1)};
+window.__mapGrid=(e,l,k)=>{const R=ie.nature?[-1,3]:[0,2];e.save();e.lineWidth=2*k;e.strokeStyle='rgba(20,30,45,.55)';e.setLineDash([8*k,6*k]);
+for(let c=R[0];c<=R[1]+1;c++){const[a,b]=l(c*200,R[0]*140),[a2,b2]=l(c*200,(R[1]+1)*140);e.beginPath();e.moveTo(a,b);e.lineTo(a2,b2);e.stroke()}
+for(let r=R[0];r<=R[1]+1;r++){const[a,b]=l(R[0]*200,r*140),[a2,b2]=l((R[1]+1)*200,r*140);e.beginPath();e.moveTo(a,b);e.lineTo(a2,b2);e.stroke()}e.setLineDash([]);
+const fs=Math.max(11,Math.min(22,(l(200,0)[0]-l(0,0)[0])/5));e.font=`900 ${fs}px Arial Black, Arial, sans-serif`;e.textAlign='left';e.textBaseline='top';
+for(let c=R[0];c<=R[1];c++)for(let r=R[0];r<=R[1];r++){const n=window.__sheetAt(c*200+1,r*140+1),[a,b]=l(c*200,r*140),inner=r>=0&&r<=2&&c>=0&&c<=2;
+e.fillStyle=inner?'rgba(214,51,108,.9)':'rgba(31,58,147,.9)';const tw=e.measureText(n).width;e.beginPath();e.roundRect?e.roundRect(a+4*k,b+4*k,tw+10*k,fs+6*k,6*k):e.rect(a+4*k,b+4*k,tw+10*k,fs+6*k);e.fill();e.fillStyle='#fff';e.fillText(n,a+9*k,b+7*k)}e.restore()};
+window.__mmExtra=(c,W,H)=>{const n=window.__sheetAt(F.x,F.z);if(!n)return;c.save();c.font='900 14px Arial Black, Arial';const tw=c.measureText(n).width;c.fillStyle='rgba(31,58,147,.92)';c.beginPath();c.roundRect?c.roundRect(6,H-28,tw+44,22,11):c.rect(6,H-28,tw+44,22);c.fill();
+c.fillStyle='#fff';c.font='11px Arial';c.textBaseline='middle';c.fillText('Sheet',13,H-17);c.font='900 14px Arial Black, Arial';c.fillText(n,46,H-17);c.restore()};
+'''
+rep('var Zl=document.getElementById("mm"),re=Zl.getContext("2d"),Ue=.08,', MAPJS + 'var Zl=document.getElementById("mm"),re=Zl.getContext("2d"),Ue=.5,')
+rep('i.stroke()}}function m_(){', 'i.stroke()}window.__mapStyle&&window.__mapStyle(i,Ue)}function m_(){')
+rep('let e=(F.x-Yt)*Ue,n=(F.z-jt)*Ue,s=1.6;', 'let e=(F.x-Yt)*Ue,n=(F.z-jt)*Ue,s=.54;')
+rep('re.arc((r.x-Yt)*Ue,(r.z-jt)*Ue,1.3,0,7),re.fill());re.fillStyle="#1d6b45",re.font="bold 5px sans-serif"', 're.arc((r.x-Yt)*Ue,(r.z-jt)*Ue,4.4,0,7),re.fill());re.fillStyle="#1d6b45",re.font="bold 19px sans-serif"')
+rep('re.arc((ln.x-Yt)*Ue,(ln.z-jt)*Ue,2.6,0,7),re.fill(),re.fillText(Je?"Start":"Home",(ln.x-Yt)*Ue,(ln.z-jt)*Ue-4)', 're.arc((ln.x-Yt)*Ue,(ln.z-jt)*Ue,8,0,7),re.fill(),re.fillText(Je?"Start":"Home",(ln.x-Yt)*Ue,(ln.z-jt)*Ue-13)')
+rep('e.drawImage(Yi,b,M,(gn-Yt)*w,(bn-jt)*w);', 'e.drawImage(Yi,b,M,(gn-Yt)*w,(bn-jt)*w);window.__mapGrid&&window.__mapGrid(e,l,t.width/parseFloat(t.style.width));')
+rep('re.fill(),re.stroke(),re.restore()}var Fs=!1', 're.fill(),re.stroke(),re.restore();window.__mmExtra&&window.__mmExtra(re,i,t)}var Fs=!1')
+rep('n=1,s=(Yt+gn)/2,r=(jt+bn)/2,f(),Fs=!0', 'n=ie.nature?Math.max(1,Math.min((gn-Yt)/1150,(bn-jt)/820)):1,s=ie.nature?300:(Yt+gn)/2,r=ie.nature?210:(jt+bn)/2,f(),Fs=!0')   # open on the class's 25 sheets
+rep('#mm { display: block; border-radius: 8px; }', '#mm { display: block; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }')
 # no Seoul subway exits (Gangnam / Nonhyeon stations sit inside the bigger map)
 rep('[10,-17.2,4.6,1]]}],t=[.359,.933]', '[10,-17.2,4.6,1]]}].filter(()=>!1),t=[.359,.933]')
 # no Seoul underpasses

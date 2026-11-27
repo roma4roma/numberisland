@@ -369,7 +369,6 @@ RING_SHEETS = {
   ('maze', 14.95, 0.9, 5.0, 4.1, 0, None, 'Big Maze'),
   ('s', 2.3, 6.9, 5.9, 4.6, 4, '#A0A4AA', 'Big Factory'),
   ('box', 11.3, 9.0, 3.1, 3.2, 4, None, 'Big Cardboard Box'),       # open at the top, you can go inside
-  ('wall', 16.6, 6.9, 3.35, 0.9, 5, None, 'Giant Wall'),
   ('treehouse', 16.9, 7.9, 3.0, 2.0, 0, None, 'Treehouse'),
   ('p', 17.2, 10.0, 2.75, 2.9, 0, None, ''),
   ('wall', 2.0, 11.6, 1.1, 2.2, 5, None, 'Giant Wall'),

@@ -4450,8 +4450,37 @@ B(Wf-1,.15,2.6,'#2a8c82',0,H-.2,-PD+1.2);for(let u=-Wf/2+1;u<Wf/2-.5;u+=1.2)B(.6
 {const ba=person('#2a8c82');G.add(ba.g);ba.g.position.set(-.5,.13,kz-1.25);box(.52,.5,.04,'#f4f4f4',0,1.15,.17,ba.g)}const pc=new T.Mesh(new T.Box(3,.8,1),glass);pc.position.set(2.5,1.62,kz);G.add(pc);['#ff8ab0','#ffd23c','#8a5a3a','#ffffff','#7fd38a'].forEach((col,i)=>{const k=new T.Mesh(new ce(.25,.25,.3,10),mat(col));k.position.set(1.3+i*.6,1.4,kz);G.add(k)});
 const mc=document.createElement('canvas');mc.width=256;mc.height=160;const q=mc.getContext('2d');q.fillStyle='#1d2420';q.fillRect(0,0,256,160);q.fillStyle='#fff';q.font='bold 24px Georgia';q.textAlign='center';q.fillText('MENU',128,30);q.font='18px Georgia';
 ['Hot Chocolate ..... 3','Latte ..... 4','Strawberry Cake ..... 3','Croissant ..... 2','Lemonade ..... 2'].forEach((t,i)=>q.fillText(t,128,62+i*21));const mt=new Pe(mc);mt.colorSpace=me;const mb=new T.Mesh(new Hn(4,2.5),new Be({map:mt}));mb.position.set(0,3,-Dp+.5);G.add(mb);
-const tables=[];for(let i=0;i<Math.floor((Wf-4)/4.5);i++)for(const r of[0,1])tables.push([-Wf/2+3+i*4.5,-PD-2.6-r*3.4]);
-for(const[u,v]of tables){if(v<kz+2)continue;B(1,.08,1,'#f4f4f4',u,.85,v);B(.12,.8,.12,'#333',u,.45,v);for(const s of[-1,1])B(.5,.5,.5,'#2a8c82',u+s*.95,.3,v)}
+// people sitting down
+const SH=['#e85a8a','#2f6fdf','#ffd23c','#7fd38a','#b45cff','#ff8a24','#ffffff','#3bd1ff','#c8282d'],sit=(u,v,face)=>{const p=person(SH[Math.floor(Math.random()*SH.length)]);G.add(p.g);p.g.position.set(u,-.28,v);p.g.rotation.y=face;p.legs.forEach(l=>l.rotation.x=-1.45);p.arms.forEach(a=>a.rotation.x=-.9);return p};
+// booths along both side walls: high-back benches facing each other, a table in between
+const BC=['#8c2f39','#2a8c82'];let bi=0;for(const sd of[-1,1])for(let v=-11.5;v>kz+3.5;v-=4.6){const u=sd*(Wf/2-1.35),c=BC[bi++%2];
+for(const e of[-1,1]){B(1.9,.5,.75,c,u,.3,v+e*1.25);B(1.9,1.35,.22,c,u,.75,v+e*1.72);B(1.92,.12,.26,'#5a3a24',u,1.48,v+e*1.72)}
+B(1.5,.08,1.1,'#e9e0cc',u+sd*.1,.85,v);B(.15,.75,.15,'#333',u+sd*.1,.42,v);
+const cup=new T.Mesh(new ce(.08,.06,.15,8),mat('#ffffff'));cup.position.set(u,.97,v-.25);G.add(cup);const pl=new T.Mesh(new ce(.2,.2,.03,12),mat('#ffffff'));pl.position.set(u-sd*.1,.9,v+.25);G.add(pl);
+const ck=new T.Mesh(new ce(.1,.1,.12,8),mat(['#ff8ab0','#8a5a3a','#ffd23c'][bi%3]));ck.position.set(u-sd*.1,.98,v+.25);G.add(ck);
+if(Math.random()<.85)sit(u+sd*.2,v-1.05,0);if(Math.random()<.7)sit(u+sd*.2,v+1.05,Math.PI);
+const l=new T.Mesh(new T.Sph(.2,10,8),new Be({color:16769162}));l.position.set(u,H-1.2,v);G.add(l);B(.03,1,.03,'#333',u,H-.6,v)}
+// round tables with chairs in the middle, most of them busy
+for(let r=0;r*4.6<BD-9;r++)for(const u of[-4.2,0,4.2]){const v=-11+-r*4.6-(u===0?2.3:0);if(v<kz+3)continue;
+const tb=new T.Mesh(new ce(.6,.6,.06,16),mat('#f4f4f4'));tb.position.set(u,.82,v);G.add(tb);B(.12,.8,.12,'#333',u,.42,v);
+for(let k=0;k<4;k++){const a=k*Math.PI/2+.4,cu=u+Math.sin(a)*1.05,cv=v+Math.cos(a)*1.05,ch=new T.Group();ch.position.set(cu,0,cv);ch.rotation.y=a+Math.PI;G.add(ch);
+box(.5,.06,.5,'#b07a45',0,.48,0,ch);box(.5,.55,.06,'#b07a45',0,.78,-.24,ch);for(const a2 of[-.2,.2])for(const b2 of[-.2,.2])box(.05,.46,.05,'#333',a2,.23,b2,ch);
+if(Math.random()<.55)sit(cu,cv,a+Math.PI)}
+const cup=new T.Mesh(new ce(.08,.06,.15,8),mat(['#ffffff','#2a8c82'][r%2]));cup.position.set(u+.2,.92,v);G.add(cup)}
+// people waiting at the counter
+for(let i=0;i<3;i++){const p=person(SH[(i*3+1)%SH.length]);G.add(p.g);p.g.position.set(-1+i*.2,.13,kz+1.5+i*1.1);p.g.rotation.y=Math.PI}
+// wall decor: framed pictures, shelves with plants and mugs, a clock, a big mural
+const art=(draw)=>{const c=document.createElement('canvas');c.width=c.height=128;const q=c.getContext('2d');draw(q);const t=new Pe(c);t.colorSpace=me;return new Be({map:t})};
+const ARTS=[q=>{q.fillStyle='#ffe9c4';q.fillRect(0,0,128,128);q.fillStyle='#8a5a3a';q.fillRect(34,50,56,50);q.strokeStyle='#8a5a3a';q.lineWidth=8;q.beginPath();q.arc(92,72,14,-1.3,1.3);q.stroke();q.strokeStyle='#bbb';q.lineWidth=4;for(const k of[48,62,76]){q.beginPath();q.moveTo(k,44);q.bezierCurveTo(k-8,32,k+8,24,k,12);q.stroke()}},
+ q=>{const g=q.createLinearGradient(0,0,0,128);g.addColorStop(0,'#ff9a5a');g.addColorStop(1,'#ffd98a');q.fillStyle=g;q.fillRect(0,0,128,128);q.fillStyle='#ffef9a';q.beginPath();q.arc(64,70,22,0,7);q.fill();q.fillStyle='#6b5a8a';q.beginPath();q.moveTo(0,128);q.lineTo(40,60);q.lineTo(70,100);q.lineTo(100,50);q.lineTo(128,128);q.fill()},
+ q=>{q.fillStyle='#cfe9f2';q.fillRect(0,0,128,128);q.fillStyle='#8a929c';q.beginPath();q.ellipse(64,72,30,24,0,0,7);q.fill();q.beginPath();q.arc(88,48,14,0,7);q.fill();q.fillStyle='#4fa547';q.beginPath();q.arc(88,56,6,0,7);q.fill();q.fillStyle='#ff8a24';q.beginPath();q.moveTo(100,48);q.lineTo(112,52);q.lineTo(100,54);q.fill();q.fillStyle='#111';q.beginPath();q.arc(92,45,2.5,0,7);q.fill()},
+ q=>{q.fillStyle='#2b2d33';q.fillRect(0,0,128,128);q.fillStyle='#a9b0b8';q.beginPath();q.ellipse(64,70,36,28,0,0,7);q.fill();q.fillStyle='#16171a';q.fillRect(32,58,64,16);q.fillStyle='#fff';q.beginPath();q.arc(50,66,5,0,7);q.arc(78,66,5,0,7);q.fill();q.fillStyle='#f2b705';q.font='bold 14px Arial';q.textAlign='center';q.fillText('RACCOONS',64,116)},
+ q=>{q.fillStyle='#f6e7d2';q.fillRect(0,0,128,128);for(let i=0;i<6;i++){q.fillStyle=['#e85a8a','#ffd23c','#2a8c82','#ff8a24','#b45cff','#7fd38a'][i];q.beginPath();q.arc(30+(i%3)*34,44+Math.floor(i/3)*40,13,0,7);q.fill()}},
+ q=>{q.fillStyle='#1d2420';q.fillRect(0,0,128,128);q.fillStyle='#fff';q.font='italic bold 22px Georgia';q.textAlign='center';q.fillText('good',64,46);q.fillText('vibes',64,74);q.font='30px Georgia';q.fillText('☕',64,110)}];
+let ai=0;for(const sd of[-1,1])for(let v=-11.5;v>kz+3.5;v-=4.6){const fr=new T.Group();fr.position.set(sd*(Wf/2-.47),2.75,v);fr.rotation.y=-sd*Math.PI/2;G.add(fr);box(1.5,1.5,.06,'#3a2a1a',0,0,0,fr);const pic=new T.Mesh(new Hn(1.3,1.3),art(ARTS[ai++%ARTS.length]));pic.position.z=.04;fr.add(pic)}
+for(const sd of[-1,1]){const u=sd*(Wf/2-.6);for(const v of[kz+2.2]){B(.35,.06,3,'#7a5a3a',u,3.55,v);for(let k=0;k<3;k++){const pt=new T.Mesh(new ce(.14,.11,.22,8),mat('#c96b3a'));pt.position.set(u,3.7,v-1+k);G.add(pt);const lf=new T.Mesh(new T.Sph(.2,8,6),mat('#3f8a3a'));lf.position.set(u,3.95,v-1+k);G.add(lf)}}}
+{const ck=new T.Mesh(new ce(.45,.45,.06,20),mat('#ffffff'));ck.rotation.x=Math.PI/2;ck.position.set(Wf/4,3.4,-Dp+.5);G.add(ck);B(.04,.32,.03,'#111',Wf/4,3.48,-Dp+.54);B(.24,.04,.03,'#111',Wf/4+.1,3.4,-Dp+.54)}
+for(const sd of[-1,1])for(const v of[-14,-23,-32]){if(v<kz+2)continue;B(.03,.6,.03,'#333',sd*3,H-.5,v);const pl=new T.Mesh(new T.Sph(.32,8,6),mat('#3f8a3a'));pl.scale.y=.75;pl.position.set(sd*3,H-.95,v);G.add(pl)}
 for(let i=0;i<5;i++){const l=new T.Mesh(new T.Sph(.25,10,8),new Be({color:16769162}));l.position.set(-Wf/2+3+i*(Wf-6)/4,H-.9,bz+1);G.add(l);B(.03,.7,.03,'#333',-Wf/2+3+i*(Wf-6)/4,H-.45,bz+1)}
 for(const s of[-1,1]){const p=new T.Mesh(new ce(.4,.3,.8,10),mat('#c96b3a'));p.position.set(s*(Wf/2-1.2),.5,-PD-1.2);G.add(p);const lf=new T.Mesh(new T.Sph(.8,8,6),mat('#3f8a3a'));lf.position.set(s*(Wf/2-1.2),1.5,-PD-1.2);G.add(lf)}}
 // the patio out front: wooden deck, planters, umbrellas, string lights

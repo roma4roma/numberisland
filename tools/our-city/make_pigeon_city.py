@@ -235,6 +235,19 @@ for it in C['items']:
         snacks.append(['cafe', 'Romy Cafe', round(cxk, 1), round(czk, 1)])
         snacks.append(['bakery', 'Romy Patio', round(mx - nx * 4, 1), round(mz - nz * 4, 1)])
         snacks.append(['cafe', 'Romy Rooftop', round(x + w / 2 - nx * (depth / 2 - 4), 1), round(z + d / 2 - nz * (depth / 2 - 4), 1), round(max(3, f) * FLOOR + .9, 1)])
+    elif k in ('puppies', 'dogwalk', 'heart', 'boatrental', 'riverpier', 'decorating', 'pomeranian'):   # E1: dogs, hearts, boats, fishing, decorating
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        if k == 'pomeranian':
+            rot = math.atan2(300 - (x + w / 2), 210 - (z + d / 2))   # faces the middle of the city
+            deco.append([k, x, z, w, d, c, n, round(rot, 3)])
+        else:
+            deco.append([k, x, z, w, d, it.get('col') or c, n, f])
+        if k == 'riverpier': solids.append([x + .3, z + .3, x + w - .3, z + d - .3, 1.25])
+        if k == 'boatrental': solids.append([x + .3, z + .3, x + w - .3, z + d - .3, 1.25])
+        if n and k in ('pomeranian', 'decorating', 'puppies'):
+            parksigns.append([round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
+        if k == 'decorating': snacks.append(['bakery', 'Decorating Place', round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1)])
+        if k == 'pomeranian': snacks.append(['convenience', 'Pomeranian Snacks', round(mx + nx * 2.5, 1), round(mz + nz * 2.5, 1)])
     elif k == 'wall':
         deco.append([k, x, z, w, d, c, n, max(1, f) * FLOOR])
     elif k in ('maze', 'box', 'treehouse'):
@@ -757,6 +770,16 @@ for(const s of[-1,1])box(.05,6,.05,'#d8c49a',4.8+s*.6,PY-3.5+3,-5.2,g);box(1.6,.
 const sc=Math.min(1.3,Math.max(.8,Math.min(w,d)/18));g.scale.setScalar(sc);g.position.set(x+w/2,0,z+d/2);$t.add(g)}
 // giant grassy steps you can climb
 function grassSteps(cells){for(const[x,z,w,d,h]of cells){const g=new T.Group();box(w,h,d,'#a89f8c',0,h/2,0,g);box(w+.1,.35,d+.1,'#6cbf4a',0,h-.15,0,g);g.position.set(x+w/2,0,z+d/2);$t.add(g)}}
+// a giant fluffy Pomeranian statue on a base
+function pomeranian(x,z,w,d,f){const g=new T.Group(),O='#f0a040',OL='#f7c27a',S=Math.min(w,d)/18;
+const fluff=(r,px,py,pz,c,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(new T.Sph(r,12,10),mat(c));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);g.add(m);return m};
+box(14,1.5,14,'#b9b4aa',0,.75,0,g);box(15,.3,15,'#a39e94',0,.15,0,g);
+fluff(4.6,0,5.6,-.8,O,1,1.05,1.1);for(let i=0;i<14;i++){const a=i/14*Math.PI*2;fluff(1.6,Math.cos(a)*4,5+Math.sin(a*2)*.6,Math.sin(a)*4-.8,i%2?O:OL)}
+fluff(3.6,0,10.6,.6,O);for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fluff(1.3,Math.cos(a)*3.3,10.4+Math.sin(a)*2.6,.4,i%2?OL:O)}
+fluff(1.5,0,9.8,3.6,OL,1,.85,1);fluff(.5,0,10.3,4.95,'#1d1f24');for(const k of[-1,1]){fluff(.55,k*1.4,11.4,3.6,'#1d1f24');fluff(.16,k*1.5,11.55,4.1,'#ffffff');const e=new T.Mesh(new Ho(1.1,2,8),mat(O));e.position.set(k*2.1,14,.4);e.rotation.z=-k*.3;g.add(e)}
+const tg=new T.Mesh(new T.Sph(.5,8,6),mat('#e8728a'));tg.position.set(0,9,4.4);tg.scale.set(1,.5,.8);g.add(tg);
+for(const k of[-1,1]){fluff(1.3,k*2,1.9,3.4,O,1,.8,1.4);fluff(1.6,k*3.6,2.6,-2,O)}fluff(2.2,0,7.5,-5,OL,1.2,1,.8);
+g.scale.setScalar(Math.max(.6,Math.min(1.1,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f||0;$t.add(g)}
 // RomaCity Raccoons logo: a raccoon face in a gold ring with the team name around it
 function raccoonLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#f2b705';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#24262b';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
 c.fillStyle='#24262b';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
@@ -900,7 +923,7 @@ const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv
 const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
 const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
 else if(k==='stadium')stadium(x,z,w,d,n,c);
-else if(k==='military')military(x,z,w,d);else if(k==='steps')grassSteps(f);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
+else if(k==='military')military(x,z,w,d);else if(k==='pomeranian')pomeranian(x,z,w,d,f);else if(k==='steps')grassSteps(f);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
 else if(k==='roof67'){letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);const g=$t.children[$t.children.length-1];g.position.y=f;g.rotation.y=0}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
@@ -1085,6 +1108,52 @@ const cup=new T.Mesh(new ce(.08,.06,.15,8),mat('#ffffff'));cup.position.set(u+.2
 // warm string lights between corner poles
 function stringLights(par,P){for(const p of P){const pole=new T.Mesh(new ce(.05,.05,p[1]-(par===null?0:0),6),mat('#333'));pole.position.set(p[0],p[1]/2+(p[1]>8?p[1]-3.2-(p[1]-3)/2:0),p[2]);if(p[1]<8)par.add(pole)}
 const M=new Be({color:16771500});for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];for(let k=1;k<12;k++){const t=k/12,l=new T.Mesh(new T.Sph(.09,6,4),M);l.position.set(a[0]+(b[0]-a[0])*t,a[1]-Math.sin(t*Math.PI)*.7,a[2]+(b[2]-a[2])*t);par.add(l)}}}
+// a little dog (Pomeranian, golden, white, brown or black) with legs and a wagging tail
+function doggy(col,s=1){const g=new T.Group(),c=col||['#f0a040','#e3c27a','#ffffff','#8a5a3a','#2b2d33'][Math.floor(rnd()*5)],H=(geo,cc,x,y,z,sx=1,sy=1,sz=1)=>{const m=new T.Mesh(geo,mat(cc));m.position.set(x,y,z);m.scale.set(sx,sy,sz);g.add(m);return m};
+H(new T.Sph(.32,10,8),c,0,.45,0,1,.85,1.45);const hd=H(new T.Sph(.24,10,8),c,0,.72,.42);H(new T.Sph(.1,8,6),c,0,.66,.62,1,.8,1.2);H(new T.Sph(.045,6,4),'#111',0,.69,.72);
+for(const k of[-1,1]){H(new T.Sph(.03,6,4),'#111',k*.1,.78,.6);const e=H(new Ho(.08,.16,6),c,k*.13,.94,.4);e.rotation.z=-k*.3}
+const legs=[];for(const[a,b]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const l=new T.Group();l.position.set(a*.15,.32,b*.26);g.add(l);const m=new T.Mesh(new ce(.06,.06,.3,6),mat(c));m.position.y=-.15;l.add(m);legs.push(l)}
+const tail=new T.Group();tail.position.set(0,.6,-.42);g.add(tail);const tm=new T.Mesh(new T.Sph(.12,8,6),mat(c));tm.position.set(0,.1,-.05);tm.scale.set(1,1.6,1);tail.add(tm);g.scale.setScalar(s);$t.add(g);return{g,legs,tail}}
+// puppies playing in a fenced yard: running, stopping, wagging
+function puppies(x,z,w,d){const P=[];for(let i=0;i<8;i++){const D=doggy(null,1.3+rnd()*.6);const q={D,x:x+2+rnd()*(w-4),z:z+2+rnd()*(d-4),tx:0,tz:0,t:0};q.tx=q.x;q.tz=q.z;P.push(q)}
+for(let u=x;u<=x+w;u+=2)for(const v of[z,z+d])box(.08,.9,.08,'#ffffff',u,.45,v);for(let v=z;v<=z+d;v+=2)for(const u of[x,x+w])box(.08,.9,.08,'#ffffff',u,.45,v);
+for(const v of[z,z+d])box(w,.08,.08,'#ffffff',x+w/2,.85,v);for(const u of[x,x+w])box(.08,.08,d,'#ffffff',u,.85,z+d/2);
+let t=0;LIVE.push(dt=>{t+=dt;for(const q of P){q.t-=dt;if(q.t<=0){q.tx=x+2+rnd()*(w-4);q.tz=z+2+rnd()*(d-4);q.t=2+rnd()*3}const dx=q.tx-q.x,dz=q.tz-q.z,L=Math.hypot(dx,dz),run=L>.4;
+if(run){const sp=Math.min(L,dt*3.2);q.x+=dx/L*sp;q.z+=dz/L*sp;q.D.g.rotation.y=Math.atan2(dx,dz)}q.D.g.position.set(q.x,.12+(run?Math.abs(Math.sin(t*14+q.tx))*.12:0),q.z);
+q.D.legs.forEach((l,i)=>l.rotation.x=run?Math.sin(t*16+i*Math.PI/2)*.7:0);q.D.tail.rotation.z=Math.sin(t*18+q.tz)*.7}})}
+// people walking their dogs back and forth
+function dogWalk(x,z,w,d){const long=w>=d,L=long?w:d,W=[];for(let i=0;i<3;i++){const p=person(['#e85a8a','#2f6fdf','#7fd38a'][i]);const D=doggy(null,1.35);W.push({p,D,o:i/3,lane:(i-1)*1.2})}
+const lineM=new Be({color:3355443});let t=0;LIVE.push(dt=>{t+=dt;for(const q of W){const k=((t*.05+q.o)%1),fwd=k<.5,pos=fwd?k*2:2-k*2,u=2+pos*(L-4),dir=fwd?1:-1,
+px=long?x+u:x+w/2+q.lane,pz=long?z+d/2+q.lane:z+u,ang=long?(dir>0?Math.PI/2:-Math.PI/2):(dir>0?0:Math.PI);
+q.p.g.position.set(px,.13,pz);q.p.g.rotation.y=ang;const sw=Math.sin(t*6+q.o*9)*.5;q.p.legs[0].rotation.x=sw;q.p.legs[1].rotation.x=-sw;
+const ox=Math.sin(ang)*1.6,oz=Math.cos(ang)*1.6;q.D.g.position.set(px+ox+.5*Math.cos(ang),.12,pz+oz-.5*Math.sin(ang));q.D.g.rotation.y=ang;q.D.legs.forEach((l,i)=>l.rotation.x=Math.sin(t*14+i*Math.PI/2)*.6);q.D.tail.rotation.z=Math.sin(t*16)*.6}})}
+// floating heart balloons on strings
+function heartBalloons(list){const sh=new T.Shape;sh.moveTo(0,-.9);sh.bezierCurveTo(-1.6,.2,-.9,1.4,0,.6);sh.bezierCurveTo(.9,1.4,1.6,.2,0,-.9);const geo=new T.Ext(sh,{depth:.35,bevelEnabled:!0,bevelSize:.12,bevelThickness:.12,bevelSegments:2});geo.center();
+const H=[];for(const[x,z,c]of list){const m=new T.Mesh(geo,mat(c));const y0=ks(x,z)+4.5+rnd()*3;m.position.set(x,y0,z);$t.add(m);const st=new T.Mesh(new ce(.02,.02,4,4),mat('#dddddd'));st.position.set(x,y0-2.6,z);$t.add(st);H.push([m,st,y0,rnd()*6])}
+let t=0;LIVE.push(dt=>{t+=dt;for(const[m,st,y0,o]of H){m.position.y=y0+Math.sin(t*1.3+o)*.35;m.rotation.y=Math.sin(t*.7+o)*.6;st.position.y=m.position.y-2.6}})}
+// boat rental: a dock with swan paddle boats, and a few out on the river
+function boatRental(x,z,w,d,side){const long=w<d,cx=x+w/2,cz=z+d/2,s=side||-1;box(w,.25,d,'#9b6b3f',cx,1.1,cz);for(let u=0;u<=1;u+=.25)for(const k of[-1,1])box(.25,1.8,.25,'#6b4a2e',long?cx+k*(w/2-.2):x+u*w,.4,long?z+u*d:cz+k*(d/2-.2));
+const swan=c=>{const g=new T.Group();const hull=new T.Mesh(new T.Sph(1,12,8),mat(c));hull.scale.set(1.1,.45,1.6);hull.position.y=.35;g.add(hull);const neck=new T.Mesh(new ce(.14,.2,1.3,8),mat(c));neck.position.set(0,1.1,1.2);neck.rotation.x=-.3;g.add(neck);
+const hd=new T.Mesh(new T.Sph(.25,10,8),mat(c));hd.position.set(0,1.75,1.45);g.add(hd);const bk=new T.Mesh(new Ho(.1,.3,6),mat('#ff8a24'));bk.rotation.x=Math.PI/2;bk.position.set(0,1.72,1.75);g.add(bk);box(1.2,.3,.8,'#2f6fdf',0,.75,-.3,g);$t.add(g);return g};
+const moored=[];for(let i=0;i<4;i++){const b=swan(i%2?'#ffffff':'#ff9ac8');const t=(i+.5)/4;b.position.set(long?cx+s*(w/2+1.6):x+t*w,0,long?z+t*d:cz+s*(d/2+1.6));b.rotation.y=long?0:Math.PI/2;moored.push(b)}
+const out=[];for(let i=0;i<3;i++){const b=swan(['#ffffff','#ff9ac8','#ffd23c'][i]);const p=person(['#e85a8a','#2f6fdf','#7fd38a'][i]);p.legs.forEach(l=>l.rotation.x=-1.4);p.g.position.set(0,.25,-.2);b.add(p.g);out.push([b,i])}
+let t=0;LIVE.push(dt=>{t+=dt;moored.forEach((b,i)=>b.position.y=Math.sin(t*1.5+i)*.08);for(const[b,i]of out){const a=t*.12+i*2.1,R=long?[4,d/2]:[w/2,4],ox=long?cx+s*(w/2+7):cx,oz=long?cz:cz+s*(d/2+7);
+b.position.set(ox+Math.cos(a)*R[0],Math.sin(t*1.5+i)*.08,oz+Math.sin(a)*R[1]);b.rotation.y=Math.atan2(-Math.sin(a)*R[0],Math.cos(a)*R[1])}})}
+// river fishing pier: planks out over the water, people fishing off the end
+function riverPier(x,z,w,d,side){const long=w>=d,cx=x+w/2,cz=z+d/2;box(w,.25,d,'#9b6b3f',cx,1.1,cz);for(let u=0;u<=1;u+=.25)for(const k of[-1,1])box(.22,1.8,.22,'#6b4a2e',long?x+u*w:cx+k*(w/2-.2),.4,long?cz+k*(d/2-.2):z+u*d);
+for(let i=0;i<2;i++){const p=person(['#2f6fdf','#ffd23c'][i]);const ex=long?(side>0?x+w-1:x+1):cx+(i?.9:-.9),ez=long?cz+(i?.9:-.9):(side>0?z+d-1:z+1),ang=long?(side>0?Math.PI/2:-Math.PI/2):(side>0?0:Math.PI);
+p.g.position.set(ex,1.22,ez);p.g.rotation.y=ang;p.legs.forEach(l=>l.rotation.x=-1.4);p.g.position.y=.95;const rod=new T.Mesh(new ce(.02,.03,3.2,5),mat('#333'));rod.position.set(ex+Math.sin(ang)*1.3,2.2,ez+Math.cos(ang)*1.3);rod.rotation.set(Math.cos(ang)*.9,0,-Math.sin(ang)*.9);$t.add(rod)}}
+// the decorating place: paint tables, easels with paintings, bunting and people decorating
+function decorating(x,z,w,d){const cx=x+w/2,cz=z+d/2,pl=new T.Mesh(new Hn(w-1,d-1),mat('#f6e7d2'));pl.rotation.x=-Math.PI/2;pl.position.set(cx,.1,cz);$t.add(pl);
+const C=['#e85a8a','#ffd23c','#2a8c82','#ff8a24','#b45cff','#3bd1ff'],long=d>=w,L=long?d:w;
+for(let i=0;i<3;i++){const v=-L/2+L*(i+.5)/3,tx=long?cx:cx+v,tz=long?cz+v:cz;box(1.6,.08,3,'#ffffff',tx,.82,tz);for(const k of[-1,1])box(.1,.8,2.6,'#888',tx+k*.7,.42,tz);
+for(let j=0;j<5;j++){const pt=new T.Mesh(new ce(.12,.12,.18,8),mat(C[(i+j)%6]));pt.position.set(tx-.4+(j%2)*.8,.95,tz-1.1+j*.55);$t.add(pt)}
+for(const k of[-1,1]){const p=person(C[(i*2+k+6)%6]);p.g.position.set(tx+k*1.3,.13,tz+.5);p.g.rotation.y=-k*Math.PI/2;p.arms.forEach(a=>a.rotation.x=-1.1)}}
+for(let i=0;i<4;i++){const v=-L/2+1.5+i*(L-3)/3,ex=long?x+w-1.2:cx+v,ez=long?cz+v:z+d-1.2,g=new T.Group();g.position.set(ex,0,ez);g.rotation.y=long?-Math.PI/2:Math.PI;$t.add(g);
+for(const k of[-1,1])box(.08,1.9,.08,'#8a5a3a',k*.45,.95,0,g);const cv=document.createElement('canvas');cv.width=cv.height=64;const q=cv.getContext('2d');q.fillStyle='#fff';q.fillRect(0,0,64,64);for(let j=0;j<6;j++){q.fillStyle=C[(i+j)%6];q.beginPath();q.arc(10+Math.random()*44,10+Math.random()*44,6+Math.random()*8,0,7);q.fill()}
+const tx=new Pe(cv);tx.colorSpace=me;const pic=new T.Mesh(new Hn(1.1,1.1),new Be({map:tx,side:2}));pic.position.set(0,1.5,.06);pic.rotation.x=-.15;g.add(pic)}
+const corners=[[x+.5,z+.5],[x+w-.5,z+.5],[x+w-.5,z+d-.5],[x+.5,z+d-.5]];for(const[a,b]of corners){const p=new T.Mesh(new ce(.06,.06,3.6,6),mat('#ddd'));p.position.set(a,1.8,b);$t.add(p)}
+for(let i=0;i<4;i++){const[a,b]=corners[i],[c,e]=corners[(i+1)%4];for(let k=1;k<14;k++){const t=k/14,f=new T.Mesh(new Ho(.22,.4,3),mat(C[k%6]));f.position.set(a+(c-a)*t,3.4-Math.sin(t*Math.PI)*.6,b+(e-b)*t);f.rotation.x=Math.PI;$t.add(f)}}}
 // a game on at a stadium: a crowd in the stands and two teams playing (American football or soccer)
 function stadiumGame(x,z,w,d,sport){const S=STAD[sport]||STAD.football,rot=w>d,LW=rot?d:w,LD=rot?w:d,W2=LW/2-1,D2=LD/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N;
 const G=new T.Group();G.position.set(x+w/2,0,z+d/2);G.rotation.y=rot?Math.PI/2:0;$t.add(G);
@@ -1499,6 +1568,7 @@ for(const[k,x,z,w,d,c]of ie.deco||[])k==='stadium'&&stadiumGame(x,z,w,d,c);
 for(const[k,x,z,w,d]of ie.deco||[])k==='coaster'&&coasterRide(x,z,w,d);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='disco'&&disco(x,z,w,d,c,f[0],f[1],f[2]);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='romycafe'&&romyCafe(x,z,w,d,f[0],f[1],f[2]);
+{const HB=[];for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){if(k==='puppies')puppies(x,z,w,d);else if(k==='dogwalk')dogWalk(x,z,w,d);else if(k==='heart')HB.push([x+w/2,z+d/2,c]);else if(k==='boatrental')boatRental(x,z,w,d,f===1?1:-1);else if(k==='riverpier')riverPier(x,z,w,d,f===1?1:-1);else if(k==='decorating')decorating(x,z,w,d)}if(HB.length)heartBalloons(HB)}
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='cbox'?cardboardBox(x,z,w,d,f[0],f[1],f[2]):k==='factory'&&factoryTop(x,z,w,d,f);
 for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');raccoonHead(p.g);const cap=new T.Mesh(new T.Sph(.25,10,8,0,6.3,0,1.3),mat('#4a5436'));cap.position.y=1.8;p.g.add(cap);men.push(p)}
 let t=0;LIVE.push(dt=>{t+=dt;const L=U*.7,ph=(t*1.4)%(2*L),dir=ph<L?1:-1,pos=ph<L?ph:2*L-ph;men.forEach((p,i)=>{p.g.position.set(cx-L/2+pos,.13,cz-5+i*2);p.g.rotation.y=dir>0?Math.PI/2:-Math.PI/2;const sw=Math.sin(t*6)*.6;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw;p.arms[1].rotation.x=sw})})}

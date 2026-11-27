@@ -154,6 +154,7 @@ for it in C['items']:
             deco.append(['barn', x, z, w, d, c, n, round(math.atan2(nx, nz), 3)])
             solids.append([x + .6, z + .6, x + w - .6, z + d - .6, max(9, h * .75)])
         else:
+            if re.search(r'factory', n or '', re.I): deco.append(['factory', x, z, w, d, c, n, round(h, 1)])
             if re.search(r'disco', n or '', re.I):   # a disco you can walk (or fly) into: open door, dance floor, confetti
                 deco.append(['discoball', x, z, w, d, c, n, round(h, 1)])
                 deco.append(['disco', x + .6, z + .6, w - 1.2, d - 1.2, hexcol(c), n, [round(h, 1), round(nx, 3), round(nz, 3)]])
@@ -224,6 +225,19 @@ for it in C['items']:
         H_ = max(1, host[0]['f']) * FLOOR if host else 20
         deco.append([k, x, z, w, d, c, n, H_])
         snacks.append(['bakery', 'Secret treasure', round(x + w / 2 - 1, 1), round(z + d / 2 - 1.5, 1), 1.1])
+    elif k == 'wall':
+        deco.append([k, x, z, w, d, c, n, max(1, f) * FLOOR])
+    elif k in ('maze', 'box', 'treehouse'):
+        mx, mz, nx, nz, L = best_side(x, z, w, d)
+        if k == 'box':   # the giant cardboard box: a room with no roof
+            deco.append(['cbox', x, z, w, d, c, n, [max(3, f) * FLOOR, round(nx, 3), round(nz, 3)]])
+            snacks.append(['bakery', 'Box Snacks', round(x + w / 2 - nx * (min(w, d) / 2 - 5), 1), round(z + d / 2 - nz * (min(w, d) / 2 - 5), 1)])
+        else:
+            deco.append([k, x, z, w, d, c, n, [round(nx, 3), round(nz, 3)]])
+        if k == 'maze': snacks.append(['bakery', 'Maze Prize', round(x + w / 2, 1), round(z + d / 2, 1)])   # moved to the real middle in the game
+        if k == 'treehouse': snacks.append(['convenience', 'Treehouse Snacks', round(mx + nx * 2, 1), round(mz + nz * 2, 1)])
+        if n and k != 'box': parksigns.append([round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
+        if n and k == 'box': parksigns.append([round(mx + nx * 3 - nz * (L / 2 - 3), 1), round(mz + nz * 3 + nx * (L / 2 - 3), 1), round(math.atan2(nx, nz), 3), n])   # beside the door, not in front of it
     elif k in ('octopus', 'tigerstatue', 'coaster'):   # built in the game; solid from their real shape
         deco.append([k, x, z, w, d, c, n])
         if n and k != 'octopus':
@@ -580,7 +594,7 @@ const sc=Math.min(1.2,Math.max(.6,w/(parts.length*11)));g.scale.set(sc,sc*1.3,sc
 {const mark=(x,z)=>{const i=Math.floor((x-Yt)/Zt),j=Math.floor((z-jt)/Zt);if(i>=0&&j>=0&&i<fe&&j<Ke){const q=j*fe+i;$i[q]<.05&&($i[q]=.05)}};
 for(const[t,P]of ie.areas||[]){if(t!==1)continue;let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;for(let k=0;k<P.length;k+=2){x0=Math.min(x0,P[k]);x1=Math.max(x1,P[k]);z0=Math.min(z0,P[k+1]);z1=Math.max(z1,P[k+1])}
 for(let z=z0-2;z<=z1+2;z+=Zt)for(let x=x0-2;x<=x1+2;x+=Zt){let c=!1;for(let a=0,b=P.length-2;a<P.length;b=a,a+=2){const xa=P[a],za=P[a+1],xb=P[b],zb=P[b+1];za>z!=zb>z&&x<(xb-xa)*(z-za)/(zb-za)+xa&&(c=!c)}c&&mark(x,z)}}
-for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'||k==='stadium'||k==='disco')for(let zz=z;zz<=z+d;zz+=Zt)for(let xx=x;xx<=x+w;xx+=Zt)mark(xx,zz);   // no poles or lamps inside
+for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'||k==='stadium'||k==='disco'||k==='cbox'||k==='maze')for(let zz=z;zz<=z+d;zz+=Zt)for(let xx=x;xx<=x+w;xx+=Zt)mark(xx,zz);   // no poles or lamps inside
 const BG=ie.bridges||{};if(BG.h)for(let j=0;j<BG.nz;j++)for(let i=0;i<BG.nx;i++)BG.h[j*BG.nx+i]>.3&&mark(BG.x0+(i+.5)*BG.r,BG.z0+(j+.5)*BG.r)}
 // a big boulder
 function rock(x,z,w,d){const g=new T.Group(),R=Math.min(w,d)/2;[[0,0,R*.62,'#8b8a86'],[R*.35,R*.2,R*.42,'#9a9893'],[-R*.4,-R*.15,R*.36,'#7f7e7a']].forEach(([u,v,r,col])=>{const m=new T.Mesh(new T.Sph(r,7,5),mat(col));m.scale.set(1,.72,.9);m.position.set(u,r*.55,v);m.rotation.y=u;g.add(m)});g.position.set(x+w/2,0,z+d/2);$t.add(g)}
@@ -653,6 +667,40 @@ if(i%6===0&&a[1]>1.2){const s=new T.Mesh(new ce(.18,.25,a[1],6),mat('#f2b705'));
 // station platform with a striped tiger roof
 {const st=F(Math.PI*1.5);box(9,1.6,4,'#d8d2c2',st[0],.8,st[2]+(w>=d?3:0),g);const rf=box(10,.4,5,'#f08a24',st[0],4.2,st[2]+(w>=d?3:0),g);for(const k of[-1,1])box(.3,2.6,.3,'#16171a',st[0]+k*4.5,2.9,st[2]+(w>=d?3:0),g)}
 g.position.set(x+w/2,0,z+d/2);$t.add(g)}
+// a brick wall (giant walls are just taller)
+function brickWall(x,z,w,d,H){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#d9d2c4';c.fillRect(0,0,256,128);
+for(let r=0;r<8;r++)for(let k=-1;k<9;k++){const v=150+Math.floor(Math.random()*40);c.fillStyle=`rgb(${v+30},${v-40},${v-70})`;c.fillRect(k*32+(r%2?16:0)+2,r*16+2,28,12)}
+const tx=new Pe(cv);tx.colorSpace=me;tx.wrapS=tx.wrapT=1000;tx.repeat.set(Math.max(w,d)/6,H/3);const g=new T.Group();const m=new T.Mesh(new T.Box(w,H,d),new T.Mat({map:tx}));m.position.y=H/2;g.add(m);
+box(w+.4,.5,d+.4,'#8d8a85',0,H+.25,0,g);g.position.set(x+w/2,0,z+d/2);$t.add(g)}
+// a hedge maze: the entrance faces the road, a prize waits in the middle
+function maze(x,z,w,d,nx,nz){const g=new T.Group(),CS=4.2,NX=Math.max(3,Math.floor(w/CS)),NZ=Math.max(3,Math.floor(d/CS)),W=NX*CS,D=NZ*CS,HH=2.8,TH=.9;
+let s=7;const R=()=>(s=(s*16807)%2147483647)/2147483647;
+const V=[...Array(NX*NZ)].map(()=>0),E=new Set(),st=[[0,0]];V[0]=1;
+while(st.length){const[i,j]=st[st.length-1],nb=[[1,0],[-1,0],[0,1],[0,-1]].map(([a,b])=>[i+a,j+b]).filter(([a,b])=>a>=0&&b>=0&&a<NX&&b<NZ&&!V[b*NX+a]);
+if(!nb.length){st.pop();continue}const[a,b]=nb[Math.floor(R()*nb.length)];V[b*NX+a]=1;E.add([Math.min(i,a),Math.min(j,b),a!==i?'h':'v'].join());st.push([a,b])}
+const HC=['#3f7f3a','#468a3f','#3a7535'],hedge=(cx,cz,hw,hd)=>box(hw,HH,hd,HC[Math.floor(R()*3)],cx,HH/2,cz,g);
+const fl=new T.Mesh(new Hn(W,D),mat('#cbbd96'));fl.rotation.x=-Math.PI/2;fl.position.y=.11;g.add(fl);
+// entrance on the side facing the road
+const fx=Math.abs(nx)>Math.abs(nz),gate=fx?(nx>0?'E':'W'):(nz>0?'S':'N');
+for(let i=0;i<NX;i++)for(let j=0;j<NZ;j++){const x0=-W/2+i*CS,z0=-D/2+j*CS;
+if(i<NX-1&&!E.has([i,j,'h'].join()))hedge(x0+CS,z0+CS/2,TH,CS+TH);if(j<NZ-1&&!E.has([i,j,'v'].join()))hedge(x0+CS/2,z0+CS,CS+TH,TH)}
+const mid=Math.floor(NX/2);for(let i=0;i<NX;i++){const cx=-W/2+i*CS+CS/2;if(!(gate==='N'&&i===mid))hedge(cx,-D/2,CS+TH,TH);if(!(gate==='S'&&i===mid))hedge(cx,D/2,CS+TH,TH)}
+const midz=Math.floor(NZ/2);for(let j=0;j<NZ;j++){const cz=-D/2+j*CS+CS/2;if(!(gate==='W'&&j===midz))hedge(-W/2,cz,TH,CS+TH);if(!(gate==='E'&&j===midz))hedge(W/2,cz,TH,CS+TH)}
+// the prize in the middle: a little golden trophy on a stand
+const cxm=-W/2+mid*CS+CS/2,czm=-D/2+midz*CS+CS/2;box(1,1,1,'#e9e4d6',cxm,.5,czm,g);const cup=new T.Mesh(new ce(.45,.2,.7,12),mat('#ffd23c'));cup.position.set(cxm,1.45,czm);g.add(cup);
+g.position.set(x+w/2,0,z+d/2);$t.add(g);window.__MAZEMID=window.__MAZEMID||[];window.__MAZEMID.push([x+w/2+cxm,z+d/2+czm])}
+// a treehouse: big tree, a little house on a platform, a ladder and a rope swing
+function treehouse(x,z,w,d){const g=new T.Group(),PY=8,B='#8a5a3a',BL='#a87548';
+const tr=new T.Mesh(new ce(1.3,1.9,PY+6,10),mat('#6b4a2e'));tr.position.y=(PY+6)/2;g.add(tr);
+for(const[a,b,c,r]of[[0,17,0,5.5],[3.5,15,2,4.2],[-3.8,15.5,-1.5,4.4],[1,15,-3.8,4],[-1.5,14.5,3.6,4]]){const s=new T.Mesh(new T.Sph(r,10,8),mat(['#3f8a3a','#4b9a42','#367a33'][Math.abs(Math.round(a))%3]));s.position.set(a,b,c);g.add(s)}
+box(9,.45,7,BL,0,PY,0,g);for(const a of[-1,1])for(const b of[-1,1]){const p=new T.Mesh(new ce(.2,.2,PY,6),mat(B));p.position.set(a*4.1,PY/2,b*3.1);g.add(p)}
+box(5.6,3,4.4,'#c96b3a',1,PY+1.7,0,g);box(1.2,1,.1,'#7fb8e8',2,PY+2,2.25,g);box(1,2,.1,'#6b4a2e',-.5,PY+1.2,2.25,g);
+const rf=new T.Mesh(new Ho(4.3,2.4,4),mat('#d7262e'));rf.rotation.y=Math.PI/4;rf.position.set(1,PY+4.4,0);g.add(rf);
+for(const[a,b,c,dd]of[[9,.12,.12,3.5],[9,.12,.12,-3.5],[.12,.12,7,4.5],[.12,.12,7,-4.5]])box(a,b,c,B,a>1?0:dd,PY+1,a>1?dd:0,g);
+for(let i=-4;i<=4;i+=1)for(const s of[-1,1])box(.1,1,.1,B,i,PY+.5,s*3.5,g);
+for(const s of[-1,1])box(.15,PY,.15,BL,-4.6,PY/2,s*.5+1.5,g);for(let k=1;k<PY;k+=.8)box(.1,.1,1,BL,-4.6,k,1.5,g);
+for(const s of[-1,1])box(.05,6,.05,'#d8c49a',4.8+s*.6,PY-3.5+3,-5.2,g);box(1.6,.15,.5,B,4.8,PY-6.4+3,-5.2,g);box(3,.3,.3,B,4.8,PY+3.1,-5.2,g);
+const sc=Math.min(1.3,Math.max(.8,Math.min(w,d)/18));g.scale.setScalar(sc);g.position.set(x+w/2,0,z+d/2);$t.add(g)}
 // RomaCity Raccoons logo: a raccoon face in a gold ring with the team name around it
 function raccoonLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#f2b705';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#24262b';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
 c.fillStyle='#24262b';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
@@ -796,7 +844,7 @@ const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv
 const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
 const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
 else if(k==='stadium')stadium(x,z,w,d,n,c);
-else if(k==='military')military(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
+else if(k==='military')military(x,z,w,d);else if(k==='wall')brickWall(x,z,w,d,f);else if(k==='maze')maze(x,z,w,d,f[0],f[1]);else if(k==='treehouse')treehouse(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
 else if(k==='roof67'){letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);const g=$t.children[$t.children.length-1];g.position.y=f;g.rotation.y=0}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
@@ -865,6 +913,35 @@ const O=new T.Group;let t=0,lt=0;LIVE.push(dt=>{t+=dt;ball.rotation.y+=dt*.7;bea
 if(t-lt>.35){lt=t;for(let i=0;i<nX*nZ;i++)tiles.setColorAt(i,COLS[(i*7+Math.floor(t*3)+((i%nX+Math.floor(i/nX))%3))%6]);tiles.instanceColor.needsUpdate=!0}
 for(let i=0;i<NC;i++){const q=C[i];q[1]-=dt*q[4];if(q[1]<.2)q[1]=H-1;O.position.set(q[0]+Math.sin(t*2+q[3])*.4,q[1],q[2]+Math.cos(t*1.7+q[3])*.4);O.rotation.set(t*3+q[3],t*2+q[3],0);O.updateMatrix();conf.setMatrixAt(i,O.matrix)}conf.instanceMatrix.needsUpdate=!0;
 for(const[p,i]of dancers){const k=Math.abs(Math.sin(t*4+i));p.g.position.y=.14+k*.35;p.arms[0].rotation.x=-2.6+Math.sin(t*4+i)*.5;p.arms[1].rotation.x=-2.6-Math.sin(t*4+i)*.5;p.g.rotation.y+=dt*(i%2?.8:-.8)}})}
+// a giant cardboard box: open at the top (fly in!) with a cut-out door (walk in!), packing peanuts and toys inside
+function cardboardBox(x,z,w,d,H,nx,nz){const g=new T.Group(),T0=.45,DW=5,DH=4.6,cx=x+w/2,cz=z+d/2,fx=Math.abs(nx)>Math.abs(nz),fs=fx?Math.sign(nx):Math.sign(nz);
+const cv=document.createElement('canvas');cv.width=512;cv.height=512;const c=cv.getContext('2d');c.fillStyle='#c89a5e';c.fillRect(0,0,512,512);for(let i=0;i<512;i+=6){c.fillStyle=i%12?'rgba(120,80,30,.05)':'rgba(255,240,200,.05)';c.fillRect(0,i,512,3)}
+c.fillStyle='rgba(225,200,150,.85)';c.fillRect(226,0,60,512);c.fillStyle='#3a2a1a';c.font='bold 56px Arial';c.textAlign='center';c.fillText('THIS SIDE UP',256,96);
+c.font='bold 80px Arial';c.fillText('⬆  ⬆',256,190);c.strokeStyle='#c8282d';c.lineWidth=7;c.strokeRect(96,300,320,90);c.fillStyle='#c8282d';c.font='900 64px Arial Black, Arial';c.fillText('FRAGILE',256,368);
+c.fillStyle='#3a2a1a';c.font='bold 40px Arial';c.fillText('ROMACITY · HANDLE WITH CARE',256,460);
+const tx=new Pe(cv);tx.colorSpace=me;const CM=new T.Mat({map:tx,side:2}),PL=new T.Mat({color:13148766,side:2});
+const X0=x,X1=x+w,Z0=z,Z1=z+d,panel=(a,b,c2,dd,y0,y1,face)=>{const m=new T.Mesh(new T.Box(c2-a,y1-y0,dd-b),face?[PL,PL,PL,PL,CM,CM].map((q,i)=>face==='x'?[CM,CM,PL,PL,PL,PL][i]:q):PL);m.position.set((a+c2)/2,(y0+y1)/2,(b+dd)/2);g.add(m)};
+for(const[side,a0,a1]of[['x0',Z0,Z1],['x1',Z0,Z1],['z0',X0,X1],['z1',X0,X1]]){const isFront=fx?(side===(fs>0?'x1':'x0')):(side===(fs>0?'z1':'z0')),mid=(a0+a1)/2,ax=side[0]==='x';
+const seg=(p,q,y0,y1)=>ax?panel(side==='x0'?X0:X1-T0,p,side==='x0'?X0+T0:X1,q,y0,y1,'x'):panel(p,side==='z0'?Z0:Z1-T0,q,side==='z0'?Z0+T0:Z1,y0,y1,'z');
+if(isFront){seg(a0,mid-DW/2,0,H);seg(mid+DW/2,a1,0,H);seg(mid-DW/2,mid+DW/2,DH,H);
+// the cut-out door flap, pushed open
+const fl=new T.Group(),hx=ax?(side==='x0'?X0:X1):mid-DW/2,hz=ax?mid-DW/2:(side==='z0'?Z0:Z1);fl.position.set(hx,0,hz);g.add(fl);const m=new T.Mesh(new T.Box(ax?T0:DW,DH,ax?DW:T0),CM);m.position.set(ax?0:DW/2,DH/2,ax?DW/2:0);fl.add(m);fl.rotation.y=(ax?1:-1)*fs*.9}
+else seg(a0,a1,0,H)}
+// the top flaps, folded open and hanging outwards
+for(const[side,len,span]of[['x0',d,w/2],['x1',d,w/2],['z0',w,d/2],['z1',w,d/2]]){const f=new T.Group(),ax=side[0]==='x',s=side[1]==='0'?-1:1;f.position.set(ax?(s<0?X0:X1):cx,H,ax?cz:(s<0?Z0:Z1));g.add(f);
+const fr=fx?(side===(fs>0?'x1':'x0')):(side===(fs>0?'z1':'z0')),L2=span*.8,an=fr?.3:1.0;const m=new T.Mesh(new T.Box(ax?L2:len,T0,ax?len:L2),PL);m.position.set(ax?s*L2/2:0,0,ax?0:s*L2/2);f.add(m);if(ax)f.rotation.z=-s*an;else f.rotation.x=s*an}
+// inside: bubble-wrap floor, packing peanuts, a beach ball and toy blocks
+const bc=document.createElement('canvas');bc.width=bc.height=128;const b=bc.getContext('2d');b.fillStyle='#cfe9f2';b.fillRect(0,0,128,128);for(let i=0;i<8;i++)for(let j=0;j<8;j++){b.fillStyle='rgba(255,255,255,.75)';b.beginPath();b.arc(8+i*16+(j%2?8:0),8+j*16,6,0,7);b.fill()}
+const bt=new Pe(bc);bt.colorSpace=me;bt.wrapS=bt.wrapT=1000;bt.repeat.set(w/4,d/4);const fl=new T.Mesh(new Hn(w-1,d-1),new T.Mat({map:bt}));fl.rotation.x=-Math.PI/2;fl.position.set(cx,.12,cz);g.add(fl);
+const NP=500,pe=new on(new T.Box(.5,.22,.25),new T.Mat({color:16777215}),NP),Q=new ee,O=new T.Group;for(let i=0;i<NP;i++){O.position.set(x+1+Math.random()*(w-2),.2+Math.random()*.25,z+1+Math.random()*(d-2));O.rotation.set(Math.random()*3,Math.random()*3,0);O.updateMatrix();pe.setMatrixAt(i,O.matrix);pe.setColorAt(i,new Pt(Math.random()<.7?'#fff8e7':'#ffe3a8'))}g.add(pe);
+const bb=new T.Group();bb.position.set(cx+w*.2,2.2,cz-d*.15);g.add(bb);['#e8282d','#ffffff','#2f6fdf','#ffd23c','#ffffff','#2ec46b'].forEach((col,i)=>{const m=new T.Mesh(new T.Sph(2.2,16,12,i*Math.PI/3,Math.PI/3),mat(col));bb.add(m)});
+[['#e8282d',-.25,-.2],['#2f6fdf',-.3,.1],['#ffd23c',-.2,.25]].forEach(([col,a,bq],i)=>{const k=box(2.6,2.6,2.6,col,cx+w*a,1.3+(i===2?2.6:0),cz+d*bq,g);k.rotation.y=i*.4});
+$t.add(g);window.__ROOMS=window.__ROOMS||[];const fc=fx?cz:cx;window.__ROOMS.push({x0:X0,z0:Z0,x1:X1,z1:Z1,H,dh:DH,open:1,side:fx?(fs>0?'x1':'x0'):(fs>0?'z1':'z0'),a0:fc-DW/2+.4,a1:fc+DW/2-.4})}
+// factory chimneys with smoke
+function factoryTop(x,z,w,d,h){const pts=[[.25,.3],[.45,.3],[.7,.65]],puffs=[];for(const[a,b]of pts){const px=x+w*a,pz=z+d*b,CH=9;const ch=new T.Mesh(new ce(.9,1.2,CH,12),mat('#b5483a'));ch.position.set(px,h+CH/2,pz);$t.add(ch);
+for(const yy of[2,6]){const r=new T.Mesh(new ce(1.02,1.02,.6,12),mat('#f4f4f4'));r.position.set(px,h+yy,pz);$t.add(r)}
+for(let i=0;i<6;i++){const p=new T.Mesh(new T.Sph(1,8,6),new Be({color:12105912,transparent:!0,opacity:.6}));$t.add(p);puffs.push([p,px,pz,h+CH,i/6])}}
+let t=0;LIVE.push(dt=>{t+=dt;for(const[p,px,pz,y0,o]of puffs){const k=(t*.25+o)%1;p.position.set(px+k*3,y0+k*10,pz+Math.sin(k*5+o*9)*.8);p.scale.setScalar(.8+k*2.4);p.material.opacity=.6*(1-k)}})}
 // a game on at a stadium: a crowd in the stands and two teams playing (American football or soccer)
 function stadiumGame(x,z,w,d,sport){const S=STAD[sport]||STAD.football,rot=w>d,LW=rot?d:w,LD=rot?w:d,W2=LW/2-1,D2=LD/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N;
 const G=new T.Group();G.position.set(x+w/2,0,z+d/2);G.rotation.y=rot?Math.PI/2:0;$t.add(G);
@@ -1278,6 +1355,7 @@ for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons
 for(const[k,x,z,w,d,c]of ie.deco||[])k==='stadium'&&stadiumGame(x,z,w,d,c);
 for(const[k,x,z,w,d]of ie.deco||[])k==='coaster'&&coasterRide(x,z,w,d);
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='disco'&&disco(x,z,w,d,c,f[0],f[1],f[2]);
+for(const[k,x,z,w,d,c,n,f]of ie.deco||[])k==='cbox'?cardboardBox(x,z,w,d,f[0],f[1],f[2]):k==='factory'&&factoryTop(x,z,w,d,f);
 for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');raccoonHead(p.g);const cap=new T.Mesh(new T.Sph(.25,10,8,0,6.3,0,1.3),mat('#4a5436'));cap.position.y=1.8;p.g.add(cap);men.push(p)}
 let t=0;LIVE.push(dt=>{t+=dt;const L=U*.7,ph=(t*1.4)%(2*L),dir=ph<L?1:-1,pos=ph<L?ph:2*L-ph;men.forEach((p,i)=>{p.g.position.set(cx-L/2+pos,.13,cz-5+i*2);p.g.rotation.y=dir>0?Math.PI/2:-Math.PI/2;const sw=Math.sin(t*6)*.6;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw;p.arms[1].rotation.x=sw})})}
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
@@ -1328,7 +1406,7 @@ function d_(){''')
     rep('r.position.set(0,1.9,-2410),$t.add(r)', 'r.position.set(0,1.9,-2410)')   # no Han River out in the countryside          # high enough to fly over Mt. Pigeon
     rep('t=1800,e=new ce(.18,.25,4,5,1,!0)', 't=6000,e=new ce(.18,.25,4,5,1,!0)')   # a forest needs more trees on screen
     # the tunnel: room to fly through under the mountain
-    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const R of window.__ROOMS||[]){if(x>R.x0&&x<R.x1&&z>R.z0&&z<R.z1){const inner=x>R.x0+.6&&x<R.x1-.6&&z>R.z0+.6&&z<R.z1-.6,door=!inner&&y<R.dh-.3&&(R.side==="x0"||R.side==="x1"?(z>R.a0&&z<R.a1&&(R.side==="x0"?x<R.x0+.8:x>R.x1-.8)):(x>R.a0&&x<R.a1&&(R.side==="z0"?z<R.z0+.8:z>R.z1-.8)));if((inner||door)&&y<R.H-.4)return{f:.15,c:inner?R.H-.5:R.dh,name:null};return{f:R.H+.5,c:1e4,name:null}}}for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.L/2&&lz>=m.fz+.4&&lz<m.D/2+2.6){const fl=lz<=m.D/2?1.4:1.4*Math.max(0,1-(lz-m.D/2)/2.6);return y<fl+m.H-.6?{f:fl,c:1.4+m.H-.1,name:null}:{f:m.top+5,c:1e4,name:null}}if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P,dh]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(dh||hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}{const MR=window.__mroad;if(MR){if(!MR.bb){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const[px,pz]of MR.P){a=Math.min(a,px);b=Math.min(b,pz);c=Math.max(c,px);d=Math.max(d,pz)}MR.bb=[a-8,b-8,c+8,d+8]}const B=MR.bb;if(x>B[0]&&x<B[2]&&z>B[1]&&z<B[3]){let bd=1e9,bk=-1;for(let k=0;k<MR.P.length;k++){const dx=MR.P[k][0]-x,dz=MR.P[k][1]-z,q=dx*dx+dz*dz;q<bd&&(bd=q,bk=k)}if(bd<MR.hw*MR.hw&&y>MR.Y[bk]-3)return{f:MR.Y[bk],c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
+    rep('bi=en.spaceAt;{const SB=', 'bi=en.spaceAt;{const old0=bi;bi=(x,z,y)=>{for(const R of window.__ROOMS||[]){if(x>R.x0&&x<R.x1&&z>R.z0&&z<R.z1){const inner=x>R.x0+.6&&x<R.x1-.6&&z>R.z0+.6&&z<R.z1-.6,door=!inner&&y<R.dh-.3&&(R.side==="x0"||R.side==="x1"?(z>R.a0&&z<R.a1&&(R.side==="x0"?x<R.x0+.8:x>R.x1-.8)):(x>R.a0&&x<R.a1&&(R.side==="z0"?z<R.z0+.8:z>R.z1-.8)));if(inner&&R.open)return{f:.15,c:1e4,name:null};if((inner||door)&&y<R.H-.4)return{f:.15,c:inner?R.H-.5:R.dh,name:null};return{f:R.H+.5,c:1e4,name:null}}}for(const m of window.__MUSEUM||[]){const dx=x-m.cx,dz=z-m.cz,c=Math.cos(m.f),s=Math.sin(m.f),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<m.L/2&&lz>=m.fz+.4&&lz<m.D/2+2.6){const fl=lz<=m.D/2?1.4:1.4*Math.max(0,1-(lz-m.D/2)/2.6);return y<fl+m.H-.6?{f:fl,c:1.4+m.H-.1,name:null}:{f:m.top+5,c:1e4,name:null}}if(Math.abs(lx)<m.HW/2+.4&&lz>m.bz-.4&&lz<m.fz+.4){const inner=Math.abs(lx)<m.HW/2-.9&&lz>m.bz+.9&&lz<m.fz-.9,door=Math.abs(lx)<m.DW/2-.6&&y<1.4+m.DH-.5;if(inner||door)return y<1.4+m.H-.4?{f:1.4,c:1.4+m.H-.5,name:null}:{f:m.top,c:1e4,name:null};return{f:m.top,c:1e4,name:null}}}for(const sf of window.__SECRET||[]){const r=sf(x,z,y);if(r)return r}for(const S of window.__STAT||[]){const i=Math.floor((x-S.x0)/S.r),j=Math.floor((z-S.z0)/S.r);if(i>=0&&j>=0&&i<S.nx&&j<S.nz){const h=S.h[j*S.nx+i];if(h>.3)return{f:h,c:1e4,name:null}}}if(window.__boatAt){const dk=window.__boatAt(x,z);if(dk!=null&&y>dk-2.5)return{f:dk,c:1e4,name:null}}for(const[hw,P,dh]of window.__BRS||[]){for(let i=1;i<P.length;i++){const[a,b]=P[i-1],[c,d]=P[i],dx=c-a,dz=d-b,L=dx*dx+dz*dz||1;let t=((x-a)*dx+(z-b)*dz)/L;if(t<-.05||t>1.05)continue;t=t<0?0:t>1?1:t;const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<(dh||hw+1.3)**2){const h=window.__BRH(x,z),g0=ne(x,z);if(h>1.5)return y<g0+h-1.3?{f:g0,c:g0+h-1.2,name:null}:{f:g0+h+.05,c:1e4,name:null}}}}{const MR=window.__mroad;if(MR){if(!MR.bb){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const[px,pz]of MR.P){a=Math.min(a,px);b=Math.min(b,pz);c=Math.max(c,px);d=Math.max(d,pz)}MR.bb=[a-8,b-8,c+8,d+8]}const B=MR.bb;if(x>B[0]&&x<B[2]&&z>B[1]&&z<B[3]){let bd=1e9,bk=-1;for(let k=0;k<MR.P.length;k++){const dx=MR.P[k][0]-x,dz=MR.P[k][1]-z,q=dx*dx+dz*dz;q<bd&&(bd=q,bk=k)}if(bd<MR.hw*MR.hw&&y>MR.Y[bk]-3)return{f:MR.Y[bk],c:1e4,name:null}}}}if(window.__inTunnel&&y<9.5&&window.__inTunnel(x,z))return{f:.3,c:8.6,name:null};for(const[a,b,c,d,lo]of window.__gantries||[]){const dx=c-a,dz=d-b,L=dx*dx+dz*dz;let t=((x-a)*dx+(z-b)*dz)/L;if(t>.08&&t<.92){const px=a+dx*t-x,pz=b+dz*t-z;if(px*px+pz*pz<2.2){const f0=old0?old0(x,z,y):null;return y<lo+1?{f:f0?f0.f:He(x,z),c:lo,name:null}:{f:lo+4.2,c:1e4,name:null}}}}return old0?old0(x,z,y):null}}{const SB=')
 # ---- Pigeon Pigeon: the name, a P P logo, and snack spacing that suits a small city
 rep('<h1>Banpo Pigeon</h1>', '<h1>Pigeon Pigeon</h1>')
 rep('<h1>Seocho Person</h1>', '<h1>Pigeon Person</h1>')

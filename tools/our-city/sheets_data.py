@@ -343,6 +343,27 @@ RING_SHEETS = {
   ('military', 10.3, 8.5, 5.0, 4.9, 0, None, 'Military Base'),
   ('b', 16.5, 10.4, 2.0, 2.0, 4, '#F08A3C', ''),
  ],
+ 'S4': [
+  ('s', 0.05, 0.95, 1.65, 2.9, 2, '#9ED0E6', 'Roma'),
+  ('octopus', 2.7, 1.7, 3.0, 1.7, 0, None, 'Octopus'),                 # a giant octopus in the pond
+  ('s', 6.15, 2.9, 1.95, 3.5, 2, '#C8E86A', 'Yummy'),
+  ('soccerstadium', 9.2, 0.2, 7.9, 6.1, 0, None, 'Korea Tigers Stadium'),
+  ('stand', 8.35, 0.5, 0.6, 0.6, 1, None, ''),
+  ('stand', 8.35, 1.4, 0.6, 0.6, 1, None, ''),
+  ('stand', 8.35, 2.3, 0.6, 0.6, 1, None, ''),
+  ('stand', 8.35, 3.2, 0.6, 0.6, 1, None, ''),
+  ('stand', 8.35, 4.1, 0.6, 0.6, 1, None, ''),
+  ('stand', 8.35, 5.0, 0.6, 0.6, 1, None, ''),
+  ('stand', 17.2, 3.9, 0.5, 0.5, 1, None, ''),
+  ('stand', 17.2, 4.75, 0.5, 0.5, 1, None, ''),
+  ('stand', 17.2, 5.55, 0.5, 0.5, 1, None, ''),
+  ('s', 17.65, 0.95, 2.15, 2.75, 1, '#F6D55C', 'Hot Dog'),
+  ('tigerstatue', 2.25, 8.8, 4.75, 1.0, 0, None, 'Tiger Statue'),     # a big tiger lying down
+  ('s', 1.95, 10.85, 0.95, 1.15, 1, '#E8E2D6', 'Snack Shop'),
+  ('coaster', 10.3, 8.6, 6.0, 3.15, 0, None, 'Tiger Roller Coaster'),
+  ('stand', 10.35, 8.65, 0.6, 0.6, 1, None, 'Coaster Snacks'),
+  ('s', 17.0, 8.95, 2.5, 2.15, 2, '#F08A3C', 'Yummy Pigeon'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),

@@ -220,13 +220,18 @@ for it in C['items']:
         H_ = max(1, host[0]['f']) * FLOOR if host else 20
         deco.append([k, x, z, w, d, c, n, H_])
         snacks.append(['bakery', 'Secret treasure', round(x + w / 2 - 1, 1), round(z + d / 2 - 1.5, 1), 1.1])
+    elif k in ('octopus', 'tigerstatue', 'coaster'):   # built in the game; solid from their real shape
+        deco.append([k, x, z, w, d, c, n])
+        if n and k != 'octopus':
+            mx, mz, nx, nz, L = best_side(x, z, w, d)
+            parksigns.append([round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
     elif k in ('military', 'rock'):   # built in the game; solid from their real shape
         deco.append([k, x, z, w, d, c, n])
         if k == 'military':
             mx, mz, nx, nz, L = best_side(x, z, w, d)
             parksigns.append([round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1), round(math.atan2(nx, nz), 3), n or 'Military Base'])
-    elif k == 'stadium':   # American football stadium (stands are solid from their real shape; the field is open)
-        deco.append([k, x, z, w, d, c, n])
+    elif k in ('stadium', 'soccerstadium'):   # a stadium (stands are solid from their real shape; the field is open)
+        deco.append(['stadium', x, z, w, d, 'soccer' if k == 'soccerstadium' else 'football', n])
         if n:
             mx, mz, nx, nz, L = best_side(x, z, w, d)
             parksigns.append([round(mx + nx * 1.5, 1), round(mz + nz * 1.5, 1), round(math.atan2(nx, nz), 3), n])
@@ -608,6 +613,42 @@ for(const a of[-1,1])for(const b of[-1,1])box(.15,1.8,.15,'#6b5a45',tu+a*1.6,9.9
 {const fu=gs[0]==='u'?gs[1]*(U-4):-6,fv=gs[0]==='v'?gs[1]*(V-4):-6,p=new T.Mesh(new ce(.08,.1,10,8),mat('#d8d8d8'));p.position.set(fu,5,fv);g.add(p);const cv=document.createElement('canvas');cv.width=96;cv.height=64;const c=cv.getContext('2d');c.fillStyle=OL;c.fillRect(0,0,96,64);c.fillStyle='#ffd23c';c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?9:22;c.lineTo(48+Math.cos(a)*r,32+Math.sin(a)*r)}c.fill();
 const tx=new Pe(cv);tx.colorSpace=me;const fl=new T.Mesh(new Hn(2.6,1.7),new Be({map:tx,side:2}));fl.position.set(fu+1.35,9,fv);g.add(fl)}
 g.position.set(x+w/2,0,z+d/2);$t.add(g)}
+// a giant friendly octopus in the pond, waving its tentacles
+function octopus(x,z,w,d){const g=new T.Group(),S=Math.min(w,d)/16,P='#b05cc8',PL='#d48ae0';
+const hd=new T.Mesh(new T.Sph(4,20,16),mat(P));hd.scale.set(1,1.25,1);hd.position.y=7.5;g.add(hd);
+for(const k of[-1,1]){const e=new T.Mesh(new T.Sph(1.05,14,10),mat('#ffffff'));e.position.set(k*1.5,7.2,3.3);g.add(e);const p=new T.Mesh(new T.Sph(.55,12,8),mat('#16171a'));p.position.set(k*1.55,7.2,4.15);g.add(p);const sh=new T.Mesh(new T.Sph(.18,8,6),mat('#ffffff'));sh.position.set(k*1.35,7.5,4.6);g.add(sh)}
+const sm=new T.Mesh(new Vo(.9,.16,6,14,Math.PI),mat('#5a2a6a'));sm.position.set(0,5.9,3.75);sm.rotation.z=Math.PI;g.add(sm);
+for(const k of[-1,1]){const ch=new T.Mesh(new T.Sph(.55,8,6),mat('#f08ab8'));ch.position.set(k*2.6,6.3,3.1);ch.scale.z=.4;g.add(ch)}
+const arms=[];for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.2,arm=new T.Group();arm.position.set(Math.cos(a)*2.6,3.6,Math.sin(a)*2.6);arm.rotation.y=-a;g.add(arm);let par=arm,r=1;
+const segs=[];for(let j=0;j<10;j++){const sg=new T.Group();sg.position.set(j?1.5*r/.88:0,0,0);par.add(sg);const b=new T.Mesh(new T.Sph(r*.95,10,8),mat(j%2?P:PL));b.scale.set(1.25,.8,1);b.position.x=.75*r;sg.add(b);if(j>1){const su=new T.Mesh(new T.Sph(.2*r,6,4),mat('#f3c6f0'));su.position.set(.75*r,-r*.7,0);sg.add(su)}
+sg.rotation.z=j===0?-.3:j<4?-.04:.14;segs.push(sg);par=sg;r*=.88}arms.push(segs)}
+g.scale.setScalar(Math.max(.7,Math.min(1.3,S)));g.position.set(x+w/2,-.6,z+d/2);g.rotation.y=Math.atan2(300-(x+w/2),210-(z+d/2));$t.add(g);
+let lt=performance.now(),t=0;const wave=tm=>{t+=Math.min(.05,(tm-lt)/1000);lt=tm;arms.forEach((segs,i)=>segs.forEach((sg,j)=>{if(j)sg.rotation.z=(j<4?-.04:.14)+Math.sin(t*1.6+i*.8-j*.5)*.1}));hd.position.y=7.5+Math.sin(t*1.2)*.25;requestAnimationFrame(wave)};requestAnimationFrame(wave)}
+// a giant tiger statue lying on a stone base
+function tigerStatue(x,z,w,d){const g=new T.Group(),L=Math.max(w,d),alongX=w>=d,sc=L/40;
+const cv=document.createElement('canvas');cv.width=256;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#f08a24';c.fillRect(0,0,256,128);c.fillStyle='#ffffff';c.fillRect(0,96,256,32);c.fillStyle='#16171a';
+for(let i=0;i<14;i++){const x0=i*18+6;c.beginPath();c.moveTo(x0,0);c.quadraticCurveTo(x0+10,30,x0+2,62);c.lineTo(x0+8,62);c.quadraticCurveTo(x0+16,30,x0+8,0);c.fill()}
+const tx=new Pe(cv);tx.colorSpace=me;tx.wrapS=tx.wrapT=1000;const FM=new T.Mat({map:tx});
+const base=new T.Mesh(new T.Box(36,2,9),mat('#b9b4aa'));base.position.y=1;g.add(base);box(37,.4,10,'#a39e94',0,.2,0,g);
+const bd=new T.Mesh(new T.Sph(1,28,18),FM);bd.scale.set(13,4.6,4.6);bd.position.set(1,5.8,0);g.add(bd);
+const hd=new T.Mesh(new T.Sph(3.6,24,18),FM);hd.position.set(-13,8.8,0);hd.rotation.set(0,0,-.3);g.add(hd);
+const mz=new T.Mesh(new T.Sph(1.8,14,10),mat('#ffffff'));mz.scale.set(.9,.8,1.25);mz.position.set(-15.9,7.7,0);g.add(mz);const ns=new T.Mesh(new T.Sph(.55,10,8),mat('#e8728a'));ns.position.set(-17.4,8.4,0);g.add(ns);
+for(const k of[-1,1]){const e=new T.Mesh(new T.Sph(.6,10,8),mat('#e0b800'));e.position.set(-15.4,9.7,k*1.4);g.add(e);const p=new T.Mesh(new T.Sph(.3,8,6),mat('#16171a'));p.position.set(-15.9,9.7,k*1.45);g.add(p);
+const ear=new T.Mesh(new T.Sph(1.1,10,8),mat('#f08a24'));ear.scale.set(.5,1,1);ear.position.set(-12.2,11.9,k*2.2);g.add(ear);const ei=new T.Mesh(new T.Sph(.6,8,6),mat('#16171a'));ei.scale.set(.5,1,1);ei.position.set(-12.6,11.9,k*2.2);g.add(ei);
+const paw=new T.Mesh(new T.Sph(1,12,8),FM);paw.scale.set(4.5,1.3,1.6);paw.position.set(-14,3.3,k*2.4);g.add(paw);const pw=new T.Mesh(new T.Sph(1.3,10,8),mat('#ffffff'));pw.scale.set(1.2,.8,1);pw.position.set(-18,3.2,k*2.4);g.add(pw);
+const hl=new T.Mesh(new T.Sph(1,12,8),FM);hl.scale.set(4,2.4,1.8);hl.position.set(10,3.9,k*3.4);g.add(hl)}
+let par=g,tp=[14,4.5,0];for(let i=0;i<9;i++){const s=new T.Mesh(new T.Sph(.95-i*.05,10,8),mat(i%2?'#16171a':'#f08a24'));tp=[tp[0]+.55,tp[1]-.1+(i>5?.45:0),tp[2]+(i<5?.55:.15)];s.position.set(...tp);g.add(s)}
+g.scale.setScalar(sc);g.position.set(x+w/2,0,z+d/2);g.rotation.y=alongX?0:Math.PI/2;$t.add(g)}
+// roller coaster: a looping track on supports (the train runs on it, see coasterRide)
+function coasterPath(w,d){const A=Math.max(w,d)/2-5,B=Math.min(w,d)/2-4,alongX=w>=d;return t=>{const u=A*Math.cos(t),v=B*Math.sin(t)*(1-.25*Math.cos(2*t)),y=3+11*Math.pow((1+Math.sin(t))/2,3)+3.5*Math.pow((1+Math.sin(3*t+1))/2,2);return alongX?[u,y,v]:[v,y,u]}}
+function coaster(x,z,w,d){const g=new T.Group(),F=coasterPath(w,d),Nn=180,P=[];for(let i=0;i<=Nn;i++)P.push(F(i/Nn*Math.PI*2));g.updateMatrixWorld(!0);
+const seg=(a,b,o,col,th)=>{const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],L=Math.hypot(dx,dy,dz),m=new T.Mesh(new T.Box(th,th,L+.05),mat(col));m.position.set((a[0]+b[0])/2+o[0],(a[1]+b[1])/2+o[1],(a[2]+b[2])/2+o[2]);m.lookAt(b[0]+o[0],b[1]+o[1],b[2]+o[2]);g.add(m)};
+for(let i=0;i<Nn;i++){const a=P[i],b=P[i+1],tx=b[0]-a[0],tz=b[2]-a[2],tl=Math.hypot(tx,tz)||1,nx=-tz/tl*.6,nz=tx/tl*.6;seg(a,b,[nx,0,nz],'#e8463c',.22);seg(a,b,[-nx,0,-nz],'#e8463c',.22);
+if(i%2===0){const m=new T.Mesh(new T.Box(1.5,.12,.3),mat('#3a3d44'));m.position.set(a[0],a[1]-.1,a[2]);m.rotation.y=Math.atan2(tx,tz);g.add(m)}
+if(i%6===0&&a[1]>1.2){const s=new T.Mesh(new ce(.18,.25,a[1],6),mat('#f2b705'));s.position.set(a[0],a[1]/2-.15,a[2]);g.add(s)}}
+// station platform with a striped tiger roof
+{const st=F(Math.PI*1.5);box(9,1.6,4,'#d8d2c2',st[0],.8,st[2]+(w>=d?3:0),g);const rf=box(10,.4,5,'#f08a24',st[0],4.2,st[2]+(w>=d?3:0),g);for(const k of[-1,1])box(.3,2.6,.3,'#16171a',st[0]+k*4.5,2.9,st[2]+(w>=d?3:0),g)}
+g.position.set(x+w/2,0,z+d/2);$t.add(g)}
 // RomaCity Raccoons logo: a raccoon face in a gold ring with the team name around it
 function raccoonLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#f2b705';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#24262b';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
 c.fillStyle='#24262b';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
@@ -623,41 +664,65 @@ for(const k of[-1,1]){c.fillStyle='#ffffff';c.beginPath();c.arc(k*28,-1,8,0,7);c
 c.fillStyle='#f4f4f4';c.beginPath();c.ellipse(0,30,24,17,0,0,7);c.fill();c.fillStyle='#16171a';c.beginPath();c.ellipse(0,20,10,7,0,0,7);c.fill();
 c.strokeStyle='#16171a';c.lineWidth=3;c.beginPath();c.moveTo(0,26);c.lineTo(0,34);c.moveTo(-9,38);c.quadraticCurveTo(0,44,9,38);c.stroke();c.restore()}
 const logoTex=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createElement('canvas');cv.width=cv.height=256;raccoonLogo(cv.getContext('2d'),128,128,124);t=new Pe(cv);t.colorSpace=me;return t}})();
-// American football stadium: turf field with yard lines and end zones, stands on all four sides, goal posts, lights, scoreboard
-function stadium(x,z,w,d,n){const g=new T.Group(),W2=w/2-1,D2=d/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N,GOLD='#f2b705',DARK='#2f3238';
-const cv=document.createElement('canvas'),PX=16;cv.width=FW*2*PX;cv.height=FL*2*PX;const c=cv.getContext('2d');
-c.fillStyle='#3d8a38';c.fillRect(0,0,cv.width,cv.height);const fx0=3*PX,fx1=cv.width-3*PX,fy0=3*PX,fy1=cv.height-3*PX,ez=5*PX,gl0=fy0+ez,gl1=fy1-ez,yd=(gl1-gl0)/10;
+// Korea Tigers logo: a tiger face in a red ring with the team name around it
+function tigerLogo(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#d7262e';c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle='#1d1f24';c.beginPath();c.arc(0,0,r*.78,0,7);c.fill();
+c.fillStyle='#ffffff';c.font=`900 ${r*.17}px Arial Black, Arial, sans-serif`;c.textAlign='center';c.textBaseline='middle';
+const arc=(t,top)=>{const R=r*.89,ws=[...t].map(ch=>c.measureText(ch).width*1.08),T=ws.reduce((a,b)=>a+b,0)/R;let a=top?-Math.PI/2-T/2:Math.PI/2+T/2;[...t].forEach((ch,i)=>{const da=ws[i]/R/2;a+=top?da:-da;c.save();c.rotate(a);c.translate(R,0);c.rotate(top?Math.PI/2:-Math.PI/2);c.fillText(ch,0,0);c.restore();a+=top?da:-da})};
+arc('KOREA',1);arc('TIGERS',0);for(const k of[-1,1]){c.beginPath();c.arc(k*r*.89,0,r*.035,0,7);c.fill()}
+const s=r*.0075;c.scale(s,s);
+for(const k of[-1,1]){c.fillStyle='#f08a24';c.beginPath();c.arc(k*50,-50,22,0,7);c.fill();c.fillStyle='#1d1f24';c.beginPath();c.arc(k*50,-50,13,0,7);c.fill();c.fillStyle='#ffffff';c.beginPath();c.arc(k*50,-48,7,0,7);c.fill()}
+c.fillStyle='#f08a24';c.beginPath();c.ellipse(0,4,68,58,0,0,7);c.fill();
+c.fillStyle='#ffffff';c.beginPath();c.moveTo(-68,14);c.quadraticCurveTo(-46,62,0,58);c.quadraticCurveTo(46,62,68,14);c.quadraticCurveTo(30,28,0,30);c.quadraticCurveTo(-30,28,-68,14);c.fill();
+c.beginPath();c.ellipse(-20,32,20,15,0,0,7);c.ellipse(20,32,20,15,0,0,7);c.fill();
+c.fillStyle='#16171a';for(const[a,b,l]of[[0,-50,26],[-14,-46,20],[14,-46,20]]){c.beginPath();c.moveTo(a-5,b);c.lineTo(a+5,b);c.lineTo(a,b+l);c.fill()}
+for(const k of[-1,1])for(const[yy,l]of[[-6,24],[8,28]]){c.beginPath();c.moveTo(k*68,yy-5);c.lineTo(k*68,yy+5);c.lineTo(k*(68-l),yy);c.fill()}
+for(const k of[-1,1]){c.fillStyle='#ffffff';c.beginPath();c.ellipse(k*26,-10,13,9,0,0,7);c.fill();c.fillStyle='#e0b800';c.beginPath();c.arc(k*26,-10,7,0,7);c.fill();c.fillStyle='#16171a';c.beginPath();c.ellipse(k*26,-10,2.5,6,0,0,7);c.fill();
+c.strokeStyle='#16171a';c.lineWidth=4;c.beginPath();c.moveTo(k*14,-22);c.lineTo(k*38,-26);c.stroke()}
+c.fillStyle='#e8728a';c.beginPath();c.moveTo(-10,18);c.lineTo(10,18);c.lineTo(0,28);c.fill();c.strokeStyle='#16171a';c.lineWidth=3;c.beginPath();c.moveTo(0,28);c.lineTo(0,36);c.moveTo(-12,40);c.quadraticCurveTo(0,46,12,40);c.stroke();c.restore()}
+const STAD={football:{c1:'#f2b705',c2:'#2f3238',seats:['#f2b705','#2f3238'],logo:raccoonLogo,name:'ROMACITY RACCOONS',board:['RACCOONS','67','VISITORS','7','QTR 4   0:42   GO RACCOONS!'],home:['#f2b705','#2f3238'],away:['#e8463c','#ffffff'],crowd:['#f2b705','#f2b705','#f2b705','#2f3238','#2f3238','#a9b0b8','#ffffff','#e8463c']},
+ soccer:{c1:'#d7262e',c2:'#1d1f24',seats:['#d7262e','#ffffff'],logo:tigerLogo,name:'KOREA TIGERS',board:['TIGERS','3','VISITORS','1','2ND HALF   78:12   GO TIGERS!'],home:['#d7262e','#ffffff'],away:['#2f6fdf','#ffffff'],crowd:['#d7262e','#d7262e','#d7262e','#ffffff','#ffffff','#1d1f24','#f08a24','#2f6fdf']}};
+const logoTexFor=(()=>{const C={};return S=>{if(C[S.name])return C[S.name];const cv=document.createElement('canvas');cv.width=cv.height=256;S.logo(cv.getContext('2d'),128,128,124);const t=new Pe(cv);t.colorSpace=me;return C[S.name]=t}})();
+// a stadium: field, stands on all four sides, goals, lights, scoreboard, team banners (American football or soccer)
+function stadium(x,z,w,d,n,sport){const S=STAD[sport]||STAD.football,g=new T.Group(),rot=w>d,LW=rot?d:w,LD=rot?w:d,W2=LW/2-1,D2=LD/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N,C1=S.c1,C2=S.c2;
+const cv=document.createElement('canvas'),PX=16;cv.width=FW*2*PX;cv.height=FL*2*PX;const c=cv.getContext('2d');c.fillStyle='#3d8a38';c.fillRect(0,0,cv.width,cv.height);
+if(sport==='soccer'){const m=2*PX,W=cv.width,H=cv.height;for(let i=0;i<12;i++){c.fillStyle=i%2?'#4fa547':'#46993f';c.fillRect(m,m+i*(H-2*m)/12,W-2*m,(H-2*m)/12)}
+c.strokeStyle='#ffffff';c.lineWidth=4;c.strokeRect(m,m,W-2*m,H-2*m);c.beginPath();c.moveTo(m,H/2);c.lineTo(W-m,H/2);c.stroke();c.beginPath();c.arc(W/2,H/2,5*PX,0,7);c.stroke();
+for(const s of[0,1]){const y0=s?H-m:m,dir=s?-1:1;c.strokeRect(W/2-8*PX,Math.min(y0,y0+dir*8*PX),16*PX,8*PX);c.strokeRect(W/2-4*PX,Math.min(y0,y0+dir*3*PX),8*PX,3*PX);c.fillStyle='#fff';c.beginPath();c.arc(W/2,y0+dir*6*PX,3,0,7);c.fill();
+c.beginPath();c.arc(W/2,y0+dir*8*PX,3.2*PX,s?Math.PI+.75:.75,s?2*Math.PI-.75:Math.PI-.75);c.stroke()}
+for(const[a,b,s0]of[[m,m,0],[W-m,m,Math.PI/2],[W-m,H-m,Math.PI],[m,H-m,1.5*Math.PI]]){c.beginPath();c.arc(a,b,PX,s0,s0+Math.PI/2);c.stroke()}
+S.logo(c,W/2,H/2,PX*3.6)}
+else{const fx0=3*PX,fx1=cv.width-3*PX,fy0=3*PX,fy1=cv.height-3*PX,ez=5*PX,gl0=fy0+ez,gl1=fy1-ez,yd=(gl1-gl0)/10;
 for(let i=0;i<10;i++){c.fillStyle=i%2?'#4fa547':'#46993f';c.fillRect(fx0,gl0+i*yd,fx1-fx0,yd)}
-c.fillStyle=DARK;c.fillRect(fx0,fy0,fx1-fx0,ez);c.fillRect(fx0,gl1,fx1-fx0,ez);
+c.fillStyle=C2;c.fillRect(fx0,fy0,fx1-fx0,ez);c.fillRect(fx0,gl1,fx1-fx0,ez);
 c.strokeStyle='#ffffff';c.lineWidth=5;c.strokeRect(fx0,fy0,fx1-fx0,fy1-fy0);c.lineWidth=3;for(let i=0;i<=10;i++){c.beginPath();c.moveTo(fx0,gl0+i*yd);c.lineTo(fx1,gl0+i*yd);c.stroke()}
 c.lineWidth=2;for(let i=1;i<50;i++){if(i%5===0)continue;const yy=gl0+i*yd/5;for(const hx of[fx0+6,fx0+.38*(fx1-fx0),fx0+.62*(fx1-fx0),fx1-6]){c.beginPath();c.moveTo(hx-5,yy);c.lineTo(hx+5,yy);c.stroke()}}
 c.fillStyle='#ffffff';c.font=`bold ${PX*1.5}px Arial`;c.textAlign='center';c.textBaseline='middle';
-for(let i=1;i<10;i++){const t=String(10*(i<=5?i:10-i)),yy=gl0+i*yd;for(const[sx,rot]of[[fx0+PX*2.4,Math.PI/2],[fx1-PX*2.4,-Math.PI/2]]){c.save();c.translate(sx,yy);c.rotate(rot);c.fillText(t,0,0);c.restore()}}
-c.fillStyle=GOLD;c.font=`900 ${PX*2.7}px Arial Black, Arial`;c.save();c.translate(cv.width/2,fy0+ez/2);c.rotate(Math.PI);c.fillText('RACCOONS',0,0);c.restore();c.fillText('ROMACITY',cv.width/2,gl1+ez/2);
-raccoonLogo(c,cv.width/2,cv.height/2,PX*4.3);
+for(let i=1;i<10;i++){const t=String(10*(i<=5?i:10-i)),yy=gl0+i*yd;for(const[sx,r0]of[[fx0+PX*2.4,Math.PI/2],[fx1-PX*2.4,-Math.PI/2]]){c.save();c.translate(sx,yy);c.rotate(r0);c.fillText(t,0,0);c.restore()}}
+c.fillStyle=C1;c.font=`900 ${PX*2.7}px Arial Black, Arial`;c.save();c.translate(cv.width/2,fy0+ez/2);c.rotate(Math.PI);c.fillText('RACCOONS',0,0);c.restore();c.fillText('ROMACITY',cv.width/2,gl1+ez/2);
+S.logo(c,cv.width/2,cv.height/2,PX*4.3)}
 const ft=new Pe(cv);ft.colorSpace=me;ft.anisotropy=4;const fm=new T.Mesh(new Hn(FW*2,FL*2),new T.Mat({map:ft}));fm.rotation.x=-Math.PI/2;fm.position.y=.13;g.add(fm);
-for(let i=0;i<N;i++){const hw=FW+i*ss,hl=FL+i*es,h=.9+i*.45,col=i===0?'#e9e4d6':i%2?DARK:GOLD;
+for(let i=0;i<N;i++){const hw=FW+i*ss,hl=FL+i*es,h=.9+i*.45,col=i===0?'#e9e4d6':S.seats[i%2];
 for(const s of[-1,1]){box(ss,h,2*(hl+es),col,s*(hw+ss/2),h/2,0,g);box(2*(hw+ss),h,es,col,0,h/2,s*(hl+es/2),g)}}
-const WH=10;for(const s of[-1,1]){box(.7,WH,2*D2+.7,DARK,s*W2,WH/2,0,g);box(2*W2+.7,WH,.7,DARK,0,WH/2,s*D2,g);box(.8,.9,2*D2+.8,GOLD,s*W2,WH-.45,0,g);box(2*W2+.8,.9,.8,GOLD,0,WH-.45,s*D2,g)}
-// banners on the outside walls
-const bc=document.createElement('canvas');bc.width=1024;bc.height=160;const b=bc.getContext('2d');b.fillStyle='#24262b';b.fillRect(0,0,1024,160);b.fillStyle=GOLD;b.fillRect(0,0,1024,10);b.fillRect(0,150,1024,10);
-raccoonLogo(b,80,80,66);raccoonLogo(b,944,80,66);b.fillStyle='#ffffff';b.font='900 58px Arial Black, Arial';b.textAlign='center';b.textBaseline='middle';b.fillText('ROMACITY RACCOONS',512,84);
+const WH=10,WALL=sport==='soccer'?'#1d1f24':C2;for(const s of[-1,1]){box(.7,WH,2*D2+.7,WALL,s*W2,WH/2,0,g);box(2*W2+.7,WH,.7,WALL,0,WH/2,s*D2,g);box(.8,.9,2*D2+.8,C1,s*W2,WH-.45,0,g);box(2*W2+.8,.9,.8,C1,0,WH-.45,s*D2,g)}
+const bc=document.createElement('canvas');bc.width=1024;bc.height=160;const b=bc.getContext('2d');b.fillStyle=WALL;b.fillRect(0,0,1024,160);b.fillStyle=C1;b.fillRect(0,0,1024,10);b.fillRect(0,150,1024,10);
+S.logo(b,80,80,66);S.logo(b,944,80,66);b.fillStyle='#ffffff';b.font='900 58px Arial Black, Arial';b.textAlign='center';b.textBaseline='middle';b.fillText(S.name,512,84);
 const bt=new Pe(bc);bt.colorSpace=me;const bm=new Be({map:bt});
 for(const s of[-1,1]){const L=Math.min(2*D2-6,58),pl=new T.Mesh(new Hn(L,L*160/1024),bm);pl.position.set(s*(W2+.37),6,0);pl.rotation.y=s*Math.PI/2;g.add(pl)}
-for(const s of[-1,1]){const lg=new T.Mesh(new Hn(7,7),new Be({map:logoTex(),transparent:!0}));lg.position.set(0,5.5,s*(D2+.37));lg.rotation.y=s>0?0:Math.PI;g.add(lg)}
-// goal posts (yellow) at the back of each end zone
-for(const s of[-1,1]){const v=s*(FL-3);const p=new T.Mesh(new ce(.15,.15,3.2,8),mat('#ffd200'));p.position.set(0,1.6,v+s*.8);g.add(p);box(.25,.25,1,'#ffd200',0,3.2,v+s*.4,g);box(5.6,.25,.25,'#ffd200',0,3.2,v,g);
+for(const s of[-1,1]){const lg=new T.Mesh(new Hn(7,7),new Be({map:logoTexFor(S),transparent:!0}));lg.position.set(0,5.5,s*(D2+.37));lg.rotation.y=s>0?0:Math.PI;g.add(lg)}
+if(sport==='soccer'){const NM=new Be({color:16777215,transparent:!0,opacity:.45,side:2});for(const s of[-1,1]){const v=s*28;for(const k of[-1,1]){const p=new T.Mesh(new ce(.08,.08,2.4,8),mat('#ffffff'));p.position.set(k*3.6,1.33,v);g.add(p)}
+box(7.4,.16,.16,'#ffffff',0,2.5,v,g);const back=new T.Mesh(new Hn(7.2,2.4),NM);back.position.set(0,1.33,v+s*1.6);g.add(back);const top=new T.Mesh(new Hn(7.2,1.6),NM);top.rotation.x=Math.PI/2;top.position.set(0,2.5,v+s*.8);g.add(top);
+for(const k of[-1,1]){const sd=new T.Mesh(new Hn(1.6,2.4),NM);sd.rotation.y=Math.PI/2;sd.position.set(k*3.6,1.33,v+s*.8);g.add(sd)}}
+for(const a of[-1,1])for(const s of[-1,1]){const f=new T.Mesh(new ce(.03,.03,1.5,6),mat('#ffffff'));f.position.set(a*13,.88,s*28);g.add(f);box(.02,.4,.55,'#ffd23c',a*13,1.4,s*28+.28,g)}}
+else for(const s of[-1,1]){const v=s*(FL-3);const p=new T.Mesh(new ce(.15,.15,3.2,8),mat('#ffd200'));p.position.set(0,1.6,v+s*.8);g.add(p);box(.25,.25,1,'#ffd200',0,3.2,v+s*.4,g);box(5.6,.25,.25,'#ffd200',0,3.2,v,g);
 for(const k of[-1,1]){const u=new T.Mesh(new ce(.1,.1,6,8),mat('#ffd200'));u.position.set(k*2.8,6.2,v);g.add(u)}}
-// scoreboard over the north stand
-{const sc=document.createElement('canvas');sc.width=512;sc.height=224;const q=sc.getContext('2d');q.fillStyle='#0d0e10';q.fillRect(0,0,512,224);q.strokeStyle=GOLD;q.lineWidth=8;q.strokeRect(4,4,504,216);
-raccoonLogo(q,92,112,74);q.textAlign='left';q.textBaseline='middle';q.fillStyle='#ffffff';q.font='bold 30px Arial';q.fillText('RACCOONS',190,52);q.fillText('VISITORS',190,118);
-q.fillStyle='#ffcf33';q.font='bold 46px Courier New, monospace';q.textAlign='right';q.fillText('67',488,52);q.fillText('7',488,118);q.fillStyle='#ff6b4a';q.font='bold 26px Courier New, monospace';q.textAlign='center';q.fillText('QTR 4   0:42   GO RACCOONS!',340,184);
+{const sc=document.createElement('canvas');sc.width=512;sc.height=224;const q=sc.getContext('2d');q.fillStyle='#0d0e10';q.fillRect(0,0,512,224);q.strokeStyle=C1;q.lineWidth=8;q.strokeRect(4,4,504,216);
+S.logo(q,92,112,74);q.textAlign='left';q.textBaseline='middle';q.fillStyle='#ffffff';q.font='bold 30px Arial';q.fillText(S.board[0],190,52);q.fillText(S.board[2],190,118);
+q.fillStyle='#ffcf33';q.font='bold 46px Courier New, monospace';q.textAlign='right';q.fillText(S.board[1],488,52);q.fillText(S.board[3],488,118);q.fillStyle='#ff6b4a';q.font='bold 24px Courier New, monospace';q.textAlign='center';q.fillText(S.board[4],340,184);
 const st=new Pe(sc);st.colorSpace=me;const v=-D2;box(18.6,8.6,.8,'#1b1c20',0,16,v,g);const f=new T.Mesh(new Hn(18,7.9),new Be({map:st}));f.position.set(0,16,v+.42);g.add(f);
 for(const k of[-1,1])box(.6,3,.6,'#555b63',k*6,11.5,v,g)}
-// light towers in the corners
 for(const a of[-1,1])for(const s of[-1,1]){const px=a*(W2-1.6),pz=s*(D2-1.6),p=new T.Mesh(new ce(.3,.45,24,8),mat('#8d949c'));p.position.set(px,12,pz);g.add(p);
 const hd=new T.Group();hd.position.set(px,24.5,pz);hd.rotation.y=Math.atan2(-px,-pz);g.add(hd);box(5,3,.5,'#3a3d44',0,0,0,hd);for(let i=0;i<3;i++)for(let j=0;j<2;j++){const l=new T.Mesh(new Hn(1.3,1.1),new Be({color:16777200}));l.position.set(-1.6+i*1.6,-.6+j*1.3,.27);hd.add(l)}}
-g.position.set(x+w/2,0,z+d/2);$t.add(g)}
+g.position.set(x+w/2,0,z+d/2);g.rotation.y=rot?Math.PI/2:0;$t.add(g)}
 const n0=$t.children.length;
 for(const[k,x,z,w,d,c,n,f]of ie.deco||[]){const cx=x+w/2,cz=z+d/2;
 if(k==='raccoon')animal(x,z,w,d,{body:'#8e959c',belly:'#e9e6e0',nose:'#1e2124',mask:!0,stripes:!0,rot:f});
@@ -726,8 +791,8 @@ for(const yy of[30,36]){const wdw=new T.Mesh(new T.Sph(1.1,14,10),mat('#2f6fdf')
 const cv=document.createElement('canvas');cv.width=128;cv.height=512;const c2=cv.getContext('2d');c2.fillStyle='#f4f4f4';c2.fillRect(0,0,128,512);c2.fillStyle='#1f3a93';c2.font='bold 80px sans-serif';c2.textAlign='center';'OURCITY'.split('').forEach((ch,i)=>c2.fillText(ch,64,70+i*66));
 const tx=new Pe(cv);tx.colorSpace=me;const lab=new T.Mesh(new Hn(3,12),new Be({map:tx}));lab.position.set(0,1.2+4+18,Rr+.03);g.add(lab);
 const S=Math.min(w,d)/16;g.scale.setScalar(Math.max(.8,Math.min(1.2,S)));g.position.set(x+w/2,0,z+d/2);g.rotation.y=f;$t.add(g)}
-else if(k==='stadium')stadium(x,z,w,d,n);
-else if(k==='military')military(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
+else if(k==='stadium')stadium(x,z,w,d,n,c);
+else if(k==='military')military(x,z,w,d);else if(k==='octopus')octopus(x,z,w,d);else if(k==='tigerstatue')tigerStatue(x,z,w,d);else if(k==='coaster')coaster(x,z,w,d);else if(k==='rock')rock(x,z,w,d);
 else if(k==='roof67'){letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);const g=$t.children[$t.children.length-1];g.position.y=f;g.rotation.y=0}
 else if(k==='L67')letters(x,z,w,d,[[SIX,'#8fd8ff'],[SEVEN,'#ff9acd']]);
 else if(k==='LOL')letters(x,z,w,d,[[ELL,'#ffd23c'],[OH,'#ff7a5a'],[ELL,'#7fc8ff']]);
@@ -765,22 +830,32 @@ part(g,new T.Box(.48,.62,.28),shirt,0,1.18,0);part(g,new T.Box(.5,.2,.3),'#22262
 const arms=[-1,1].map(s=>{const p=pivot(g,s*.31,1.45,0);part(p,new T.Box(.13,.6,.14),shirt,0,-.28,0);part(p,new T.Sph(.08,8,6),skin,0,-.62,0);return p});
 part(g,new T.Sph(.2,12,10),skin,0,1.68,0);part(g,new T.Sph(.21,12,10),['#2b1d14','#111','#6b4426','#c9a15a'][Math.floor(rnd()*4)],0,1.74,-.04,1,.7,1);
 $t.add(g);return{g,legs,arms}}
-// a game on at the stadium: a crowd in the stands and two teams playing, with the ball flying back and forth
-function footballGame(x,z,w,d){const cx=x+w/2,cz=z+d/2,W2=w/2-1,D2=d/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N;
-const spots=[];for(let i=1;i<N;i++){const hw=FW+i*ss+ss/2,hl=FL+i*es+es/2,y=.9+i*.45;for(let v=-hl+.6;v<=hl-.6;v+=.8)for(const s of[-1,1])rnd()<.6&&spots.push([cx+s*hw,y,cz+v]);
-for(let u=-hw+1;u<hw-.6;u+=.8)for(const s of[-1,1])rnd()<.6&&spots.push([cx+u,y,cz+s*hl])}
-const COL=['#f2b705','#f2b705','#f2b705','#2f3238','#2f3238','#a9b0b8','#ffffff','#e8463c'],SK=['#f1c7a0','#d9a47a','#a86f4a','#f6d6b8'],Q=new ee;
+// a game on at a stadium: a crowd in the stands and two teams playing (American football or soccer)
+function stadiumGame(x,z,w,d,sport){const S=STAD[sport]||STAD.football,rot=w>d,LW=rot?d:w,LD=rot?w:d,W2=LW/2-1,D2=LD/2-1,FW=15,FL=30,N=14,ss=(W2-.7-FW)/N,es=(D2-.7-FL)/N;
+const G=new T.Group();G.position.set(x+w/2,0,z+d/2);G.rotation.y=rot?Math.PI/2:0;$t.add(G);
+const spots=[];for(let i=1;i<N;i++){const hw=FW+i*ss+ss/2,hl=FL+i*es+es/2,y=.9+i*.45;for(let v=-hl+.6;v<=hl-.6;v+=.8)for(const s of[-1,1])rnd()<.6&&spots.push([s*hw,y,v]);
+for(let u=-hw+1;u<hw-.6;u+=.8)for(const s of[-1,1])rnd()<.6&&spots.push([u,y,s*hl])}
+const SK=['#f1c7a0','#d9a47a','#a86f4a','#f6d6b8'],Q=new ee;
 const body=new on(new T.Box(.46,.75,.36).translate(0,.37,0),new Ft({color:16777215}),spots.length),head=new on(new T.Box(.3,.3,.3).translate(0,.92,0),new Ft({color:16777215}),spots.length);
-spots.forEach(([a,b,c],k)=>{Q.makeTranslation(a,b,c);body.setMatrixAt(k,Q);head.setMatrixAt(k,Q);body.setColorAt(k,new Pt(COL[Math.floor(rnd()*COL.length)]));head.setColorAt(k,new Pt(SK[Math.floor(rnd()*SK.length)]))});$t.add(body);$t.add(head);
-const team=[],mk=(shirt,helm,u,v,face)=>{const p=person(shirt);const hm=new T.Mesh(new T.Sph(.25,10,8),mat(helm));hm.position.y=1.74;p.g.add(hm);box(.04,.3,.04,'#ffffff',0,1.72,.24,p.g);p.g.rotation.y=face;team.push({p,u,v,ph:rnd()*6,a:1+rnd()*2.5})};
-[[-8,-4],[-4,-2],[0,-6],[4,-2],[8,-4],[-2,-12],[3,-16]].forEach(([u,v])=>mk('#f2b705','#2f3238',u,v,0));
-[[-8,4],[-4,2],[0,3],[4,2],[8,4],[-5,10],[5,14]].forEach(([u,v])=>mk('#e8463c','#ffffff',u,v,Math.PI));
-const ball=new T.Mesh(new T.Sph(.2,10,8),mat('#7a3f1d'));ball.scale.set(1,1,1.7);$t.add(ball);
-// cheerleaders by the sideline
-for(let i=0;i<4;i++){const p=person(i%2?'#2f3238':'#f2b705');p.g.position.set(cx-FW+1.2,.13,cz-6+i*4);p.g.rotation.y=Math.PI/2;team.push({p,u:-FW+1.2,v:-6+i*4,ph:i,a:0,cheer:1})}
-let t=0;LIVE.push(dt=>{t+=dt;for(const q of team){const P=q.p;if(q.cheer){const k=Math.abs(Math.sin(t*3+q.ph));P.g.position.y=.13+k*.4;P.arms.forEach(a=>a.rotation.x=-2.6-k*.4);continue}
-P.g.position.x=cx+q.u+Math.sin(t*.9+q.ph)*q.a;P.g.position.z=cz+q.v+Math.sin(t*.6+q.ph*2)*q.a*.8;const sw=Math.sin(t*9+q.ph)*.7;P.legs[0].rotation.x=sw;P.legs[1].rotation.x=-sw;P.arms[0].rotation.x=-sw;P.arms[1].rotation.x=sw}
-const L=3.5,k=(t%L)/L,dir=Math.floor(t/L)%2?1:-1,v=dir*-14+dir*28*k;ball.position.set(cx+Math.sin(t*.4)*5,1.7+Math.sin(k*Math.PI)*10,cz+v);ball.rotation.z+=dt*10;ball.rotation.y=0})}
+spots.forEach(([a,b,c],k)=>{Q.makeTranslation(a,b,c);body.setMatrixAt(k,Q);head.setMatrixAt(k,Q);body.setColorAt(k,new Pt(S.crowd[Math.floor(rnd()*S.crowd.length)]));head.setColorAt(k,new Pt(SK[Math.floor(rnd()*SK.length)]))});G.add(body);G.add(head);
+const team=[],mk=(shirt,helm,u,v,face,keeper)=>{const p=person(shirt);G.add(p.g);if(sport!=='soccer'){const hm=new T.Mesh(new T.Sph(.25,10,8),mat(helm));hm.position.y=1.74;p.g.add(hm);box(.04,.3,.04,'#ffffff',0,1.72,.24,p.g)}p.g.rotation.y=face;const q={p,u,v,ph:rnd()*6,a:1+rnd()*2.5,keeper};team.push(q);return q};
+let ball,players=[];
+if(sport==='soccer'){[[-8,-6],[0,-4],[8,-6],[-5,-14],[5,-14]].forEach(([u,v])=>players.push(mk(S.home[0],0,u,v,0)));[[-8,6],[0,4],[8,6],[-5,14],[5,14]].forEach(([u,v])=>players.push(mk(S.away[0],0,u,v,Math.PI)));
+mk('#2ec4b6',0,0,-26.5,0,1);mk('#ffd23c',0,0,26.5,Math.PI,1);ball=new T.Mesh(new T.Sph(.22,12,10),mat('#ffffff'));G.add(ball);
+const ref=person('#16171a');G.add(ref.g);team.push({p:ref,u:11,v:0,ph:1,a:3})}
+else{[[-8,-4],[-4,-2],[0,-6],[4,-2],[8,-4],[-2,-12],[3,-16]].forEach(([u,v])=>mk(S.home[0],S.home[1],u,v,0));[[-8,4],[-4,2],[0,3],[4,2],[8,4],[-5,10],[5,14]].forEach(([u,v])=>mk(S.away[0],S.away[1],u,v,Math.PI));
+ball=new T.Mesh(new T.Sph(.2,10,8),mat('#7a3f1d'));ball.scale.set(1,1,1.7);G.add(ball);
+for(let i=0;i<4;i++){const p=person(i%2?S.c2:S.c1);G.add(p.g);p.g.position.set(-FW+1.2,.13,-6+i*4);p.g.rotation.y=Math.PI/2;team.push({p,u:-FW+1.2,v:-6+i*4,ph:i,a:0,cheer:1})}}
+let t=0,from=0,to=1,pt=0;LIVE.push(dt=>{t+=dt;for(const q of team){const P=q.p;if(q.cheer){const k=Math.abs(Math.sin(t*3+q.ph));P.g.position.y=.13+k*.4;P.arms.forEach(a=>a.rotation.x=-2.6-k*.4);continue}
+if(q.keeper){P.g.position.set(q.u+Math.sin(t*.8+q.ph)*2.5,.13,q.v);continue}
+P.g.position.set(q.u+Math.sin(t*.9+q.ph)*q.a,.13,q.v+Math.sin(t*.6+q.ph*2)*q.a*.8);const sw=Math.sin(t*9+q.ph)*.7;P.legs[0].rotation.x=sw;P.legs[1].rotation.x=-sw;P.arms[0].rotation.x=-sw;P.arms[1].rotation.x=sw}
+if(sport==='soccer'){pt+=dt/1.6;if(pt>=1){pt=0;from=to;do to=Math.floor(rnd()*players.length);while(to===from)}const A=players[from].p.g.position,B=players[to].p.g.position,k=pt;ball.position.set(A.x+(B.x-A.x)*k,.22+Math.abs(Math.sin(k*Math.PI))*.8,A.z+(B.z-A.z)*k+.5);ball.rotation.x+=dt*8}
+else{const L=3.5,k=(t%L)/L,dir=Math.floor(t/L)%2?1:-1,v=dir*-14+dir*28*k;ball.position.set(Math.sin(t*.4)*5,1.7+Math.sin(k*Math.PI)*10,v);ball.rotation.z+=dt*10}})}
+// the roller coaster train: tiger-striped cars with riders, faster on the way down
+function coasterRide(x,z,w,d){const F=coasterPath(w,d),cx=x+w/2,cz=z+d/2,cars=[];for(let i=0;i<4;i++){const c=new T.Group();$t.add(c);box(1.3,.9,2.3,i%2?'#16171a':'#f08a24',0,.75,0,c);box(1.35,.25,2.35,'#ffffff',0,1.25,0,c);
+for(const k of[-.3,.3]){const h=new T.Mesh(new T.Sph(.24,8,6),mat(['#f1c7a0','#d9a47a','#a86f4a'][Math.floor(rnd()*3)]));h.position.set(k,1.65,0);c.add(h)}
+if(!i){const hd=new T.Mesh(new T.Sph(.65,12,10),mat('#f08a24'));hd.position.set(0,1.2,1.4);c.add(hd);for(const k of[-1,1]){const e=new T.Mesh(new T.Sph(.22,8,6),mat('#f08a24'));e.position.set(k*.45,1.75,1.3);c.add(e)}}cars.push(c)}
+let s=0;LIVE.push(dt=>{const y0=F(s)[1];s=(s+dt*(.12+Math.max(0,17-y0)*.022))%(Math.PI*2);cars.forEach((c,i)=>{const t=s-i*.045,p=F(t),q=F(t+.01);c.position.set(cx+p[0],p[1]+.15,cz+p[2]);c.lookAt(cx+q[0],q[1]+.15,cz+q[2])})})}
 function soccer(x,z,w,d){const long=w>=d,L=(long?w:d)-6,Wd=(long?d:w)-6,cx=x+w/2,cz=z+d/2;
 const P=(u,v)=>long?[cx+u,cz+v]:[cx+v,cz+u];   // u = along the pitch, v = across
 const ball=new T.Mesh(new T.Sph(.22,12,10),mat('#ffffff'));$t.add(ball);const B={u:0,v:0,tu:0,tv:0,sp:0,h:0};
@@ -1165,7 +1240,8 @@ let fs=76;while(c2.measureText(n).width>480&&fs>30){fs-=4;c2.font='bold '+fs+'px
 else{const it=new T.Mesh(new T.Sph(.3,10,8),mat(['#f2b23c','#e8463c','#7a4f2c','#ff8ad8'][q%4]));it.position.set(.8,1.55,1.4);g.add(it)}}}
 
 for(const[k,x,z,w,d]of ie.critters||[])k==='soccer'?soccer(x,z,w,d):k==='pigeons'?pigeons(x,z,w,d):k==='elephant'?elephant(x,z,w,d):k==='basketball'?basketball(x,z,w,d):k==='playground'?playground(x,z,w,d):k==='bigcats'&&bigcats(x,z,w,d);
-for(const[k,x,z,w,d]of ie.deco||[])k==='stadium'&&footballGame(x,z,w,d);
+for(const[k,x,z,w,d,c]of ie.deco||[])k==='stadium'&&stadiumGame(x,z,w,d,c);
+for(const[k,x,z,w,d]of ie.deco||[])k==='coaster'&&coasterRide(x,z,w,d);
 for(const[k,x,z,w,d]of ie.deco||[])if(k==='military'){const U=w/2-1,V=d/2-1,cx=x+w/2+U*.4,cz=z+d/2-V*.1,men=[];for(let i=0;i<6;i++){const p=person('#5f6b45');raccoonHead(p.g);const cap=new T.Mesh(new T.Sph(.25,10,8,0,6.3,0,1.3),mat('#4a5436'));cap.position.y=1.8;p.g.add(cap);men.push(p)}
 let t=0;LIVE.push(dt=>{t+=dt;const L=U*.7,ph=(t*1.4)%(2*L),dir=ph<L?1:-1,pos=ph<L?ph:2*L-ph;men.forEach((p,i)=>{p.g.position.set(cx-L/2+pos,.13,cz-5+i*2);p.g.rotation.y=dir>0?Math.PI/2:-Math.PI/2;const sw=Math.sin(t*6)*.6;p.legs[0].rotation.x=sw;p.legs[1].rotation.x=-sw;p.arms[0].rotation.x=-sw;p.arms[1].rotation.x=sw})})}
 let lt=performance.now();const tick=now=>{const dt=Math.min(.05,(now-lt)/1e3);lt=now;for(const f of LIVE)f(dt);requestAnimationFrame(tick)};requestAnimationFrame(tick)}

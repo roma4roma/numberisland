@@ -456,6 +456,48 @@ RING_SHEETS = {
   ('boatrental', 14.3, 8.4, 1.25, 1.6, 0, 'sail', ''),                 # little sailboats on the river
   ('s', 17.4, 11.7, 1.7, 2.0, 5, '#FF7AC8', 'CU'),
  ],
+ 'E3': [
+  ('s', 1.1, 0.9, 1.0, 0.6, 1, '#9B6BD0', 'Food'),
+  ('s', 3.15, 0.9, 2.1, 1.1, 20, '#6CD04A', 'Tasty Hotel'),
+  ('s', 5.3, 1.9, 0.95, 0.45, 2, '#F6F57A', 'GS25'),
+  ('s', 6.25, 0.05, 2.0, 1.8, 6, '#9B6BD0', 'Bathroom'),
+  ('s', 9.2, 0.95, 0.8, 0.85, 4, '#1F5A5A', 'APT'),
+  ('raccoon', 12.2, 1.05, 1.05, 0.95, 10, None, 'Raccoon Statue'),
+  ('s', 17.1, 0.15, 0.95, 1.85, 3, '#9B8BE0', 'Fishing Place'),
+  ('riverpier', 15.9, 1.0, 1.2, 0.45, 0, None, ''),
+  ('amusement', 0.1, 2.8, 2.0, 1.95, 0, None, 'Amusement Park'),      # outdoor: Ferris wheel and teacups
+  ('s', 3.1, 3.85, 2.15, 0.95, 4, '#FF8A3D', 'Paris Baguette'),
+  ('s', 6.3, 3.85, 1.05, 0.85, 3, '#3FBF4A', '7-11'),
+  ('waterpark', 7.35, 2.8, 2.05, 2.0, 0, None, 'Waterpark'),
+  ('s', 0.05, 4.85, 0.9, 0.85, 2, '#3BC4E0', 'CU'),
+  ('s', 5.2, 4.85, 2.05, 0.9, 3, '#8CE07A', 'Supermarket'),
+  ('p', 13.2, 3.0, 1.0, 0.9, 0, None, 'Resting Place'),
+  ('stand', 13.75, 3.45, 0.45, 0.45, 1, None, 'Resting Place Snacks'),
+  ('s', 17.1, 2.95, 0.9, 0.95, 4, '#E07AD0', 'Fish Mart'),
+  ('p', 11.2, 4.85, 2.9, 2.0, 0, None, 'Park'),
+  ('stand', 13.4, 6.2, 0.55, 0.55, 1, None, 'Park Snacks'),
+  ('hotpack', 3.1, 5.8, 1.05, 0.95, 0, None, 'Hot Pack Statue'),     # a giant hand warmer with a face
+  ('s', 3.1, 6.8, 1.1, 1.0, 2, '#9B8BE0', 'Hot Pack Shop'),
+  ('s', 7.3, 5.8, 2.05, 2.0, 10, '#2CC4B0', 'Video Game School'),
+  ('s', 0.05, 7.8, 1.85, 2.25, 19, '#F08AC8', 'Skylift'),
+  ('cablecar', 0.98, 8.93, 1.62, -5.03, 19, None, ''),                # cable car from the Skylift tower down to the amusement park
+  ('s', 5.2, 7.8, 2.05, 1.1, 4, '#B9BDC2', 'Museum'),
+  ('s', 8.4, 7.8, 0.9, 1.05, 2, '#E8288A', 'Game Shop'),
+  ('s', 11.3, 7.8, 2.0, 0.95, 5, '#F6E04A', 'Cheese Factory'),
+  ('s', 16.1, 6.8, 2.0, 1.8, 2, '#3BC4E0', 'Boat Rental'),
+  ('boatrental', 15.1, 7.0, 1.0, 1.5, 0, 'sail', ''),
+  ('s', 6.25, 9.0, 1.05, 0.85, 2, '#8A6BD0', 'Toy Store'),
+  ('s', 3.05, 9.0, 1.05, 2.0, 10, '#2CB4C4', 'APT'),
+  ('s', 4.15, 10.1, 1.05, 0.9, 5, '#F2F57A', 'APT'),
+  ('s', 10.2, 9.85, 2.1, 1.75, 15, '#A86BD0', 'Ramen Factory'),
+  ('s', 15.2, 9.85, 0.9, 0.95, 6, '#9B6BD0', 'APT'),
+  ('s', 17.1, 9.8, 1.6, 1.0, 2, '#3A2A6A', 'Candy Store'),
+  ('wilbur', 6.2, 10.95, 2.05, 0.65, 0, None, 'Wilbur Statue'),       # Wilbur from Charlotte's Web
+  ('s', 0.85, 11.0, 3.25, 3.0, 5, '#5A3AB0', 'Nice To CU'),
+  ('s', 5.15, 11.9, 2.1, 2.05, 3, '#8A3AC8', 'Dance Party Disco'),     # go inside: raccoons dancing
+  ('s', 11.2, 11.9, 2.0, 2.05, 2, '#1FA88A', 'Pizza'),
+  ('s', 16.1, 11.85, 1.9, 0.95, 5, '#6CD04A', 'Buffet'),
+ ],
  'N5': [  # Mr. Romanek
   ('gantry', 4.55, 3.5, 8.5, 5.5, 3, '#7a5a3a', 'Welcome to Mt. Pigeon'),
   ('pigeonstatue', 6.6, 6.9, 2.6, 2.6, 0, 30, 'Pigeon Statue'),
